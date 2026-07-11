@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; margin: 40px; color: #222; }
+    h1 { border-bottom: 2px solid #1976D2; color: #1976D2; padding-bottom: 8px; }
+    h2 { color: #1565C0; margin-top: 28px; font-size: 16px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
+    th { background: #E3F2FD; color: #1976D2; text-align: left; padding: 10px 12px; border: 1px solid #BBDEFB; }
+    td { padding: 9px 12px; border: 1px solid #ddd; }
+    tr:nth-child(even) td { background: #F9FAFB; }
+  </style>
+</head>
+<body>
+
+<h1>Date Time Configuration</h1>
+<p style="font-size:12px;color:#888;margin:4px 0 12px 0;">Logical Device Name: {{ deviceId.Logic_Device_Name }}</p>
+
+<h2>Clock Setting</h2>
+<table>
+  <thead>
+    <tr><th>Day</th><th>Month</th><th>Year</th><th>Hour</th><th>Minute</th><th>Second</th><th>Timezone Offset (min)</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ clock.day }}</td>
+      <td>{{ clock.month }}</td>
+      <td>{{ clock.year }}</td>
+      <td>{{ clock.hour }}</td>
+      <td>{{ clock.minute }}</td>
+      <td>{{ clock.second }}</td>
+      <td>{{ clock.timezone_offset_min }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>DST Incremental (Start)</h2>
+<table>
+  <thead>
+    <tr><th>Day</th><th>Month</th><th>Hour</th><th>Minute</th><th>Second</th><th>Day of Week</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ dst_incremental.day }}</td>
+      <td>{{ dst_incremental.month }}</td>
+      <td>{{ dst_incremental.hour }}</td>
+      <td>{{ dst_incremental.minute }}</td>
+      <td>{{ dst_incremental.second }}</td>
+      <td>{{ dst_incremental.day_of_week }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>DST Decremental (End)</h2>
+<table>
+  <thead>
+    <tr><th>Day</th><th>Month</th><th>Hour</th><th>Minute</th><th>Second</th><th>Day of Week</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ dst_decremental.day }}</td>
+      <td>{{ dst_decremental.month }}</td>
+      <td>{{ dst_decremental.hour }}</td>
+      <td>{{ dst_decremental.minute }}</td>
+      <td>{{ dst_decremental.second }}</td>
+      <td>{{ dst_decremental.day_of_week }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>DST Settings</h2>
+<table>
+  <thead>
+    <tr><th>Deviation (min)</th><th>Active</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ dst.deviation_min }}</td>
+      <td>{{ dst.active }}</td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

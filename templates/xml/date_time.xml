@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+  <title>Date Time</title>
+  <logicalDeviceName>{{ deviceId.Logic_Device_Name }}</logicalDeviceName>
+  <clock>
+    <day>{{ clock.day }}</day>
+    <month>{{ clock.month }}</month>
+    <year>{{ clock.year }}</year>
+    <hour>{{ clock.hour }}</hour>
+    <minute>{{ clock.minute }}</minute>
+    <second>{{ clock.second }}</second>
+    <timezone_offset_min>{{ clock.timezone_offset_min }}</timezone_offset_min>
+  </clock>
+  <dst_incremental>
+    <day>{{ dst_incremental.day }}</day>
+    <month>{{ dst_incremental.month }}</month>
+    <hour>{{ dst_incremental.hour }}</hour>
+    <minute>{{ dst_incremental.minute }}</minute>
+    <second>{{ dst_incremental.second }}</second>
+    <day_of_week>{{ dst_incremental.day_of_week }}</day_of_week>
+  </dst_incremental>
+  <dst_decremental>
+    <day>{{ dst_decremental.day }}</day>
+    <month>{{ dst_decremental.month }}</month>
+    <hour>{{ dst_decremental.hour }}</hour>
+    <minute>{{ dst_decremental.minute }}</minute>
+    <second>{{ dst_decremental.second }}</second>
+    <day_of_week>{{ dst_decremental.day_of_week }}</day_of_week>
+  </dst_decremental>
+  <dst>
+    <deviation_min>{{ dst.deviation_min }}</deviation_min>
+    <active>{{ dst.active }}</active>
+  </dst>
+</report>

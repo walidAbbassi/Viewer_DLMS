@@ -1,0 +1,29 @@
+{
+  "pushSetups": [
+    
+    {
+      "id": "push_setup_interval",
+      "label": "Push Setup Interval",
+      "tabs": [
+        { "label": "Push Setup Interval 1",           "dataSource": "PushSetupInterval_1" },
+        { "label": "Push Setup Interval 2",   "dataSource": "PushSetupInterval_2" },
+        { "label": "Push Setup Interval 3",   "dataSource": "PushSetupInterval_3" }
+      ]
+    },
+    {
+        "id":"push_setup_on_alarm",
+        "label":"Push Setup on Alarm",
+        "dataSource":"PushSetupOnAlarm"
+    },
+    {
+        "id":"push_setup_on_connectivity",
+        "label":"Push Setup On Connectivity",
+        "dataSource":"PushSetupOnConnectivity"
+    },
+    {
+        "id":"push_setup_on_installation",
+        "label":"Push Setup On Installation",
+        "dataSource":"PushSetupOnInstallation"
+    }
+  ]
+}

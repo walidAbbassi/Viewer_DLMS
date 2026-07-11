@@ -1,0 +1,33 @@
+{
+  templates_folder: "../templates",
+  pages: [
+    {
+      page_name: "configuration",
+      xml_template: "load_profile.xml",
+      csv_template: "load_profile.csv",
+      pdf_template: "",
+      docx_template: "",
+    },
+    {
+      page_name: "load_profile_LoadProfilePeriod1",
+      xml_template: "load_profile.xml",
+      csv_template: "load_profile.csv",
+      pdf_template: "class_7.html",
+      docx_template: "load_profile.docx",
+    },
+    {
+      page_name: "load_profile_ReactiveQ2PowerLoadProfile",
+      xml_template: "load_profile.xml",
+      csv_template: "load_profile.csv",
+      pdf_template: "",
+      docx_template: "",
+    },
+    {
+      page_name: "load_profile_LoadProfile1",
+      xml_template: "load_profile.xml",
+      csv_template: "load_profile.csv",
+      pdf_template: "class_7.html",
+      docx_template: "load_profile.docx",
+    },
+  ],
+}

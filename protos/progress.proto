@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package progress;
+
+// The request with query parameters
+message QueryRequest {
+  string query = 1;
+}
+
+// The response that contains progress
+message ProgressUpdate {
+  int32 percent = 1; // 0 to 100
+  string message = 2; // optional (e.g., "Processing step 2/5")
+}
+
+// Service definition
+service QueryService {
+  rpc RunQuery (QueryRequest) returns (stream ProgressUpdate);
+}

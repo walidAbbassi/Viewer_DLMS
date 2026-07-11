@@ -1,0 +1,156 @@
+syntax = "proto3";
+
+package manual_dlms;
+
+// ============================================================
+// Manual DLMS service proto
+// ============================================================
+// Provides a clean API surface for the Manual DLMS feature:
+//   - Single GET / SET / ACTION  (with XML-or-HEX auto-detection for input)
+//   - WITH-LIST batch variants
+//   - Standalone XDR encode / decode
+//   - Raw APDU frame send
+// ============================================================
+
+service ManualDlmsService {
+
+  // ---- Single-object operations ------------------------------------
+
+  // Perform a COSEM GET (read) request.
+  rpc CosemGet    (CosemGetRequest)    returns (ManualDlmsResult);
+
+  // Perform a COSEM SET (write) request.
+  // The payload field accepts either XML or a raw XDR hex string.
+  rpc CosemSet    (CosemSetRequest)    returns (ManualDlmsResult);
+
+  // Perform a COSEM ACTION (method invoke) request.
+  // The payload field accepts either XML or a raw XDR hex string.
+  rpc CosemAction (CosemActionRequest) returns (ManualDlmsResult);
+
+  // ---- WITH-LIST batch operations ----------------------------------
+
+  // Perform GET-WITH-LIST (multiple reads in one PDU).
+  rpc GetWithList    (WithListGetRequest)    returns (WithListResult);
+
+  // Perform SET-WITH-LIST (multiple writes in one PDU).
+  rpc SetWithList    (WithListSetRequest)    returns (WithListResult);
+
+  // Perform ACTION-WITH-LIST (multiple invocations in one PDU).
+  rpc ActionWithList (WithListActionRequest) returns (WithListResult);
+
+  // ---- XDR encode / decode -----------------------------------------
+
+  // Convert an XML data-type tree to an uppercase XDR hex string.
+  rpc Encode (EncodeRequest) returns (CodecResult);
+
+  // Convert an XDR hex string to a pretty-printed XML string.
+  rpc Decode (DecodeRequest) returns (CodecResult);
+
+  // ---- Raw frame ---------------------------------------------------
+
+  // Send a raw DLMS APDU frame and return the response.
+  rpc SendRawFrame (SendRawFrameRequest) returns (ManualDlmsResult);
+}
+
+
+// ============================================================
+// Request messages
+// ============================================================
+
+message CosemGetRequest {
+  int32  class_id  = 1;
+  string obis      = 2;   // logical name hex, e.g. "0000010000FF"
+  int32  attribute = 3;
+}
+
+message CosemSetRequest {
+  int32  class_id   = 1;
+  string obis       = 2;
+  int32  attribute  = 3;
+  string input_data = 4;  // XML or raw XDR hex – auto-detected by service
+}
+
+message CosemActionRequest {
+  int32  class_id   = 1;
+  string obis       = 2;
+  int32  attribute  = 3;
+  string input_data = 4;  // XML or raw XDR hex; empty string = no parameter
+}
+
+// ---- WITH-LIST requests ------------------------------------------
+
+message WithListGetItem {
+  int32  class_id  = 1;
+  string obis      = 2;
+  int32  attribute = 3;
+}
+
+message WithListSetItem {
+  int32  class_id   = 1;
+  string obis       = 2;
+  int32  attribute  = 3;
+  string input_data = 4;  // XML or raw XDR hex
+}
+
+message WithListActionItem {
+  int32  class_id   = 1;
+  string obis       = 2;
+  int32  attribute  = 3;
+  string input_data = 4;  // XML or raw XDR hex; empty = no parameter
+}
+
+message WithListGetRequest {
+  repeated WithListGetItem items = 1;
+}
+
+message WithListSetRequest {
+  repeated WithListSetItem items = 1;
+}
+
+message WithListActionRequest {
+  repeated WithListActionItem items = 1;
+}
+
+// ---- Codec requests ----------------------------------------------
+
+message EncodeRequest {
+  string xml_input = 1;  // ng_sdk-format XML, e.g. <Unsigned8>42</Unsigned8>
+}
+
+message DecodeRequest {
+  string hex_input = 1;  // XDR hex string, e.g. "1142"
+}
+
+// ---- Raw frame request ------------------------------------------
+
+message SendRawFrameRequest {
+  string hex_frame = 1;  // Raw APDU bytes as hex, e.g. "C0..."
+}
+
+
+// ============================================================
+// Response messages
+// ============================================================
+
+// Result of a single DLMS operation (GET, SET, or ACTION).
+message ManualDlmsResult {
+  bool   success    = 1;
+  string xdr        = 2;  // response payload as uppercase XDR hex (GET/ACTION)
+  string xml        = 3;  // XML representation of the XDR payload
+  string error      = 4;  // human-readable error name (e.g. "ACCESS_VIOLATED")
+  int32  error_code = 5;  // numeric DataAccessResult code
+}
+
+// Aggregated result of a WITH-LIST batch operation.
+message WithListResult {
+  repeated ManualDlmsResult items  = 1;
+  bool                      global_success = 2;
+  string                    error  = 3;  // top-level error (transport/pre-encode)
+}
+
+// Result of an encode or decode operation.
+message CodecResult {
+  bool   success = 1;
+  string output  = 2;  // encoded hex (Encode) or decoded XML (Decode)
+  string error   = 3;  // non-empty if success == false
+}

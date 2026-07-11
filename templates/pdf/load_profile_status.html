@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 15mm;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      color: #222;
+      margin: 0;
+    }
+    h1 { border-bottom: 2px solid #1976D2; color: #1976D2; padding-bottom: 8px; font-size: 18px; margin-bottom: 4px; }
+    p  { color: #6B7280; font-size: 12px; margin: 4px 0 8px 0; }
+    .meta { font-size: 11px; color: #888; margin-bottom: 16px; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      table-layout: fixed;
+      margin-top: 8px;
+    }
+    th {
+      background: #E3F2FD;
+      color: #1976D2;
+      text-align: left;
+      padding: 8px 10px;
+      border: 1px solid #BBDEFB;
+      font-size: 11px;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    td {
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      font-size: 11px;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    tr:nth-child(even) td { background: #F9FAFB; }
+    .active-yes {
+      color: #1B5E20;
+      font-weight: bold;
+    }
+    .active-no {
+      color: #B71C1C;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: bold;
+    }
+    .badge-on {
+      background: #C8E6C9;
+      color: #1B5E20;
+    }
+    .badge-off {
+      background: #FFCDD2;
+      color: #B71C1C;
+    }
+  </style>
+</head>
+<body>
+
+<h1>{{ name }}</h1>
+<p>{{ description }}</p>
+<p class="meta">Data source: {{ dataSource }} &nbsp;|&nbsp; Logical Device Name: {{ deviceId.Logic_Device_Name }}</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:15%">Mask</th>
+      <th style="width:15%">Bit Value</th>
+      <th style="width:55%">Description</th>
+      <th style="width:15%">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for bit in bits %}
+    <tr>
+      <td>{{ bit.mask }}</td>
+      <td><code>{{ bit.bitValue }}</code></td>
+      <td>{{ bit.description }}</td>
+      <td>
+        {% if bit.isActive %}
+        <span class="badge badge-on">ACTIVE</span>
+        {% else %}
+        <span class="badge badge-off">INACTIVE</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+</body>
+</html>

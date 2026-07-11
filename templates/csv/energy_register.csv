@@ -1,0 +1,7 @@
+# Page: Energy Register
+# ----------------------
+# Logical Device Name: {{ deviceId.Logic_Device_Name }}
+ID,Name,Description,OBIS Code,Value,Unit
+{% for r in registers -%}
+{{ r.id }},{{ r.name }},{{ r.description }},{{ r.obisCode }},{{ r.value }},{{ r.unit }}
+{% endfor %}

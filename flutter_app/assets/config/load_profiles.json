@@ -1,0 +1,93 @@
+{
+  "loadProfiles": [
+    {
+      "id": "LoadProfile1Status",
+      "name": "LoadProfile 1 Status",
+      "description": "Load Profile 1 Status",
+      "dataSource": "ProfileStatusLoadProfileWithPeriod1",
+      
+      "bitDescription": {
+          "totalBitsNum": 8,
+          "bitsDescripTable": [
+            { "mask": "bitMask0", "bitValue": "0x01", "description": "Critical error" },
+            { "mask": "bitMask1", "bitValue": "0x02", "description": "Clock invalid" },
+            { "mask": "bitMask2", "bitValue": "0x04", "description": "Data not valid" },
+            { "mask": "bitMask3", "bitValue": "0x08", "description": "Daylight saving" },
+            { "mask": "bitMask4","bitValue": "0x10", "description": "Net-metering/Consumer mode reproramming" },
+            { "mask": "bitMask5", "bitValue": "0x20", "description": "Clock adjusted" },
+            { "mask": "bitMask6", "bitValue": "0x40", "description": "Reserved" },
+            { "mask": "bitMask7", "bitValue": "0x80", "description": "Power Down" }
+          ]
+        }
+
+
+
+    },
+    {
+      "id": "LoadProfile1",
+      "name": "LoadProfile 1",
+      "description": "Load Profile 1",
+      "dataSource": "LoadProfilewithperiode1"
+    },
+    {
+      "id": "LoadProfile2Status",
+      "name": "LoadProfile 2 Status",
+      "description": "Load Profile 2 Status",
+      "dataSource": "ProfileStatusLoadProfileWithPeriod2",
+      
+      "bitDescription": {
+          "totalBitsNum": 8,
+          "bitsDescripTable": [
+            { "mask": "bitMask0", "bitValue": "0x01", "description": "Critical error" },
+            { "mask": "bitMask1", "bitValue": "0x02", "description": "Clock invalid" },
+            { "mask": "bitMask2", "bitValue": "0x04", "description": "Data not valid" },
+            { "mask": "bitMask3", "bitValue": "0x08", "description": "Daylight saving" },
+            { "mask": "bitMask4", "bitValue": "0x10", "description": "Capturing DIsabled" },
+            { "mask": "bitMask5", "bitValue": "0x20", "description": "Clock adjusted" },
+            { "mask": "bitMask6", "bitValue": "0x40", "description": "Reserved" },
+            { "mask": "bitMask7", "bitValue": "0x80", "description": "Power Down" }
+          ]
+        }
+
+    },
+   {
+      "id": "LoadProfile2",
+      "name": "LoadProfile 2",
+      "description": "Load Profile 2",
+      "dataSource": "LoadProfilewithperiode2"
+    },
+    {
+      "id": "PQProfileStatus",
+      "name": "PQ Profile Status",
+      "description": "PQ Profile Status",
+      "dataSource": "ProfileStatusPowerQualityProfile",
+      "bitDescription": {
+          "totalBitsNum": 8,
+          "bitsDescripTable": [
+            { "mask": "bitMask0", "bitValue": "0x01", "description": "Critical error" },
+            { "mask": "bitMask1", "bitValue": "0x02", "description": "Clock invalid" },
+            { "mask": "bitMask2", "bitValue": "0x04", "description": "Data not valid" },
+            { "mask": "bitMask3", "bitValue": "0x08", "description": "Daylight saving" },
+            { "mask": "bitMask4", "bitValue": "0x10", "description": "Capturing DIsabled" },
+            { "mask": "bitMask5", "bitValue": "0x20", "description": "Clock adjusted" },
+            { "mask": "bitMask6", "bitValue": "0x40", "description": "Reserved" },
+            { "mask": "bitMask7", "bitValue": "0x80", "description": "Power Down" }
+          ]
+        }
+
+    },
+    {
+      "id": "PQProfile",
+      "name": "PQ Profile",
+      "description": "PQ Profile",
+      "dataSource": "LoadProfilewithperiod4PowerQualityProfile"
+    }
+    
+  ]
+}
+
+
+
+
+
+

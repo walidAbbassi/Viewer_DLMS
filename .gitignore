@@ -1,0 +1,110 @@
+backend/.venv/
+backend/__pycache__/
+**/__pycache__/**
+backend/gen/__pycache__/
+backend/*.py[cod]
+backend/*.egg-info/
+backend/build/
+backend/.idea/
+flutter_app/.idea/
+flutter_app/.metadata
+flutter_app/android/
+flutter_app/build/
+flutter_app/coverage/
+flutter_app/web/
+# Compiled class file
+*.class
+
+# Log file
+*.log
+VERSION.txt
+.idea/
+backend/.idea/
+backend/__pycache__/
+backend/configuration/logger/logs/
+backend/gen/__pycache__/
+backend/license/__pycache__/
+backend/service/__pycache__/
+backend/session/__pycache__/
+backend/util/__pycache__/
+flutter_app/windows/
+
+# OpenSpec — local documentation only, never committed
+openspec/
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+# *.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# Gradle
+.gradle
+build/
+
+# Other
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata/
+.sonarlint/
+bin/
+tmp/
+
+# Intellij
+out/
+*.ipr
+*.iws
+*.iml
+.idea/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# VS Code
+.vscode/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+flutter_app/android/*
+flutter_app/ios/*
+flutter_app/linux/*
+flutter_app/macos/*
+flutter_app/web/*
+flutter_app/windows/*
+
+CLAUDE.md
+.claude/

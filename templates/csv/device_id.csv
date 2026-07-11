@@ -1,0 +1,7 @@
+# Page: Device ID
+# --------------------
+# Logical Device Name: {{ deviceId.Logic_Device_Name }}
+Field,Value
+{% for key, value in fields.items() -%}
+{{ key }},{{ value }}
+{% endfor %}

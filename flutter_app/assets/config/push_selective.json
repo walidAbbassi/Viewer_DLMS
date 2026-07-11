@@ -1,0 +1,20 @@
+{
+  "pushSelectives": [
+    {
+      "id": "push_selective_interval",
+      "label": "Push Selective Interval",
+      "objects": [
+        {
+          "label": "Push Buffer Filtre LP1",
+          "captureObjects": "LoadProfilewithperiode1",
+          "filterBuffer": "PushBufferFiltreLP1"
+        },
+        {
+          "label": "Push Buffer Filtre LP2",
+          "captureObjects": "LoadProfilewithperiode2",
+          "filterBuffer": "PushBufferFiltreLP2"
+        }
+      ]
+    }
+  ]
+}

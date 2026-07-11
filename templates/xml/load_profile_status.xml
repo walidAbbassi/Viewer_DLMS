@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+  <title>{{ name }}</title>
+  <logicalDeviceName>{{ deviceId.Logic_Device_Name }}</logicalDeviceName>
+  <description>{{ description }}</description>
+  <dataSource>{{ dataSource }}</dataSource>
+  <bits>
+  {% for bit in bits %}
+    <bit>
+      <mask>{{ bit.mask }}</mask>
+      <bitValue>{{ bit.bitValue }}</bitValue>
+      <description>{{ bit.description }}</description>
+      <isActive>{{ bit.isActive }}</isActive>
+    </bit>
+  {% endfor %}
+  </bits>
+</report>

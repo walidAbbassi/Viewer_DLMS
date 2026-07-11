@@ -1,0 +1,8 @@
+# Page: Fresnel Diagram
+# Last Refresh: {{ lastRefresh }}
+# Logical Device Name: {{ deviceId.Logic_Device_Name }}
+# --------------------
+Phase,U (V),I (A),phi (deg)
+{% for phase, values in phases.items() -%}
+{{ phase }},{{ "%.3f"|format(values.u) }},{{ "%.3f"|format(values.i) }},{{ "%.2f"|format(values.phi) }}
+{% endfor %}

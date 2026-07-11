@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package authentication;
+
+import "google/protobuf/empty.proto";
+
+// ==========================
+// License import (NEW)
+// ==========================
+message ImportLicenseRequest {
+  // Absolute or relative path to the license file
+  string license_path = 1;
+}
+
+message ImportLicenseResponse {
+  // true if license was imported successfully
+  bool success = 1;
+
+  // non-empty if success == false
+  string error = 2;
+}
+
+// ==========================
+// Connexion service (NEW)
+// ==========================
+message ConnexionRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message ConnexionResponse {
+  bool success = 1;
+  string message = 2;
+  string role = 3;
+  repeated string rights = 4;
+  repeated string disable_features = 5;
+  string enterprise = 6;
+  string trial_period_start = 7;
+  string trial_period_end = 8;
+  repeated string exclude_rights = 9;
+}
+
+message ChangePasswordRequest {
+  string username = 1;       // Identifiant de l'utilisateur
+  string old_password = 2;   // Ancien mot de passe
+  string new_password = 3;   // Nouveau mot de passe
+  string license = 4; // La license
+}
+
+message ChangePasswordResponse {
+  bool success = 1;          // true si le changement a réussi
+  string message = 2;        // Message d'erreur ou de confirmation
+}
+
+// ==========================
+// License check (NEW)
+// ==========================
+message LicenseInfo {
+  string label = 1;
+  string file = 2;
+}
+
+message CheckLicenseResponse {
+  bool exists = 1;
+  string identifier = 2;
+
+  // ✅ Array of objects
+  repeated LicenseInfo licenses = 3;
+}
+
+
+message DeleteLicensesRequest {
+  string username = 1;
+  string password = 2;
+}
+
+
+// ==========================
+// Service
+// ==========================
+service AuthenticationService {
+  // Import license file into the system
+  rpc ImportLicense(ImportLicenseRequest) returns (ImportLicenseResponse);
+
+  // Connexion
+  rpc Connexion(ConnexionRequest) returns (ConnexionResponse);
+
+  // Change password
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+
+  // Check if a license exists (no input)
+  rpc CheckLicense(google.protobuf.Empty) returns (CheckLicenseResponse);
+
+  rpc DeleteLicenses(DeleteLicensesRequest) returns (google.protobuf.Empty);
+}

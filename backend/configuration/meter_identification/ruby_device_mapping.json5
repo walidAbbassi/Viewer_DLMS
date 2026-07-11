@@ -1,0 +1,14 @@
+{
+  items: [
+    {
+      "name": "SAP",
+      "objectName": "SapAssignment",
+      "index": 0
+    },
+    {
+      "name": "Logical Device Name",
+      "objectName": "SapAssignment",
+      "index": 1
+    },
+  ]
+}

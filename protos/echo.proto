@@ -1,0 +1,17 @@
+syntax = "proto3";
+package demo;
+
+
+// Simple demo service
+service Echo {
+rpc Say(EchoRequest) returns (EchoReply);
+rpc Sum(SumRequest) returns (SumReply);
+}
+
+
+message EchoRequest { string message = 1; }
+message EchoReply { string message = 1; }
+
+
+message SumRequest { repeated int32 numbers = 1; }
+message SumReply { int64 sum = 1; }

@@ -1,0 +1,108 @@
+{% set col_count = columns | length %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            {% if col_count > 10 %}
+            size: A3 landscape;
+            margin: 8mm 10mm;
+            {% elif col_count > 5 %}
+            size: A4 landscape;
+            margin: 10mm 12mm;
+            {% else %}
+            size: A4 portrait;
+            margin: 15mm;
+            {% endif %}
+        }
+        body {
+            font-family: Arial, sans-serif;
+            color: #222;
+            margin: 0;
+        }
+        h1 {
+            border-bottom: 2px solid #1976D2;
+            color: #1976D2;
+            padding-bottom: 8px;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        p { color: #6B7280; font-size: 12px; margin: 4px 0 8px 0; }
+        .meta { font-size: 11px; color: #888; margin-bottom: 12px; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            table-layout: fixed;
+            margin-top: 8px;
+        }
+        th {
+            background: #E3F2FD;
+            color: #1976D2;
+            text-align: left;
+            border: 1px solid #BBDEFB;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            {% if col_count > 10 %}
+            padding: 3px 4px;
+            font-size: 7px;
+            {% elif col_count > 5 %}
+            padding: 5px 7px;
+            font-size: 9px;
+            {% else %}
+            padding: 7px 10px;
+            font-size: 11px;
+            {% endif %}
+        }
+        td {
+            border: 1px solid #ddd;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            {% if col_count > 10 %}
+            padding: 3px 4px;
+            font-size: 7px;
+            {% elif col_count > 5 %}
+            padding: 5px 7px;
+            font-size: 9px;
+            {% else %}
+            padding: 6px 10px;
+            font-size: 11px;
+            {% endif %}
+        }
+        tr:nth-child(even) td { background: #F9FAFB; }
+    </style>
+</head>
+<body>
+
+<h1>{{ name }}</h1>
+<p>{{ description }}</p>
+<p class="meta">Data source: {{ dataSource }} &nbsp;|&nbsp; Total records: {{ rowCount }} &nbsp;|&nbsp; Columns: {{ col_count }} &nbsp;|&nbsp; Logical Device Name: {{ deviceId.Logic_Device_Name }}</p>
+
+<table>
+    <thead>
+        <tr>
+        {% for col in columns %}
+            <th>{{ col }}</th>
+        {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for row in data %}
+        <tr>
+        {% for value in row %}
+            <td>{{ value }}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% if chart_image_base64 %}
+<h2 style="color:#1976D2;border-bottom:2px solid #1976D2;padding-bottom:6px;margin-top:36px;font-size:16px;">Chart</h2>
+<img src="data:image/png;base64,{{ chart_image_base64 }}"
+     style="max-width:100%;height:auto;display:block;margin-top:12px;"
+     alt="Chart" />
+{% endif %}
+
+</body>
+</html>

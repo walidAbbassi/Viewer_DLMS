@@ -1,0 +1,1403 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Viewer NG — GitLab CI/CD Pipeline
+# 6 stages: prepare → lint → test → review → report → deploy
+# Runner: Windows shell (pwsh), tag controlled by $RUNNER_TAG variable
+# Binaries: $PYTHON_BIN | $FLUTTER_BIN  (override from GitLab CI/CD Variables)
+# Proxy:  $HTTP_PROXY / $HTTPS_PROXY
+# Aligned with reference: tools/Gitlab_CI_Pipeline_Copilot_Agents (project 3298)
+# ──────────────────────────────────────────────────────────────────────────────
+
+stages:
+  - prepare
+  - lint
+  - test
+  - review
+  - report
+  - deploy
+
+# Shared rules: agents and report run on MR events only.
+# Lint/test stages run on push (see individual job rules).
+.agent-rules: &agent_rules
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+default:
+  tags:
+    - $RUNNER_TAG
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - api_failure
+
+variables:
+  # All variables are defined in GitLab CI/CD Settings:
+  #   Project → Settings → CI/CD → Variables
+  #
+  # To initialise or reset them on a new project instance, run:
+  #   python tools/setup_gitlab_variables.py [--dry-run]
+  #
+  # Variables managed here (see tools/setup_gitlab_variables.py for full list):
+  #   RUNNER_TAG, PYTHON_BIN, FLUTTER_BIN, FLUTTER_SAFE_DIR, JGENHTML_BIN
+  #   NG_SDK_WHL, BACKEND_REQUIREMENTS, FLUTTER_PUBSPEC
+  #   HTTP_PROXY, HTTPS_PROXY, NO_PROXY, PIP_RETRIES, PIP_TIMEOUT, GIT_SSL_NO_VERIFY
+  #   FLAKE8_MAX_LINE_LENGTH, BACKEND_COV_THRESHOLD, FLUTTER_COV_THRESHOLD
+  #   COPILOT_MODEL, PYTHONUTF8, PYTHONIOENCODING
+  #
+  # Masked secrets (set manually in GitLab UI — never in code):
+  #   GITLAB_TOKEN, COPILOT_GITHUB_TOKEN
+
+# CI log styling helpers (inspired by tools/reference_gitlab-ci.yml)
+.ci_log_init: &ci_log_init |
+  $ErrorActionPreference = 'Continue'   # tools like flake8/pytest exit non-zero on findings — not fatal
+  $E = [char]27
+  $C = "$($E)[36m"; $Y = "$($E)[33m"; $G = "$($E)[32m"
+  $R = "$($E)[31m"; $B = "$($E)[1m";  $D = "$($E)[2m"
+  $X = "$($E)[0m"
+  function Banner([string]$icon, [string]$title) {
+    $w = 64; $inner = "  $icon  $title"
+    $pad = ' ' * [Math]::Max(1, $w - $inner.Length)
+    Write-Host "`n$C╔$('═' * $w)╗$X"
+    Write-Host "$C║$X$B$inner$X$pad$C║$X"
+    Write-Host "$C╚$('═' * $w)╝$X`n"
+  }
+  function Info([string]$label, [string]$value) {
+    Write-Host "  $D$label$X  $value"
+  }
+  function Ok([string]$msg)   { Write-Host "$G  ✔ $msg$X" }
+  function Warn([string]$msg) { Write-Host "$Y  ⚠ $msg$X" }
+  function Fail([string]$msg) { Write-Host "$R  ✘ $msg$X" }
+  function SectionStart([string]$name, [string]$title, [bool]$collapsed = $true) {
+    $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    $c = if ($collapsed) { "[collapsed=true]" } else { "" }
+    Write-Host "$($E)[0Ksection_start:$($ts):$name$c`r$($E)[0K$D  $title$X"
+  }
+  function SectionEnd([string]$name) {
+    $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    Write-Host "$($E)[0Ksection_end:$($ts):$name`r$($E)[0K"
+  }
+
+  $pyV         = & $env:PYTHON_BIN --version 2>&1
+  $pipV        = (& $env:PYTHON_BIN -m pip --version 2>&1) -replace ' from.*',''
+  $commitMsg   = (git log -1 --pretty="%s" 2>$null) -replace '"',''
+  $commitAuth  = (git log -1 --pretty="%an" 2>$null)
+  $branchName  = if ($env:CI_MERGE_REQUEST_SOURCE_BRANCH_NAME) { $env:CI_MERGE_REQUEST_SOURCE_BRANCH_NAME } else { $env:CI_COMMIT_BRANCH }
+  $BAR = '─' * 72
+  function BoxLine([string]$content) { Write-Host "$C  │$X  $content" }
+  function BoxWrap([string]$label, [string]$value, [int]$max = 58) {
+    if ($value.Length -le $max) { BoxLine "$label  $value" }
+    else { BoxLine "$label  $($value.Substring(0,$max))…"; BoxLine "$(' ' * $label.Length)  …$($value.Substring($max))" }
+  }
+  Write-Host ""
+  Write-Host "$C  ┌$BAR┐$X"
+  BoxLine "🔁 Pipeline   #$env:CI_PIPELINE_ID   source=$env:CI_PIPELINE_SOURCE"
+  BoxLine "🌿 Branch     $branchName"
+  if ($env:CI_MERGE_REQUEST_IID) {
+    BoxWrap "🔀 MR        " "!$env:CI_MERGE_REQUEST_IID  →  $env:CI_MERGE_REQUEST_TITLE"
+  }
+  Write-Host "$C  ├$BAR┤$X"
+  BoxLine "📌 Commit     $env:CI_COMMIT_SHORT_SHA   ($commitAuth)"
+  BoxWrap "             " "`"$commitMsg`"" 58
+  Write-Host "$C  ├$BAR┤$X"
+  BoxLine "🐍 Python     $pyV  |  $pipV"
+  BoxLine "🖥  Runner     $env:CI_RUNNER_DESCRIPTION"
+  BoxLine "⚙  Job        $env:CI_JOB_NAME  (#$env:CI_JOB_ID)"
+  Write-Host "$C  └$BAR┘$X"
+  Write-Host ""
+
+.pip_section_start: &pip_section_start |
+  $E = [char]27
+  $D = "$($E)[2m"
+  $X = "$($E)[0m"
+  $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+  Write-Host "$($E)[0Ksection_start:$($ts):pip_setup[collapsed=true]`r$($E)[0K$D  📦 pip install (click to expand)$X"
+
+.pip_section_end: &pip_section_end |
+  $E = [char]27
+  $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+  Write-Host "$($E)[0Ksection_end:$($ts):pip_setup`r$($E)[0K"
+
+workspace_cleanup:
+  stage: prepare
+  rules: *agent_rules
+  allow_failure: false
+  script:
+    - *ci_log_init
+    - Banner "🧹" "Workspace Cleanup (pipeline start)"
+    - |
+      $toClean = @(
+        'backend\reports\security_scanner.md',
+        'backend\reports\code_reviewer.md',
+        'backend\reports\test_coverage.md',
+        'backend\reports\dependency_audit.md',
+        'backend\reports\license_compliance.md',
+        'backend\reports\documentation.md',
+        'backend\reports\code_explainer.md',
+        'backend\reports\flutter_analyzer.md',
+        'backend\reports\flutter_coverage.md',
+        'backend\reports\cicd_diagnosis.md',
+        'backend\reports\pipeline_report.md',
+        'backend\reports\security_scanner.html',
+        'backend\reports\code_reviewer.html',
+        'backend\reports\test_coverage.html',
+        'backend\reports\dependency_audit.html',
+        'backend\reports\license_compliance.html',
+        'backend\reports\documentation.html',
+        'backend\reports\code_explainer.html',
+        'backend\reports\flutter_analyzer.html',
+        'backend\reports\flutter_coverage.html',
+        'backend\reports\cicd_diagnosis.html',
+        'backend\reports\pipeline_report.html',
+        'backend\reports\pipeline_executive_report.html'
+      )
+      foreach ($item in $toClean) {
+        if (Test-Path $item) {
+          Remove-Item -Recurse -Force $item
+          Write-Host "  🧹 cleaned: $item"
+        }
+      }
+      Get-ChildItem -Recurse -Directory -Filter '__pycache__' | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+      Write-Host "  ✔ cleanup completed (ci_inputs preserved)"
+
+lint_python_flake8:
+  stage: lint
+  rules: *agent_rules
+  allow_failure: true
+  script:
+    - *ci_log_init
+    - Banner "🔍" "Flake8 - Python Static Analysis (Full Report)"
+    - Set-Location backend
+    - New-Item -ItemType Directory -Force -Path reports | Out-Null
+    - '"# flake8 not run" | Out-File reports\flake8_report.txt -Encoding utf8'
+    - '"[]" | Out-File reports\gl-code-quality-report.json -Encoding utf8'
+    - *pip_section_start
+    - '& $env:PYTHON_BIN -m pip install flake8 flake8-html flake8-gl-codeclimate --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+    - Info "Step" "Pass 1/3 — Plain text + statistics (flake8_report.txt)"
+    - SectionStart "flake8_text" "🔍 Flake8 violations (click to expand)"
+    - '& $env:PYTHON_BIN -m flake8 . --max-line-length=$env:FLAKE8_MAX_LINE_LENGTH --exclude=.venv,gen,__pycache__ --statistics --count --tee --output-file reports\flake8_report.txt; $flake8Exit = $LASTEXITCODE'
+    - SectionEnd "flake8_text"
+    - Info "Step" "Pass 2/3 — GitLab Code Quality JSON (gl-code-quality-report.json)"
+    - '& $env:PYTHON_BIN -m flake8 . --max-line-length=$env:FLAKE8_MAX_LINE_LENGTH --exclude=.venv,gen,__pycache__ --exit-zero --format gl-codeclimate --output-file reports\gl-code-quality-report.json'
+    - Info "Step" "Pass 3/3 — HTML annotated source report (flake8_html/index.html)"
+    - SectionStart "flake8_html" "🌐 Generating HTML report (click to expand)"
+    - '& $env:PYTHON_BIN -m flake8 . --max-line-length=$env:FLAKE8_MAX_LINE_LENGTH --exclude=.venv,gen,__pycache__ --exit-zero --format=html --htmldir=reports\flake8_html'
+    - 'if (-not (Test-Path reports\flake8_html\index.html)) { New-Item -ItemType Directory -Force -Path reports\flake8_html | Out-Null; Set-Content reports\flake8_html\index.html "<html><body><p>No flake8 violations.</p></body></html>" -Encoding utf8 }'
+    - SectionEnd "flake8_html"
+    - Info "Step" "Generating JUnit XML from violations (flake8_junit.xml)"
+    - |
+      $junitOut = & $env:PYTHON_BIN ..\tools\report_converters\flake8_to_junit.py reports\flake8_report.txt reports\flake8_junit.xml 2>&1
+      Write-Host "  [junit] $junitOut"
+      if (-not (Test-Path reports\flake8_junit.xml)) {
+        Write-Host "  [junit] script did not produce output — writing empty JUnit fallback"
+        Set-Content reports\flake8_junit.xml '<?xml version=''1.0'' encoding=''utf-8''?><testsuites><testsuite name="flake8" tests="0" failures="0"/></testsuites>' -Encoding utf8
+      }
+    - |
+      # ── KPI Block ─────────────────────────────────────────────────────
+      $total  = (Select-String '^\d+ violation' reports\flake8_report.txt -ErrorAction SilentlyContinue | Select-Object -Last 1).Line
+      $errors = (Select-String '^E\d+' reports\flake8_report.txt -ErrorAction SilentlyContinue).Count
+      $warns  = (Select-String '^W\d+' reports\flake8_report.txt -ErrorAction SilentlyContinue).Count
+      $jsonSz = if (Test-Path reports\gl-code-quality-report.json) { [math]::Round((Get-Item reports\gl-code-quality-report.json).Length/1KB,1) } else { '?' }
+      $htmlOk = Test-Path reports\flake8_html\index.html
+      $BAR = '─' * 64
+      Write-Host ""
+      Write-Host "$C  ┌─ Flake8 KPIs $BAR┐$X"
+      Write-Host "$C  │$X  Total violations : $($total -replace '^\s*','')"
+      Write-Host "$C  │$X  Error codes (E*) : $errors  |  Warning codes (W*) : $warns"
+      Write-Host "$C  │$X  Code Quality JSON: $jsonSz KB  →  artifact gl-code-quality-report.json"
+      Write-Host "$C  │$X  HTML report      : $(if ($htmlOk) { '✅ reports/flake8_html/index.html' } else { '❌ not generated' })"
+      Write-Host "$C  │$X  JUnit XML        : reports/flake8_junit.xml  →  Tests tab in MR"
+      Write-Host "$C  └$BAR┘$X"
+      Write-Host ""
+    - 'if ($flake8Exit -ne 0) { Warn "Flake8: violations found — see artifacts for details" } else { Ok "Flake8: no violations" }'
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/flake8_report.txt
+      - backend/reports/flake8_html/
+      - backend/reports/gl-code-quality-report.json
+      - backend/reports/flake8_junit.xml
+    reports:
+      codequality: backend/reports/gl-code-quality-report.json
+      junit: backend/reports/flake8_junit.xml
+
+lint_python_black:
+  stage: lint
+  rules: *agent_rules
+  allow_failure: true
+  script:
+    - *ci_log_init
+    - Banner "🖤" "Black - Formatting Check"
+    - *pip_section_start
+    - Set-Location backend
+    - '& $env:PYTHON_BIN -m pip install black --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+    - Info "Step" "Checking Python formatting (diff → artifact black_diff.txt)"
+    - SectionStart "black_diff" "🖤 Collecting full Black diff into artifact"
+    - '& $env:PYTHON_BIN -m black --check --diff --verbose . --exclude "(\.venv|gen|__pycache__)" > black_diff.txt 2>&1; $blackExit = $LASTEXITCODE'
+    - '$lineCount = (Get-Content black_diff.txt -ErrorAction SilentlyContinue | Measure-Object -Line).Lines'
+    - SectionEnd "black_diff"
+    - 'if ($blackExit -ne 0) { SectionStart "black_diff_preview" "🖤 Black diff preview (first 120 lines, click to expand)"; Get-Content black_diff.txt -TotalCount 120 | Write-Host; if ($lineCount -gt 120) { Warn "Black preview truncated: $($lineCount - 120) additional lines available in artifact black_diff.txt" }; SectionEnd "black_diff_preview" }'
+    - |
+      # ── KPI Block ─────────────────────────────────────────────────────
+      $content     = Get-Content black_diff.txt -ErrorAction SilentlyContinue
+      $filesNeed   = ($content | Select-String '^would reformat|^reformatted').Count
+      $filesOk     = ($content | Select-String '^All done|left unchanged').Count
+      $addedLines  = ($content | Select-String '^\+(?!\+\+)').Count
+      $removedLines= ($content | Select-String '^-(?!--)').Count
+      $summary     = $content | Select-String '\d+ file' | Select-Object -Last 1
+      $BAR = '─' * 64
+      Write-Host ""
+      Write-Host "$C  ┌─ Black KPIs $BAR┐$X"
+      Write-Host "$C  │$X  Files needing reformatting : $filesNeed"
+      Write-Host "$C  │$X  Lines to add / remove      : +$addedLines / -$removedLines"
+      Write-Host "$C  │$X  Summary                    : $($summary.Line -replace '^\s*','')"
+      Write-Host "$C  │$X  Full diff                  : artifact black_diff.txt ($lineCount lines)"
+      Write-Host "$C  └$BAR┘$X"
+      Write-Host ""
+    - 'if ($blackExit -ne 0) { Warn "Black: $filesNeed file(s) need reformatting — download artifact black_diff.txt for full details" } else { Ok "Black: all files formatted correctly" }'
+    - 'exit $blackExit'
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/black_diff.txt
+
+lint_flutter_analyze:
+  stage: lint
+  rules: *agent_rules
+  allow_failure: true
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - flutter_app/flutter_analyze.txt
+      - flutter_app/flutter_codequality.json
+    reports:
+      codequality: flutter_app/flutter_codequality.json
+  script:
+    - *ci_log_init
+    - Banner "🧭" "Flutter Analyze (Full Report)"
+    - git config --global --add safe.directory $env:FLUTTER_SAFE_DIR
+    - Set-Location flutter_app
+    - '"[flutter analyze] Job started at $(Get-Date -Format o)" | Out-File -FilePath flutter_analyze.txt -Encoding utf8'
+    - Info "Step" "Running Dart static analysis"
+    - SectionStart "flutter_pub_get" "📦 flutter pub get attempts (click to expand)"
+    - '$pubGetOk = $false; foreach ($cfg in @(@{p="";l="offline";o="--offline"},@{p="";l="direct";o=""},@{p=$env:HTTP_PROXY;l="proxy";o=""})) { $env:http_proxy=$cfg.p; $env:https_proxy=$cfg.p; Write-Host "[flutter analyze] pub get attempt ($($cfg.l))"; & $env:FLUTTER_BIN pub get $cfg.o; if ($LASTEXITCODE -eq 0) { $pubGetOk=$true; break } }; if (-not $pubGetOk) { throw "[flutter analyze] pub get failed on all attempts" }'
+    - SectionEnd "flutter_pub_get"
+    - $env:http_proxy  = ""
+    - $env:https_proxy = ""
+    - SectionStart "flutter_analyze_run" "🔎 flutter analyze output (click to expand)"
+    - '$output = (& $env:FLUTTER_BIN analyze --no-fatal-warnings 2>&1); $output | Out-File -FilePath flutter_analyze.txt -Encoding utf8 -Append; $output | Write-Host'
+    - SectionEnd "flutter_analyze_run"
+    - Info "Step" "Generating GitLab Code Quality JSON (flutter_codequality.json)"
+    - '& $env:PYTHON_BIN ..\tools\report_converters\flutter_to_codequality.py flutter_analyze.txt flutter_codequality.json'
+    - |
+      # ── KPI Block ─────────────────────────────────────────────────────
+      $content  = Get-Content flutter_analyze.txt -ErrorAction SilentlyContinue
+      $errors   = ($content | Select-String '^\s+error\b').Count
+      $warnings = ($content | Select-String '^\s+warning\b').Count
+      $infos    = ($content | Select-String '^\s+info\b').Count
+      $total    = $errors + $warnings + $infos
+      $summary  = $content | Select-String 'issue' | Select-Object -Last 1
+      $jsonSz   = if (Test-Path flutter_codequality.json) { [math]::Round((Get-Item flutter_codequality.json).Length/1KB,1) } else { '?' }
+      $BAR = '─' * 64
+      Write-Host ""
+      Write-Host "$C  ┌─ Flutter Analyze KPIs $BAR┐$X"
+      Write-Host "$C  │$X  Errors   : $errors"
+      Write-Host "$C  │$X  Warnings : $warnings"
+      Write-Host "$C  │$X  Infos    : $infos"
+      Write-Host "$C  │$X  Total    : $total  →  $($summary.Line -replace '^\s*','')"
+      Write-Host "$C  │$X  Code Quality JSON : $jsonSz KB  →  artifact flutter_codequality.json"
+      Write-Host "$C  └$BAR┘$X"
+      Write-Host ""
+    - Ok "Flutter analyze completed"
+
+lint_python_pylint:
+  stage: lint
+  rules: *agent_rules
+  allow_failure: true
+  script:
+    - *ci_log_init
+    - Banner "🐍" "Pylint - Python Code Quality Score"
+    - Set-Location backend
+    - New-Item -ItemType Directory -Force -Path reports | Out-Null
+    - '"# pylint not run" | Out-File reports\pylint_report.txt -Encoding utf8'
+    - '"[]" | Out-File reports\pylint_codequality.json -Encoding utf8'
+    - *pip_section_start
+    - '& $env:PYTHON_BIN -m pip install pylint pylint-gitlab --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+    - Info "Step" "Pass 1/2 — Text report + score (pylint_report.txt)"
+    - SectionStart "pylint_text" "🐍 Pylint output (click to expand)"
+    - '& $env:PYTHON_BIN -m pylint . --ignore=.venv,gen,__pycache__ --output-format=text --reports=y > reports\pylint_report.txt 2>&1; $pylintExit = $LASTEXITCODE'
+    - 'if (-not (Test-Path reports\pylint_report.txt)) { "# pylint_report.txt — no output" | Out-File reports\pylint_report.txt -Encoding utf8 }'
+    - 'Get-Content reports\pylint_report.txt -TotalCount 60 | Write-Host'
+    - SectionEnd "pylint_text"
+    - Info "Step" "Pass 2/2 — GitLab Code Quality JSON (pylint_codequality.json)"
+    - '& $env:PYTHON_BIN -m pylint . --ignore=.venv,gen,__pycache__ --output-format=pylint_gitlab.GitlabCodeClimateReporter --output=reports\pylint_codequality.json; $null = $LASTEXITCODE'
+    - 'if (-not (Test-Path reports\pylint_codequality.json)) { "[]" | Out-File reports\pylint_codequality.json -Encoding utf8 }'
+    - |
+      # ── KPI Block ─────────────────────────────────────────────────────
+      $content  = Get-Content reports\pylint_report.txt -ErrorAction SilentlyContinue
+      $score    = ($content | Select-String 'rated at').Line -replace '.*rated at\s*','' -replace '/.*',''
+      $conv     = ($content | Select-String '^C:').Count
+      $refact   = ($content | Select-String '^R:').Count
+      $warn     = ($content | Select-String '^W:').Count
+      $err      = ($content | Select-String '^E:').Count
+      $fatal    = ($content | Select-String '^F:').Count
+      $issueCount = (Get-Content reports\pylint_codequality.json -ErrorAction SilentlyContinue | ConvertFrom-Json -ErrorAction SilentlyContinue).Count
+      $BAR = '─' * 64
+      Write-Host ""
+      Write-Host "$C  ┌─ Pylint KPIs $BAR┐$X"
+      Write-Host "$C  │$X  Score        : $score / 10.00"
+      Write-Host "$C  │$X  Convention   : $conv   Refactor : $refact   Warning : $warn"
+      Write-Host "$C  │$X  Error        : $err    Fatal    : $fatal"
+      Write-Host "$C  │$X  Code Quality : $issueCount issues → artifact pylint_codequality.json"
+      Write-Host "$C  └$BAR┘$X"
+      Write-Host ""
+    - 'if ($pylintExit -band 32) { Fail "Pylint: usage/config error (exit $pylintExit)" } elseif ($pylintExit -band 1) { Fail "Pylint: fatal message issued (exit $pylintExit)" } elseif ($pylintExit -ne 0) { Warn "Pylint: issues found (exit $pylintExit) — score $score/10.00" } else { Ok "Pylint: perfect score 10.00/10.00" }'
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/pylint_report.txt
+      - backend/reports/pylint_codequality.json
+    reports:
+      codequality: backend/reports/pylint_codequality.json
+
+lint_python_mypy:
+  stage: lint
+  rules: *agent_rules
+  allow_failure: true
+  script:
+    - *ci_log_init
+    - Banner "🔬" "Mypy - Python Type Checking"
+    - Set-Location backend
+    - New-Item -ItemType Directory -Force -Path reports | Out-Null
+    - '"# mypy not run" | Out-File reports\mypy_report.txt -Encoding utf8'
+    - '"[]" | Out-File reports\mypy_codequality.json -Encoding utf8'
+    - *pip_section_start
+    - '& $env:PYTHON_BIN -m pip install mypy --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+    - Info "Step" "Running mypy type checker (mypy_report.txt)"
+    - SectionStart "mypy_output" "🔬 Mypy output (click to expand)"
+    - '& $env:PYTHON_BIN -m mypy . --ignore-missing-imports --no-error-summary --exclude "(\.venv|gen|__pycache__)" > reports\mypy_report.txt 2>&1; $mypyExit = $LASTEXITCODE'
+    - 'if (-not (Test-Path reports\mypy_report.txt)) { "# mypy_report.txt — no output" | Out-File reports\mypy_report.txt -Encoding utf8 }'
+    - 'Get-Content reports\mypy_report.txt -TotalCount 60 | Write-Host'
+    - SectionEnd "mypy_output"
+    - Info "Step" "Generating GitLab Code Quality JSON (mypy_codequality.json)"
+    - '& $env:PYTHON_BIN ..\tools\report_converters\mypy_to_codequality.py reports\mypy_report.txt reports\mypy_codequality.json'
+    - |
+      # ── KPI Block ─────────────────────────────────────────────────────
+      $content  = Get-Content reports\mypy_report.txt -ErrorAction SilentlyContinue
+      $errors   = ($content | Select-String ': error:').Count
+      $warnings = ($content | Select-String ': warning:').Count
+      $notes    = ($content | Select-String ': note:').Count
+      $summary  = $content | Select-String 'Found \d+|Success' | Select-Object -Last 1
+      $BAR = '─' * 64
+      Write-Host ""
+      Write-Host "$C  ┌─ Mypy KPIs $BAR┐$X"
+      Write-Host "$C  │$X  Type errors  : $errors"
+      Write-Host "$C  │$X  Warnings     : $warnings"
+      Write-Host "$C  │$X  Notes        : $notes"
+      Write-Host "$C  │$X  Summary      : $($summary.Line -replace '^\s*','')"
+      Write-Host "$C  └$BAR┘$X"
+      Write-Host ""
+    - 'if ($mypyExit -ne 0) { Warn "Mypy: $errors type error(s) found" } else { Ok "Mypy: no type errors" }'
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/mypy_report.txt
+      - backend/reports/mypy_codequality.json
+    reports:
+      codequality: backend/reports/mypy_codequality.json
+
+lint_python_radon:
+  stage: lint
+  rules: *agent_rules
+  allow_failure: true
+  script:
+    - *ci_log_init
+    - Banner "📊" "Radon - Complexity & Maintainability Metrics"
+    - Set-Location backend
+    - New-Item -ItemType Directory -Force -Path reports | Out-Null
+    - '"{" + "}" | Out-File reports\radon_cc.json -Encoding utf8'
+    - '"{" + "}" | Out-File reports\radon_mi.json -Encoding utf8'
+    - '"{" + "}" | Out-File reports\radon_hal.json -Encoding utf8'
+    - *pip_section_start
+    - '& $env:PYTHON_BIN -m pip install radon --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+    - Info "Step" "Cyclomatic Complexity (radon_cc.json)"
+    - SectionStart "radon_cc" "📐 Cyclomatic Complexity output (click to expand)"
+    - '& $env:PYTHON_BIN -m radon cc . --json --exclude ".venv,gen,__pycache__" > reports\radon_cc.json 2>&1'
+    - SectionEnd "radon_cc"
+    - Info "Step" "Maintainability Index (radon_mi.json)"
+    - SectionStart "radon_mi" "🔧 Maintainability Index output (click to expand)"
+    - '& $env:PYTHON_BIN -m radon mi . --json --exclude ".venv,gen,__pycache__" > reports\radon_mi.json 2>&1'
+    - SectionEnd "radon_mi"
+    - Info "Step" "Halstead Metrics (radon_hal.json)"
+    - SectionStart "radon_hal" "📏 Halstead Metrics output (click to expand)"
+    - '& $env:PYTHON_BIN -m radon hal . --json --exclude ".venv,gen,__pycache__" > reports\radon_hal.json 2>&1'
+    - SectionEnd "radon_hal"
+    - Info "Step" "Parsing metrics for KPI block"
+    - '$radonOutput = & $env:PYTHON_BIN ..\tools\report_converters\radon_metrics.py reports\radon_cc.json reports\radon_mi.json'
+    - '$radonOutput | Write-Host'
+    - |
+      # ── KPI Block ─────────────────────────────────────────────────────
+      $ccLine  = $radonOutput | Select-String 'CC_STATS:'
+      $miLine  = $radonOutput | Select-String 'MI_STATS:'
+      $BAR = '─' * 64
+      Write-Host ""
+      Write-Host "$C  ┌─ Radon KPIs $BAR┐$X"
+      Write-Host "$C  │$X  Cyclomatic Complexity : $($ccLine.Line -replace 'CC_STATS:\s*','')"
+      Write-Host "$C  │$X  Maintainability Index : $($miLine.Line -replace 'MI_STATS:\s*','')"
+      Write-Host "$C  │$X  Ranks: A=simple B=moderate C=complex D=unstable E=alarming F=very alarming"
+      Write-Host "$C  │$X  Artifacts : radon_cc.json  radon_mi.json  radon_hal.json"
+      Write-Host "$C  └$BAR┘$X"
+      Write-Host ""
+    - Ok "Radon metrics complete — see artifacts for full JSON"
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/radon_cc.json
+      - backend/reports/radon_mi.json
+      - backend/reports/radon_hal.json
+
+test_backend:
+  stage: test
+  rules: *agent_rules
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/reports/coverage.xml
+      junit: backend/reports/pytest_junit.xml
+      dotenv: backend/reports/test_env.dotenv
+  script:
+    - *ci_log_init
+    - Banner "🧪" "Backend Tests (pytest)"
+    - Set-Location backend
+    - New-Item -ItemType Directory -Force -Path reports | Out-Null
+    - *pip_section_start
+    - '& $env:PYTHON_BIN -m pip install -r requirements.txt --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - '& $env:PYTHON_BIN -m pip install ujson5 pytest-html --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - '& $env:PYTHON_BIN -m pip install "..\$env:NG_SDK_WHL" --no-deps --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+    - Info "Step" "Running backend unit tests with full reporting"
+    - SectionStart "pytest_run" "🧪 pytest output (click to expand)"
+    - '$pytestOut = (& $env:PYTHON_BIN -m pytest -v --tb=short --durations=10 --cov=. --cov-branch --cov-report=term-missing:skip-covered --cov-report=xml:reports/coverage.xml --cov-report=html:reports/coverage_html --cov-report=json:reports/coverage.json --junitxml=reports/pytest_junit.xml --html=reports/pytest_report.html --self-contained-html 2>&1); $pytestExit = $LASTEXITCODE; $pytestOut | Write-Host; $pytestOut | Out-File reports\pytest_output.txt -Encoding utf8'
+    - SectionEnd "pytest_run"
+    - Info "Step" "Per-module coverage breakdown"
+    - SectionStart "coverage_breakdown" "📊 Coverage per module (click to expand)"
+    - '$covBreakdown = & $env:PYTHON_BIN ..\tools\report_converters\pytest_coverage_breakdown.py reports\coverage.json $env:BACKEND_COV_THRESHOLD; $covBreakdown | Write-Host'
+    - SectionEnd "coverage_breakdown"
+    - |
+      # ── KPI Block ─────────────────────────────────────────────────────
+      $BAR = '─' * 64
+      $junitPath = 'reports\pytest_junit.xml'
+      if (Test-Path $junitPath) {
+        [xml]$junit = Get-Content $junitPath -ErrorAction SilentlyContinue
+        $ts = if ($junit.testsuites -and $junit.testsuites.testsuite) { $junit.testsuites.testsuite } else { $junit.testsuite }
+        if ($ts -is [array]) { $ts = $ts[0] }
+        $total   = [int]$ts.tests
+        $failed  = [int]$ts.failures
+        $errored = [int]$ts.errors
+        $skipped = [int]$ts.skipped
+        $passed  = $total - $failed - $errored - $skipped
+        $duration = [math]::Round([float]$ts.time, 2)
+      } else { $total=0; $passed=0; $failed=0; $errored=0; $skipped=0; $duration=0 }
+      $covPct = '?'
+      if (Test-Path 'reports\coverage.json') {
+        try { $cov = Get-Content 'reports\coverage.json' -Raw | ConvertFrom-Json; $covPct = [math]::Round($cov.totals.percent_covered, 2) } catch {}
+      }
+      $covTotalLine = ($covBreakdown | Select-String 'COVERAGE_TOTAL:' | Select-Object -First 1)
+      $covLowLine   = ($covBreakdown | Select-String 'COVERAGE_LOW:'   | Select-Object -First 1)
+      $slowTests = ((Get-Content 'reports\pytest_output.txt' -ErrorAction SilentlyContinue | Select-String '^\d+\.\d+s (call|setup)' | Select-Object -First 3 | ForEach-Object { $_.Line.Trim() }) -join '  |  ')
+      Write-Host ""
+      Write-Host "$C  ┌─ Pytest KPIs $BAR┐$X"
+      Write-Host "$C  │$X  Tests    : total=$total  passed=$passed  failed=$failed  error=$errored  skipped=$skipped"
+      Write-Host "$C  │$X  Duration : ${duration}s"
+      Write-Host "$C  │$X  Coverage : $covPct%  $($covTotalLine.Line -replace 'COVERAGE_TOTAL:\s*','')"
+      Write-Host "$C  │$X  Low cov  : $($covLowLine.Line -replace 'COVERAGE_LOW:\s*','')"
+      Write-Host "$C  │$X  Slowest  : $(if ($slowTests) { $slowTests } else { 'N/A' })"
+      Write-Host "$C  │$X  JUnit    : reports/pytest_junit.xml  →  Tests tab in MR"
+      Write-Host "$C  │$X  HTML     : reports/pytest_report.html  (self-contained)"
+      Write-Host "$C  │$X  Cov HTML : reports/coverage_html/index.html"
+      Write-Host "$C  │$X  JSON cov : reports/coverage.json  (line-level detail)"
+      Write-Host "$C  └$BAR┘$X"
+      Write-Host ""
+    - |
+      $dotenvPath = 'reports\test_env.dotenv'
+      "BACKEND_COVERAGE=$covPct" | Out-File $dotenvPath -Encoding utf8
+      "BACKEND_TESTS_TOTAL=$total" | Add-Content $dotenvPath
+      "BACKEND_TESTS_PASSED=$passed" | Add-Content $dotenvPath
+      "BACKEND_TESTS_FAILED=$failed" | Add-Content $dotenvPath
+    - 'if ($pytestExit -ne 0) { Fail "pytest: $failed test(s) failed / $errored error(s)" } else { Ok "pytest: $total/$total passed — coverage $covPct%" }'
+    - 'exit $pytestExit'
+
+test_frontend:
+  stage: test
+  rules: *agent_rules
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - flutter_app/coverage/
+      - flutter_app/flutter_test_machine.jsonl
+      - flutter_app/flutter_test_junit.xml
+      - flutter_app/flutter_test_env.dotenv
+    reports:
+      junit: flutter_app/flutter_test_junit.xml
+      dotenv: flutter_app/flutter_test_env.dotenv
+  script:
+    - *ci_log_init
+    - Banner "🎯" "Frontend Tests (Flutter)"
+    - git config --global --add safe.directory $env:FLUTTER_SAFE_DIR
+    - Set-Location flutter_app
+    - Info "Step" "Running Flutter unit tests with full reporting"
+    - SectionStart "flutter_test_run" "🧪 flutter test run — JSON reporter (see KPI block below for summary)"
+    - 'Write-Host "[flutter test] Attempting flutter test --no-pub (no download)"; & $env:FLUTTER_BIN test --no-pub --coverage --concurrency=4 --reporter json 2>&1 | Out-File flutter_test_machine.jsonl -Encoding utf8; $flutterTestExit = $LASTEXITCODE'
+    - |
+      if ($flutterTestExit -ne 0) {
+        Write-Host "[flutter test] --no-pub failed (exit $flutterTestExit), falling back to pub get..."
+        $pubGetOk = $false
+        foreach ($cfg in @(@{p="";l="offline";o="--offline"},@{p="";l="direct";o=""},@{p=$env:HTTP_PROXY;l="proxy";o=""})) {
+          $env:http_proxy=$cfg.p; $env:https_proxy=$cfg.p
+          Write-Host "[flutter test] pub get attempt ($($cfg.l))"
+          & $env:FLUTTER_BIN pub get $cfg.o
+          if ($LASTEXITCODE -eq 0) { $pubGetOk=$true; break }
+        }
+        if (-not $pubGetOk) { throw "[flutter test] pub get failed on all attempts" }
+        $env:http_proxy = ""; $env:https_proxy = ""
+        Write-Host "[flutter test] Retrying flutter test --no-pub after pub get..."
+        & $env:FLUTTER_BIN test --no-pub --coverage --concurrency=4 --reporter json 2>&1 | Out-File flutter_test_machine.jsonl -Encoding utf8
+        $flutterTestExit = $LASTEXITCODE
+      }
+    - SectionEnd "flutter_test_run"
+    - 'if (Test-Path $env:JGENHTML_BIN) { Write-Host "[jgenhtml] Generating HTML coverage..."; & $env:JGENHTML_BIN .\coverage\lcov.info -o coverage\html } else { Write-Host "[jgenhtml] Skipped: $env:JGENHTML_BIN not found on runner (lcov.info still uploaded as artifact)" }'
+    - Info "Step" "Generating JUnit XML from test results (flutter_test_junit.xml)"
+    - '$flutterKpi = (& $env:PYTHON_BIN ..\tools\report_converters\flutter_test_to_junit.py flutter_test_machine.jsonl flutter_test_junit.xml coverage\lcov.info); $flutterKpi | Write-Host'
+    - |
+      # ── KPI Block ─────────────────────────────────────────────────────
+      $testLine = $flutterKpi | Select-String 'TEST_STATS:'
+      $lcovLine = $flutterKpi | Select-String 'LCOV_STATS:'
+      $BAR = '─' * 64
+      Write-Host ""
+      Write-Host "$C  ┌─ Flutter Test KPIs $BAR┐$X"
+      Write-Host "$C  │$X  Tests    : $($testLine.Line -replace 'TEST_STATS:\s*','')"
+      Write-Host "$C  │$X  Coverage : $($lcovLine.Line -replace 'LCOV_STATS:\s*','')"
+      Write-Host "$C  │$X  JUnit    : flutter_test_junit.xml  →  Tests tab in MR"
+      Write-Host "$C  │$X  HTML cov : coverage/html/index.html  (lcov HTML)"
+      Write-Host "$C  │$X  Raw data : flutter_test_machine.jsonl  (Dart test protocol)"
+      Write-Host "$C  └$BAR┘$X"
+      Write-Host ""
+    - |
+      # ── Coverage Threshold + dotenv ──────────────────────────────────────
+      $lcovLine2 = ($flutterKpi | Select-String 'LCOV_STATS:' | Select-Object -First 1)
+      $flutterCovPct = '?'
+      if ($lcovLine2) {
+        $pctMatch = [regex]::Match($lcovLine2.Line, 'coverage=([\d.]+)%')
+        if ($pctMatch.Success) {
+          $flutterCovPct = $pctMatch.Groups[1].Value
+          $pctVal = [float]$flutterCovPct
+          if ($pctVal -lt [float]$env:FLUTTER_COV_THRESHOLD) { Write-Warning "[coverage] Flutter coverage ${flutterCovPct}% is below $env:FLUTTER_COV_THRESHOLD% threshold" }
+          else { Write-Host "[coverage] Flutter coverage ${flutterCovPct}% OK (>= $env:FLUTTER_COV_THRESHOLD%)" }
+        }
+      }
+      $testLine2 = ($flutterKpi | Select-String 'TEST_STATS:' | Select-Object -First 1)
+      $flutterTotal = if ($testLine2) { ([regex]::Match($testLine2.Line,'total=(\d+)')).Groups[1].Value } else { '?' }
+      $flutterPassed = if ($testLine2) { ([regex]::Match($testLine2.Line,'passed=(\d+)')).Groups[1].Value } else { '?' }
+      $flutterFailed = if ($testLine2) { ([regex]::Match($testLine2.Line,'failed=(\d+)')).Groups[1].Value } else { '?' }
+      "FLUTTER_COVERAGE=$flutterCovPct" | Out-File flutter_test_env.dotenv -Encoding utf8
+      "FLUTTER_TESTS_TOTAL=$flutterTotal" | Add-Content flutter_test_env.dotenv
+      "FLUTTER_TESTS_PASSED=$flutterPassed" | Add-Content flutter_test_env.dotenv
+      "FLUTTER_TESTS_FAILED=$flutterFailed" | Add-Content flutter_test_env.dotenv
+    - 'if ($flutterTestExit -ne 0) { Fail "Flutter test: failures detected — check flutter_test_machine.jsonl" } else { Ok "Flutter test: all tests passed" }'
+    - |
+      if (Test-Path coverage\html) {
+        Info "Step" "Zipping HTML coverage report (reduces artifact upload size)"
+        Compress-Archive -Path coverage\html\* -DestinationPath coverage\html_report.zip -Force
+        Remove-Item coverage\html -Recurse -Force
+        Ok "coverage/html → coverage/html_report.zip"
+      }
+    - 'exit $flutterTestExit'
+
+test_backend_mutation:
+  stage: test
+  rules: *agent_rules
+  tags:
+    - $RUNNER_TAG
+  allow_failure: true
+  when: manual
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/mutmut_report.txt
+      - backend/reports/mutmut_results.txt
+      - backend/.mutmut-cache/
+  script:
+    - *ci_log_init
+    - Banner "☢️" "Mutation Testing (mutmut) — manual / advisory"
+    - *pip_section_start
+    - Set-Location backend
+    - '& $env:PYTHON_BIN -m pip install mutmut --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+    - New-Item -ItemType Directory -Force -Path reports | Out-Null
+    - Info "Step" "Running mutmut on service/ directory"
+    - SectionStart "mutmut_run" "☢️ mutmut run output (click to expand)"
+    - '& $env:PYTHON_BIN -m mutmut run --paths-to-mutate service/ --tests-dir tests/ 2>&1 | Tee-Object reports\mutmut_report.txt; $mutmutExit = $LASTEXITCODE'
+    - SectionEnd "mutmut_run"
+    - '& $env:PYTHON_BIN -m mutmut results 2>&1 | Tee-Object reports\mutmut_results.txt'
+    - '$mutmutResults = Get-Content reports\mutmut_results.txt -ErrorAction SilentlyContinue'
+    - |
+      # ── Mutation KPI Block ────────────────────────────────────────────
+      $killed   = ($mutmutResults | Select-String '\bkilled\b'   -AllMatches).Matches.Count
+      $survived = ($mutmutResults | Select-String '\bsurvived\b' -AllMatches).Matches.Count
+      $total_mut = $killed + $survived
+      $score = if ($total_mut -gt 0) { [math]::Round(100.0 * $killed / $total_mut, 1) } else { 0 }
+      $BAR = '─' * 64
+      Write-Host ""
+      Write-Host "$C  ┌─ Mutmut KPIs $BAR┐$X"
+      Write-Host "$C  │$X  Mutants  : total=$total_mut  killed=$killed  survived=$survived"
+      Write-Host "$C  │$X  Score    : $score%  (higher = better test quality)"
+      Write-Host "$C  │$X  Report   : reports/mutmut_results.txt"
+      Write-Host "$C  │$X  Cache    : .mutmut-cache/  (re-run with --rerun-all for fresh scan)"
+      Write-Host "$C  └$BAR┘$X"
+      Write-Host ""
+    - 'Ok "Mutation testing complete — score: $score%  (killed=$killed survived=$survived)"'
+
+copilot-check:
+  stage: review
+  tags:
+    - $RUNNER_TAG
+  rules: *agent_rules
+  allow_failure: false
+  # Single gate between test/lint and all agents.
+  # allow_failure: false ensures agents do NOT start if copilot-check fails.
+  # Pulls artifacts from test_*, lint_flutter_analyze, lint_python_flake8, aggregates them into
+  # backend/reports/ci_inputs/ and re-exposes them so every downstream agent
+  # can rely solely on copilot-check (clean linear graph: lint+test -> copilot-check -> agents -> report).
+  needs:
+    - job: test_backend
+      artifacts: true
+    - job: test_frontend
+      artifacts: true
+    - job: lint_flutter_analyze
+      artifacts: true
+    - job: lint_python_flake8
+      artifacts: true
+    - job: lint_python_mypy
+      artifacts: true
+    - job: lint_python_pylint
+      artifacts: true
+    - job: lint_python_black
+      artifacts: true
+    - job: lint_python_radon
+      artifacts: true
+  dependencies:
+    - test_backend
+    - test_frontend
+    - lint_flutter_analyze
+    - lint_python_flake8
+    - lint_python_mypy
+    - lint_python_pylint
+    - lint_python_black
+    - lint_python_radon
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/ci_inputs/
+  script:
+    - *ci_log_init
+    - Banner "🤖" "Copilot Availability Check"
+    - *pip_section_start
+    - '& $env:PYTHON_BIN -m pip install -r $env:BACKEND_REQUIREMENTS --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+    - Info "Step" "Pre-flight checks (token · gh · copilot ext)"
+    - SectionStart "copilot_preflight" "🔍 Pre-flight checks (click to expand)"
+    - |
+      # Token check
+      if ($env:COPILOT_GITHUB_TOKEN) {
+        $len    = $env:COPILOT_GITHUB_TOKEN.Length
+        $prefix = $env:COPILOT_GITHUB_TOKEN.Substring(0, [Math]::Min(12, $len))
+        Write-Host "  COPILOT_GITHUB_TOKEN  SET (length=$len, prefix=$prefix...)"
+        if ($env:COPILOT_GITHUB_TOKEN.StartsWith('ghp_')) {
+          Write-Host "  WARN classic PAT detected (ghp_). Copilot requires fine-grained token or managed auth."
+        }
+      } else {
+        Write-Host "  COPILOT_GITHUB_TOKEN  NOT SET — Copilot SDK will be unavailable"
+      }
+      # GitLab token check (used by agents to post MR comments)
+      if ($env:GITLAB_TOKEN) {
+        $glen    = $env:GITLAB_TOKEN.Length
+        $gprefix = $env:GITLAB_TOKEN.Substring(0, [Math]::Min(10, $glen))
+        Write-Host "  GITLAB_TOKEN          SET (length=$glen, prefix=$gprefix...)"
+      } else {
+        Write-Host "  GITLAB_TOKEN          NOT SET — MR comment posting may fail (401)"
+      }
+      # Non-blocking API probe to classify access issues early
+      if ($env:GITLAB_TOKEN) {
+        try {
+          $hdr = @{ 'PRIVATE-TOKEN' = $env:GITLAB_TOKEN }
+          $u = Invoke-WebRequest -Uri "$env:CI_SERVER_URL/api/v4/user" -Headers $hdr -UseBasicParsing -TimeoutSec 20
+          Write-Host "  GitLab API /user      OK ($($u.StatusCode))"
+        } catch {
+          Write-Host "  GitLab API /user      FAIL ($($_.Exception.Message))"
+        }
+        try {
+          $hdr = @{ 'PRIVATE-TOKEN' = $env:GITLAB_TOKEN }
+          $p = Invoke-WebRequest -Uri "$env:CI_SERVER_URL/api/v4/projects/$env:CI_PROJECT_ID" -Headers $hdr -UseBasicParsing -TimeoutSec 20
+          Write-Host "  GitLab API /project   OK ($($p.StatusCode))"
+        } catch {
+          Write-Host "  GitLab API /project   FAIL ($($_.Exception.Message))"
+        }
+      }
+      # gh version
+      $ghVer = (gh version 2>&1 | Select-Object -First 1) -replace "`n",""
+      Write-Host "  gh version    $ghVer"
+      # copilot extension
+      $extVer = (gh copilot --version 2>&1 | Select-Object -First 1) -replace "`n",""
+      if ($LASTEXITCODE -eq 0) { Write-Host "  copilot ext   $extVer" } else { Write-Host "  copilot ext   NOT FOUND (gh copilot not installed)" }
+      $global:LASTEXITCODE = 0
+    - SectionEnd "copilot_preflight"
+    - Info "Step" "Running Copilot health check"
+    - Write-Host "  [SDK Test]"
+    - |
+      & $env:PYTHON_BIN -m agents.copilot_client
+      if ($LASTEXITCODE -eq 0) {
+        Write-Host "  ✅ Copilot SDK=available — agents will run in Layer 1 + Layer 2 (AI) mode"
+        $global:COPILOT_SDK_OK = $true
+      } else {
+        Write-Host "  ⚠ Copilot SDK=unavailable — agents will run in Layer 1 (regex) mode only"
+        $global:COPILOT_SDK_OK = $false
+      }
+      $global:LASTEXITCODE = 0
+    - 'Info "Copilot" ($(if ($global:COPILOT_SDK_OK) { "SDK available ✅" } else { "SDK unavailable — Layer 1 only ⚠" }))'
+    - Write-Host "  ✔ Copilot check complete"
+    - Info "Step" "Aggregating coverage/analyze/lint artifacts for downstream agents"
+    - SectionStart "copilot_artifacts" "📁 artifact aggregation (click to expand)"
+    - New-Item -ItemType Directory -Force -Path backend\reports\ci_inputs | Out-Null
+    - 'if (Test-Path backend\reports\coverage.xml)                   { Copy-Item backend\reports\coverage.xml                   backend\reports\ci_inputs\backend_coverage.xml -Force }        else { Write-Host "[copilot-check] WARN backend coverage.xml missing" }'
+    - 'if (Test-Path flutter_app\coverage\lcov.info)                 { Copy-Item flutter_app\coverage\lcov.info                 backend\reports\ci_inputs\lcov.info -Force }                   else { Write-Host "[copilot-check] WARN flutter lcov.info missing" }'
+    - 'if (Test-Path flutter_app\flutter_analyze.txt)                { Copy-Item flutter_app\flutter_analyze.txt                backend\reports\ci_inputs\flutter_analyze.txt -Force }          else { Write-Host "[copilot-check] WARN flutter_analyze.txt missing" }'
+    - 'if (Test-Path backend\reports\gl-code-quality-report.json)    { Copy-Item backend\reports\gl-code-quality-report.json    backend\reports\ci_inputs\flake8_codequality.json -Force }      else { Write-Host "[copilot-check] WARN flake8 codequality JSON missing" }'
+    - 'if (Test-Path backend\reports\flake8_report.txt)              { Copy-Item backend\reports\flake8_report.txt              backend\reports\ci_inputs\flake8_report.txt -Force }          else { Write-Host "[copilot-check] WARN flake8 report missing" }'
+    - 'if (Test-Path backend\reports\mypy_report.txt)                { Copy-Item backend\reports\mypy_report.txt                backend\reports\ci_inputs\mypy_report.txt -Force }            else { Write-Host "[copilot-check] WARN mypy report missing" }'
+    - 'if (Test-Path backend\reports\pylint_report.txt)              { Copy-Item backend\reports\pylint_report.txt              backend\reports\ci_inputs\pylint_report.txt -Force }          else { Write-Host "[copilot-check] WARN pylint report missing" }'
+    - 'if (Test-Path flutter_app\flutter_codequality.json)           { Copy-Item flutter_app\flutter_codequality.json           backend\reports\ci_inputs\flutter_codequality.json -Force }     else { Write-Host "[copilot-check] WARN flutter codequality JSON missing" }'
+    - 'if (Test-Path backend\black_diff.txt)                         { Copy-Item backend\black_diff.txt                         backend\reports\ci_inputs\black_diff.txt -Force }               else { Write-Host "[copilot-check] WARN black_diff.txt missing" }'
+    - 'if (Test-Path backend\reports\radon_cc.json)                  { Copy-Item backend\reports\radon_cc.json                  backend\reports\ci_inputs\radon_cc.json -Force }               else { Write-Host "[copilot-check] WARN radon_cc.json missing" }'
+    - 'if (Test-Path backend\reports\radon_mi.json)                  { Copy-Item backend\reports\radon_mi.json                  backend\reports\ci_inputs\radon_mi.json -Force }               else { Write-Host "[copilot-check] WARN radon_mi.json missing" }'
+    - |
+      Info "Inventory" "backend/reports/ci_inputs"
+      if (Test-Path backend\reports\ci_inputs) {
+        Get-ChildItem backend\reports\ci_inputs -File | Select-Object Name, Length | Format-Table -AutoSize
+      } else {
+        Write-Host "[copilot-check] WARN ci_inputs directory missing"
+      }
+    - SectionEnd "copilot_artifacts"
+    - Ok "Copilot check completed"
+
+.agent_base:
+  stage: review
+  resource_group: review-agents-serial
+  tags:
+    - $RUNNER_TAG
+  rules: *agent_rules
+  allow_failure: true
+  needs:
+    - job: copilot-check
+      optional: false
+      artifacts: true
+  dependencies:
+    - copilot-check
+  before_script:
+    - |
+      $ErrorActionPreference = 'Continue'   # agents exit non-zero on findings — not fatal
+      Write-Host "  🧹 review-stage cleanup skipped (handled by workspace_cleanup)"
+      if (Test-Path backend\reports\ci_inputs) {
+        Write-Host "  📁 ci_inputs inventory:"
+        Get-ChildItem backend\reports\ci_inputs -File | Select-Object Name, Length | Format-Table -AutoSize
+      } else {
+        Write-Host "  ⚠ ci_inputs directory missing before agent start"
+      }
+    - *ci_log_init
+    - *pip_section_start
+    - '& $env:PYTHON_BIN -m pip install httpx pip-audit pip-licenses --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - '& $env:PYTHON_BIN -m pip install -r $env:BACKEND_REQUIREMENTS --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - '& $env:PYTHON_BIN -m pip install ujson5 --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - '& $env:PYTHON_BIN -m pip install "$env:NG_SDK_WHL" --no-deps --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+    - |
+      # ── DEV override: simulate MR pipeline on push for testing ───────
+      if (-not $env:CI_MERGE_REQUEST_IID -and $env:DEV_MR_IID) {
+        $env:CI_MERGE_REQUEST_IID = $env:DEV_MR_IID
+        Info "Dev" "DEV_MR_IID=$env:DEV_MR_IID injected as CI_MERGE_REQUEST_IID (test mode)"
+      }
+    - Banner "🧠" "Prompt Agent"
+    - Info "Prompt" "Layer 1 (regex) + Layer 2 (Copilot SDK/CLI fallback)"
+  after_script:
+    - |
+      # ── Artifact safety net — create placeholder if agent did not write output ──
+      $agentReports = @(
+        'security_scanner','code_reviewer','test_coverage','dependency_audit',
+        'license_compliance','documentation','code_explainer','cicd_diagnosis',
+        'flutter_analyzer','flutter_coverage','pipeline_report'
+      )
+      New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+      foreach ($r in $agentReports) {
+        $md   = "backend\reports\$r.md"
+        $html = "backend\reports\$r.html"
+        if (-not (Test-Path $md))   { "# $r — skipped or no output (push pipeline / no MR IID)" | Out-File $md   -Encoding utf8 }
+        if (-not (Test-Path $html)) { "<p>$r — skipped or no output (push pipeline / no MR IID)</p>" | Out-File $html -Encoding utf8 }
+      }
+
+agent_security_scanner:
+  extends: .agent_base
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: delayed
+      start_in: 8 minutes
+  allow_failure: true
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/security_scanner.md
+      - backend/reports/security_scanner.html
+  script:
+    - New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+    - Banner "🛡" "Security Scanner Agent"
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) { Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID" }
+      else { Info "Mode" "Push (dry-run)" }
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        & $env:PYTHON_BIN -m agents.security_scanner --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --scan-dir backend flutter_app\lib --output backend\reports\security_scanner.md --fail-on-high --push-mode
+      } else {
+        & $env:PYTHON_BIN -m agents.security_scanner --project-id $env:CI_PROJECT_ID --scan-dir backend flutter_app\lib --output backend\reports\security_scanner.md --fail-on-high --push-mode --dry-run
+      }
+      $agentCode = $LASTEXITCODE
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "Security scanner completed"
+
+agent_code_reviewer:
+  extends: .agent_base
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: delayed
+      start_in: 1 minute
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/code_reviewer.md
+      - backend/reports/code_reviewer.html
+  script:
+    - New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+    - Banner "📝" "Code Reviewer Agent"
+    - |
+      $diffBase = if ($env:CI_MERGE_REQUEST_DIFF_BASE_SHA) { $env:CI_MERGE_REQUEST_DIFF_BASE_SHA } else { "HEAD~1" }
+      Write-Host "$D  📊 Changed files (vs $diffBase, whitespace ignored):$X"
+      git diff "$diffBase...HEAD" -w --stat | ForEach-Object { Write-Host "  $_" }
+      Write-Host ''
+      # Exclude auto-generated paths from the per-file diff loop to keep the
+      # CI trace human-readable. The agent still scans the full diff via Python.
+      $excludePatterns = @('^gen/', '^ng_sdk_whl/extracted/', 'flutter_app/lib/grpc/generated/', '__pycache__/', '\.dart_tool/', '/build/')
+      $allFiles = @(git diff "$diffBase...HEAD" -w --name-only)
+      $changedFiles = @($allFiles | Where-Object {
+          $candidate = $_
+          -not ($excludePatterns | Where-Object { $candidate -match $_ })
+      })
+      $skipped = $allFiles.Count - $changedFiles.Count
+      foreach ($file in $changedFiles) {
+        $safeId = 'review_' + ($file -replace '[^a-zA-Z0-9]', '_')
+        $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        Write-Host "$($E)[0Ksection_start:$($ts):$safeId`[collapsed=true]`r$($E)[0K$D  📄 $file$X"
+        git diff "$diffBase...HEAD" -w -- $file
+        $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        Write-Host "$($E)[0Ksection_end:$($ts):$safeId`r$($E)[0K"
+      }
+      if ($skipped -gt 0) {
+        Write-Host "$D  ℹ  $skipped generated/extracted file(s) hidden — visible in GitLab Changes tab$X"
+      }
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) { Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID" }
+      else { Info "Mode" "Push (dry-run)" }
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        & $env:PYTHON_BIN -m agents.code_reviewer --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --scan-dir backend flutter_app\lib --output backend\reports\code_reviewer.md --push-mode
+      } else {
+        & $env:PYTHON_BIN -m agents.code_reviewer --project-id $env:CI_PROJECT_ID --scan-dir backend flutter_app\lib --output backend\reports\code_reviewer.md --push-mode --dry-run
+      }
+      $agentCode = $LASTEXITCODE
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "Code reviewer completed"
+
+agent_test_coverage:
+  extends: .agent_base
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: delayed
+      start_in: 6 minutes
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/test_coverage.md
+      - backend/reports/test_coverage.html
+  script:
+    - New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+    - Banner "📊" "Test Coverage Agent"
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) { Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID" }
+      else { Info "Mode" "Push (dry-run)" }
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        & $env:PYTHON_BIN -m agents.test_coverage_agent --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --coverage-file backend\reports\ci_inputs\backend_coverage.xml --flutter-coverage backend\reports\ci_inputs\lcov.info --output backend\reports\test_coverage.md --push-mode
+      } else {
+        & $env:PYTHON_BIN -m agents.test_coverage_agent --project-id $env:CI_PROJECT_ID --coverage-file backend\reports\ci_inputs\backend_coverage.xml --flutter-coverage backend\reports\ci_inputs\lcov.info --output backend\reports\test_coverage.md --push-mode --dry-run
+      }
+      $agentCode = $LASTEXITCODE
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "Test coverage analysis completed"
+
+agent_dependency_audit:
+  extends: .agent_base
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: delayed
+      start_in: 7 minutes
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/dependency_audit.md
+      - backend/reports/dependency_audit.html
+  script:
+    - New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+    - Banner "📦" "Dependency Audit Agent"
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) { Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID" }
+      else { Info "Mode" "Push (dry-run)" }
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        & $env:PYTHON_BIN -m agents.dependency_audit_agent --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --requirements $env:BACKEND_REQUIREMENTS --pubspec $env:FLUTTER_PUBSPEC --output backend\reports\dependency_audit.md --push-mode
+      } else {
+        & $env:PYTHON_BIN -m agents.dependency_audit_agent --project-id $env:CI_PROJECT_ID --requirements $env:BACKEND_REQUIREMENTS --pubspec $env:FLUTTER_PUBSPEC --output backend\reports\dependency_audit.md --push-mode --dry-run
+      }
+      $agentCode = $LASTEXITCODE
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "Dependency audit completed"
+
+agent_license_compliance:
+  extends: .agent_base
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: delayed
+      start_in: 3 minutes
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/license_compliance.md
+      - backend/reports/license_compliance.html
+  script:
+    - New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+    - Banner "⚖" "License Compliance Agent"
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) { Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID" }
+      else { Info "Mode" "Push (dry-run)" }
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        & $env:PYTHON_BIN -m agents.license_compliance_agent --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --pubspec $env:FLUTTER_PUBSPEC --output backend\reports\license_compliance.md --push-mode
+      } else {
+        & $env:PYTHON_BIN -m agents.license_compliance_agent --project-id $env:CI_PROJECT_ID --pubspec $env:FLUTTER_PUBSPEC --output backend\reports\license_compliance.md --push-mode --dry-run
+      }
+      $agentCode = $LASTEXITCODE
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "License compliance completed"
+
+agent_documentation:
+  extends: .agent_base
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: delayed
+      start_in: 9 minutes
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/documentation.md
+      - backend/reports/documentation.html
+  script:
+    - New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+    - Banner "📚" "Documentation Agent"
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) { Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID" }
+      else { Info "Mode" "Push (dry-run)" }
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        & $env:PYTHON_BIN -m agents.documentation_agent --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --scan-dir backend flutter_app\lib --output backend\reports\documentation.md --push-mode
+      } else {
+        & $env:PYTHON_BIN -m agents.documentation_agent --project-id $env:CI_PROJECT_ID --scan-dir backend flutter_app\lib --output backend\reports\documentation.md --push-mode --dry-run
+      }
+      $agentCode = $LASTEXITCODE
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "Documentation analysis completed"
+
+agent_code_explainer:
+  extends: .agent_base
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: delayed
+      start_in: 2 minutes
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/code_explainer.md
+      - backend/reports/code_explainer.html
+  script:
+    - New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+    - Banner "📖" "Code Explainer Agent"
+    - |
+      $diffBase = if ($env:CI_MERGE_REQUEST_DIFF_BASE_SHA) { $env:CI_MERGE_REQUEST_DIFF_BASE_SHA } else { "HEAD~1" }
+      Write-Host "$D  📊 Changed files (vs $diffBase, whitespace ignored):$X"
+      git diff "$diffBase...HEAD" -w --stat | ForEach-Object { Write-Host "  $_" }
+      Write-Host ''
+      # Exclude auto-generated paths from the per-file diff loop to keep the
+      # CI trace human-readable. The agent still fetches the full diff via the GitLab API.
+      $excludePatterns = @('^gen/', '^ng_sdk_whl/extracted/', 'flutter_app/lib/grpc/generated/', '__pycache__/', '\.dart_tool/', '/build/')
+      $allFiles = @(git diff "$diffBase...HEAD" -w --name-only)
+      $changedFiles = @($allFiles | Where-Object {
+          $candidate = $_
+          -not ($excludePatterns | Where-Object { $candidate -match $_ })
+      })
+      $skipped = $allFiles.Count - $changedFiles.Count
+      foreach ($file in $changedFiles) {
+        $safeId = 'explain_' + ($file -replace '[^a-zA-Z0-9]', '_')
+        $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        Write-Host "$($E)[0Ksection_start:$($ts):$safeId`[collapsed=true]`r$($E)[0K$D  📄 $file$X"
+        git diff "$diffBase...HEAD" -w -- $file
+        $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        Write-Host "$($E)[0Ksection_end:$($ts):$safeId`r$($E)[0K"
+      }
+      if ($skipped -gt 0) {
+        Write-Host "$D  ℹ  $skipped generated/extracted file(s) hidden — visible in GitLab Changes tab$X"
+      }
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) { Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID" }
+      else { Info "Mode" "Push" }
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        & $env:PYTHON_BIN -m agents.code_explainer --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --output backend\reports\code_explainer.md
+      } else {
+        & $env:PYTHON_BIN -m agents.code_explainer --project-id $env:CI_PROJECT_ID --push-mode --output backend\reports\code_explainer.md
+      }
+      $agentCode = $LASTEXITCODE
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "Code explainer completed"
+
+agent_cicd_diagnosis:
+  extends: .agent_base
+  when: on_failure
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/cicd_diagnosis.md
+      - backend/reports/cicd_diagnosis.html
+  script:
+    - New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+    - Banner "🩺" "CI/CD Diagnosis Agent"
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) { Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID" }
+      else { Info "Mode" "Push (dry-run)" }
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        & $env:PYTHON_BIN -m agents.cicd_agent --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --job-id $env:CI_JOB_ID --output backend\reports\cicd_diagnosis.md
+      } else {
+        & $env:PYTHON_BIN -m agents.cicd_agent --project-id $env:CI_PROJECT_ID --job-id $env:CI_JOB_ID --push-mode --dry-run --output backend\reports\cicd_diagnosis.md
+      }
+      $agentCode = $LASTEXITCODE
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "CI/CD diagnosis completed"
+
+agent_flutter_analyzer:
+  extends: .agent_base
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: delayed
+      start_in: 4 minutes
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/flutter_analyzer.md
+      - backend/reports/flutter_analyzer.html
+  script:
+    - New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+    - Banner "🧭" "Flutter Analyzer Agent"
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) { Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID" }
+      else { Info "Mode" "Push (dry-run)" }
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        & $env:PYTHON_BIN -m agents.flutter_analyzer_agent --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --analyze-output backend\reports\ci_inputs\flutter_analyze.txt --output backend\reports\flutter_analyzer.md --push-mode
+      } else {
+        & $env:PYTHON_BIN -m agents.flutter_analyzer_agent --project-id $env:CI_PROJECT_ID --analyze-output backend\reports\ci_inputs\flutter_analyze.txt --output backend\reports\flutter_analyzer.md --push-mode --dry-run
+      }
+      $agentCode = $LASTEXITCODE
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "Flutter analyzer completed"
+
+agent_flutter_coverage:
+  extends: .agent_base
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: delayed
+      start_in: 5 minutes
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/flutter_coverage.md
+      - backend/reports/flutter_coverage.html
+  script:
+    - New-Item -ItemType Directory -Force -Path backend\reports | Out-Null
+    - Banner "📈" "Flutter Coverage Agent"
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) { Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID" }
+      else { Info "Mode" "Push (dry-run)" }
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        & $env:PYTHON_BIN -m agents.flutter_coverage_agent --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --lcov-file backend\reports\ci_inputs\lcov.info --output backend\reports\flutter_coverage.md --push-mode
+      } else {
+        & $env:PYTHON_BIN -m agents.flutter_coverage_agent --project-id $env:CI_PROJECT_ID --lcov-file backend\reports\ci_inputs\lcov.info --output backend\reports\flutter_coverage.md --push-mode --dry-run
+      }
+      $agentCode = $LASTEXITCODE
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "Flutter coverage completed"
+
+pipeline_report:
+  stage: report
+  tags:
+    - $RUNNER_TAG
+  rules: *agent_rules
+  allow_failure: true
+  needs:
+    - job: agent_code_reviewer
+      artifacts: true
+    - job: agent_code_explainer
+      artifacts: true
+    - job: agent_license_compliance
+      artifacts: true
+    - job: agent_flutter_analyzer
+      artifacts: true
+    - job: agent_flutter_coverage
+      artifacts: true
+    - job: agent_test_coverage
+      artifacts: true
+    - job: agent_dependency_audit
+      artifacts: true
+    - job: agent_security_scanner
+      artifacts: true
+    - job: agent_documentation
+      artifacts: true
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/reports/
+  before_script:
+    - *ci_log_init
+    - *pip_section_start
+    - '& $env:PYTHON_BIN -m pip install httpx --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+  script:
+    - Banner "🧾" "Pipeline Report Agent"
+    - '$tsStart = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()'
+    - SectionStart "report_exec" "🧾 report execution (click to expand)"
+    - |
+      if ($env:CI_MERGE_REQUEST_IID) {
+        Info "Mode" "Merge Request !$env:CI_MERGE_REQUEST_IID"
+        & $env:PYTHON_BIN -m agents.pipeline_report_agent --project-id $env:CI_PROJECT_ID --mr-iid $env:CI_MERGE_REQUEST_IID --reports-dir backend\reports --output backend\reports\pipeline_report.md --push-mode
+      } else {
+        Info "Mode" "Push (dry-run)"
+        & $env:PYTHON_BIN -m agents.pipeline_report_agent --project-id $env:CI_PROJECT_ID --reports-dir backend\reports --output backend\reports\pipeline_report.md --push-mode --dry-run
+      }
+      $agentCode = $LASTEXITCODE
+    - SectionEnd "report_exec"
+    - |
+      $elapsed = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $tsStart
+      $statusIcon = if ($agentCode -eq 0) { "$G✅$X" } else { "$R❌$X" }
+      Write-Host ""
+      Write-Host "$C  ┌─ Result ────────────────────────────────────────────────────┐$X"
+      Write-Host "  │  Status    $statusIcon  exit=$agentCode"
+      Write-Host "  │  Duration  ${elapsed}s"
+      Write-Host "$C  └────────────────────────────────────────────────────────────────┘$X"
+      Write-Host ''
+      exit $agentCode
+    - Ok "Pipeline report completed"
+
+notify_pipeline_completion:
+  stage: deploy
+  tags:
+    - $RUNNER_TAG
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+  allow_failure: true
+  needs:
+    - job: pipeline_report
+      artifacts: true
+  dependencies:
+    - pipeline_report
+  before_script:
+    - *ci_log_init
+    - *pip_section_start
+    - '& $env:PYTHON_BIN -m pip install requests --retries $env:PIP_RETRIES --timeout $env:PIP_TIMEOUT'
+    - *pip_section_end
+  script:
+    - Banner "📧" "Pipeline Completion Notification"
+    - 'Info "Pipeline" "#$env:CI_PIPELINE_ID  |  MR: !$env:CI_MERGE_REQUEST_IID"'
+    - 'Info "Mode" "GitLab API note → native email via GitLab SMTP relay"'
+    - |
+      & $env:PYTHON_BIN tools\notify_pipeline_gitlab.py `
+        --pipeline-id $env:CI_PIPELINE_ID `
+        --mr-iid $env:CI_MERGE_REQUEST_IID `
+        --project-id $env:CI_PROJECT_ID `
+        --artifacts-dir backend\reports
+      $notifyExit = $LASTEXITCODE
+    - |
+      if ($notifyExit -eq 0) {
+        Write-Host "$G✅ Pipeline completion note posted — GitLab will send native email notification$X"
+      } else {
+        Write-Host "$R❌ Notification failed (exit $notifyExit) — check GITLAB_TOKEN and API connectivity$X"
+      }
+    - exit $notifyExit
+
+deploy_staging:
+  stage: deploy
+  tags:
+    - $RUNNER_TAG
+  when: manual
+  only:
+    - main
+  script:
+    - *ci_log_init
+    - Banner "🚀" "Deploy Staging"
+    - Info "Status" "Manual deploy placeholder -- add deploy steps here"
+
+
+

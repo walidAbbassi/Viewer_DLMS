@@ -1,0 +1,40 @@
+{
+  items: [
+    {
+      "name": "Producer Serial Number",
+      "objectName": "DeviceID1",
+    },
+    {
+      "name": "Device ID2",
+      "objectName": "DeviceID2",
+    },
+    {
+      "name": "Device ID3",
+      "objectName": "DeviceID3",
+    },
+    {
+      "name": "Cosem Logical Device Name",
+      "objectName": "COSEMLogicalDeviceName",
+    },
+    {
+      "name": "Device ID4",
+      "objectName": "DeviceID4",
+    },
+    {
+      "name": "Device ID5",
+      "objectName": "DeviceID5",
+    },
+    {
+      "name": "Device ID6",
+      "objectName": "DeviceID6",
+    },
+    {
+      "name": "Device ID7",
+      "objectName": "DeviceID7",
+    },
+    {
+      "name": "Device ID8",
+      "objectName": "DeviceID8",
+    }
+  ],
+}

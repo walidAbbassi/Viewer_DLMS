@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+  <title>Energy Register</title>
+  <logicalDeviceName>{{ deviceId.Logic_Device_Name }}</logicalDeviceName>
+  <registers>
+  {% for r in registers %}
+    <register>
+      <id>{{ r.id }}</id>
+      <name>{{ r.name }}</name>
+      <description>{{ r.description }}</description>
+      <obisCode>{{ r.obisCode }}</obisCode>
+      <value>{{ r.value }}</value>
+      <unit>{{ r.unit }}</unit>
+    </register>
+  {% endfor %}
+  </registers>
+</report>

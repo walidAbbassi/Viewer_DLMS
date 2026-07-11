@@ -1,0 +1,18 @@
+{
+  "pushActions": [
+    {
+      "id": "push_action_schedule",
+      "label": "Push Action Schedule",
+      "tabs": [
+        { "label": "Push Action Schedule 1",           "dataSource": "PushActionSchedulerInterval_1" },
+        { "label": "Push Action Schedule 2",   "dataSource": "PushActionSchedulerInterval_2" },
+        { "label": "Push Action Schedule 3",   "dataSource": "PushActionSchedulerInterval_3" }
+      ]
+    },
+    {
+      "id": "push_action_scheduler_on_installation",
+      "label": "Push Action Scheduler On Installation",
+      "dataSource": "PushActionSchedulerOnInstallation"
+    }
+  ]
+}

@@ -1,0 +1,1460 @@
+﻿syntax = "proto3";
+
+package meter;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+
+// ==========================
+// XML/XDR translation (NEW)
+// ==========================
+message TranslateDataItemRequest {
+  // Input data as string (can be XML or XDR).
+  string data = 1;
+
+  // true  -> input is XDR, server returns XML
+  // false -> input is XML, server returns XDR
+  bool is_xdr_input = 2;
+}
+
+message TranslateDataRequest {
+  // Multiple items to translate in one call.
+  repeated TranslateDataItemRequest requests = 1;
+}
+
+message TranslateDataItemResponse {
+  // Echo of input (optional but useful for debugging).
+  string input = 1;
+
+  // Translated data (XML or XDR, depending on is_xdr_input).
+  string output = 2;
+
+  // Echo of direction to know how it was processed.
+  bool is_xdr_input = 3;
+
+  // Result status.
+  bool success = 4;
+  string error = 5; // non-empty if success == false
+}
+
+message TranslateDataResponse {
+  repeated TranslateDataItemResponse items = 1;
+}
+
+message DlmsTranslateRequest {
+  string data = 1;   // XDR hex string or XML string
+  bool isxml = 2;    // true -> input is XML (XML→XDR), false -> input is XDR (XDR→XML)
+}
+
+
+// ==========================
+// Requests
+// ==========================
+message GetRequest {
+  int32 class_   = 1;  // DLMS/COSEM class id
+  string obiscode = 2; // hex/OBIS string (e.g., "1-0:1.8.0")
+  int32 attribute = 3; // attribute index
+
+  // Access selector: none (default), datetime range, or entry selector
+  oneof access_selector {
+    DateTimeRangeSelector datetime_selector = 4;
+    EntrySelector entry_selector    = 5;
+  }
+}
+
+// Datetime range selector (start/end)
+message DateTimeRangeSelector {
+  google.protobuf.Timestamp start = 1;
+  google.protobuf.Timestamp end   = 2;
+}
+
+// Entry selector with two ranges: entry and selected
+message EntrySelector {
+  int32 entry_from    = 1;
+  int32 entry_to      = 2;
+  int32 selected_from = 3;
+  int32 selected_to   = 4;
+}
+
+message SetRequest {
+  int32 class_ = 1;
+  string obiscode = 2;     // hex/OBIS string
+  int32 attribute = 3;
+  string payload = 4;      // hex string
+}
+
+message ActionRequest {
+  int32 class_ = 1;
+  string obiscode = 2;     // hex/OBIS string
+  int32 attribute = 3;
+  string payload = 4;      // hex string
+}
+
+// Polymorphic envelope for a frame request
+message AbstractFrameRequest {
+  oneof request {
+    GetRequest get_request       = 1;
+    SetRequest set_request       = 2;
+    ActionRequest action_request = 3;
+  }
+}
+
+// ==========================
+// Responses
+// ==========================
+message ApplicationResponse {
+  AbstractFrameRequest request = 1; // original request
+  google.protobuf.Any value     = 2; // any result message
+  string error                  = 3; // error message if any
+  int32 status_code             = 4; // application-level status
+}
+
+// For the new simpler ExecuteGet/Set/Action RPCs
+message FrameExecutionItem {
+  AbstractFrameRequest request = 1; // original request
+  string xml_xdr               = 2; // XML representation of XDR
+  string xdr                   = 3; // raw XDR (e.g., hex)
+  bool success                 = 4; // true if ok
+  string error                 = 5; // error message if any, empty if success
+}
+
+message FrameExecutionList {
+  repeated FrameExecutionItem items = 1;
+}
+
+// ==========================
+// Helper messages
+// ==========================
+message BoolValue {
+  bool value = 1;
+}
+
+message Int32Value {
+  int32 value = 1;
+}
+
+
+message StringValue {
+  string value = 1;
+}
+
+
+message StringList {
+  repeated string items = 1;
+}
+
+
+
+// Lists + with_list flag
+message GetRequestList {
+  repeated GetRequest requests = 1;
+  bool with_list = 2; // true = use DLMS "GET with list", false = individual
+}
+
+message SetRequestList {
+  repeated SetRequest requests = 1;
+  bool with_list = 2; // true = use DLMS "SET with list", false = individual
+}
+
+message ActionRequestList {
+  repeated ActionRequest requests = 1;
+  bool with_list = 2; // true = use DLMS "ACTION with list", false = individual
+}
+
+message ApplicationResponseList {
+  repeated ApplicationResponse responses = 1;
+}
+
+// ==========================
+// Init context request
+// ==========================
+message InitMeterContextRequest {
+  // You asked for this exact field name
+  string modulename = 1;
+}
+
+// ==========================
+// Firmware/Image transfer
+// ==========================
+message InitiateTransferRequest {
+  // exact names as requested
+  string path_file = 1;
+  string imageId   = 2;
+}
+
+message TransferFileRequest {
+  string path_file = 1;
+  int32 block_size = 2;
+}
+
+message TransferUpdate {
+  int32 block_number = 1;
+  string message     = 2; // e.g., "sent", "verified", "error: ...", etc.
+}
+
+// ---- NEW: verification / resend / activation ----
+message VerifyTransfertRequest {
+  string path_file = 1;
+  int32 block_size = 2;
+}
+
+// Array of booleans indicating per-chunk verification result (true = OK).
+message VerifyTransfertResponse {
+  repeated bool chunks_ok = 1;
+}
+
+message ResendMissingChunksRequest {
+  string path_file = 1;
+  int32 block_size = 2;
+}
+
+message ResumeTransferRequest {
+  string path_file  = 1;
+  int32  block_size = 2;
+  int32  start_block = 3;  // index of the first block to (re)send
+}
+
+// For firmware activation result with extra message.
+message ActivateFirmwareResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ==========================
+// Datamodel browsing (NEW)
+// ==========================
+message GetDatamodelObjectsRequest {
+  bool withAttributes = 1;
+}
+
+// ==========================
+// Push object list
+// ==========================
+
+message PushObjectRestrictionDateRange {
+  string from_date = 1;
+  string to_date   = 2;
+}
+
+message PushObjectRestrictionEntryRange {
+  int32 from_entry = 1;
+  int32 to_entry   = 2;
+}
+
+message PushObjectItem {
+  int32  class_id         = 1;
+  int32  attribute_index  = 2;
+  string logical_name     = 3;
+  string object_name      = 4;
+  int32  data_index       = 5;
+  int32  restriction_type = 6;
+  oneof restriction_value {
+    PushObjectRestrictionDateRange  date_range  = 7;
+    PushObjectRestrictionEntryRange entry_range = 8;
+  }
+}
+
+message GetPushObjectListRequest {
+  string datasource = 1;
+}
+
+message GetPushObjectListResponse {
+  repeated PushObjectItem items = 1;
+}
+
+message SetPushObjectListRequest {
+  string              datasource = 1;
+  repeated PushObjectItem items  = 2;
+}
+
+message GetRandomisationStartIntervalRequest {
+  string datasource = 1;
+}
+
+message GetRandomisationStartIntervalResponse {
+  int32 result = 1;
+}
+
+message SetRandomisationStartIntervalRequest {
+  string datasource = 1;
+  int32  value      = 2;
+}
+
+message GetNumberOfRetriesRequest {
+  string datasource = 1;
+}
+
+message GetNumberOfRetriesResponse {
+  int32 result = 1;
+}
+
+message SetNumberOfRetriesRequest {
+  string datasource = 1;
+  int32  value      = 2;
+}
+
+message GetRepetitionDelayRequest {
+  string datasource = 1;
+}
+
+message GetRepetitionDelayResponse {
+  int32 min = 1;
+  int32 exponent = 2;
+  int32 max = 3;
+}
+
+message SetRepetitionDelayRequest {
+  string datasource = 1;
+  int32  min        = 2;
+  int32  exponent   = 3;
+  int32  max        = 4;
+}
+
+message GetLastConfirmationDatetimeRequest {
+  string datasource = 1;
+}
+
+message GetLastConfirmationDatetimeResponse {
+  string result = 1;
+}
+
+message SetLastConfirmationDatetimeRequest {
+  string datasource = 1;
+  string value      = 2;
+}
+
+message GetSendDestinationRequest {
+  string datasource = 1;
+}
+
+message GetSendDestinationResponse {
+  int32  tcp_service  = 1;
+  string destination  = 2;
+  int32  message      = 3;
+}
+
+message SetSendDestinationRequest {
+  string datasource   = 1;
+  int32  tcp_service  = 2;
+  string destination  = 3;
+  int32  message      = 4;
+}
+
+message CommunicationWindowEntry {
+  string start_time = 1;
+  string end_time   = 2;
+}
+
+message GetCommunicationWindowRequest {
+  string datasource = 1;
+}
+
+message GetCommunicationWindowResponse {
+  repeated CommunicationWindowEntry windows = 1;
+}
+
+message CosemDateTimeEntry {
+  int32 day     = 1;
+  int32 month   = 2;
+  int32 year    = 3;
+  int32 weekday = 4;
+  int32 hour    = 5;
+  int32 minute  = 6;
+  int32 second  = 7;
+}
+
+message SetCommunicationWindowEntry {
+  CosemDateTimeEntry start_time = 1;
+  CosemDateTimeEntry end_time   = 2;
+}
+
+message SetCommunicationWindowRequest {
+  string                            datasource = 1;
+  repeated SetCommunicationWindowEntry windows = 2;
+}
+
+message GetExecutionTimeRequest {
+  string datasource = 1;
+}
+
+message SetExecutionTimeRequest {
+  string                     datasource = 1;
+  repeated CosemDateTimeEntry times     = 2;
+}
+
+message GetPushActionTypeRequest {
+  string datasource = 1;
+}
+
+message GetPushActionExecutedScriptRequest {
+  string datasource = 1;
+}
+
+message GetPushActionExecutedScriptResponse {
+  int32  script_selector = 1;
+  string script_table    = 2;
+}
+
+message SetPushActionExecutedScriptRequest {
+  string datasource     = 1;
+  int32  script_selector = 2;
+  string script_table    = 3;
+}
+
+message GetScriptTableRequest {
+  string datasource = 1;
+}
+
+message ExecuteScriptTableRequest {
+  string datasource = 1;
+}
+
+// Capture object entry returned by GetCaptureObjects
+message CaptureObjectEntry {
+  int32  class_id        = 1;
+  string obis_code       = 2;
+  string name            = 3;
+  int32  attribute_index = 4;
+  int32  data_index      = 5;
+}
+
+message GetPushSelectiveCaptureObjectsRequest {
+  string datasource = 1;
+}
+
+message GetPushSelectiveCaptureObjectsResponse {
+  repeated CaptureObjectEntry entries = 1;
+}
+
+message GetPushRecoveryObjectsRequestItem {
+  string datasource = 1;
+  int32  attribute  = 2;
+}
+
+message GetPushRecoveryObjectsRequest {
+  repeated GetPushRecoveryObjectsRequestItem items = 1;
+}
+
+message GetPushRecoveryObjectsResponse {
+  repeated string results = 1;
+}
+
+message PushSetupPushRequest {
+  string datasource = 1;
+}
+
+message PushSetupResetRequest {
+  string datasource = 1;
+}
+
+message ScriptTableEntry {
+  int32  script_identifier = 1;
+  int32  service_id        = 2;
+  int32  class_id          = 3;
+  string logical_name      = 4;
+  int32  index             = 5;
+  string parameter         = 6;
+}
+
+message GetScriptTableResponse {
+  repeated ScriptTableEntry entries = 1;
+}
+
+message DatamodelObject {
+  string name = 1;
+  int32 classId = 2;
+  string logicalName = 3;
+  string logicalName_hex = 4;
+  string description = 5;
+}
+
+message GetDatamodelObjectsResponse {
+  repeated DatamodelObject objects = 1;
+}
+
+message GetDatamodelAttributesByObjectNameRequest {
+  string objectName = 1;
+  string clientName = 2;
+}
+
+message DatamodelAttribute {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string accessRights = 4;
+  string type = 5;
+}
+
+message GetDatamodelAttributesByObjectNameResponse {
+  repeated DatamodelAttribute attributes = 1;
+}
+
+
+
+
+message ReadQualityConfigRequest {
+  string data_source = 1;
+}
+
+message QualityConfigValue {
+  int32 value = 1;
+  string type = 2;
+}
+
+message QualityConfigValues {
+  repeated QualityConfigValue values = 1;
+}
+
+message ReadQualityConfigResponse {
+  oneof result {
+    QualityConfigValue value = 1;
+    QualityConfigValues values = 2;
+  }
+}
+
+message WriteQualityConfigRequest {
+  string data_source = 1;
+
+  oneof payload {
+    QualityConfigValue value = 2;
+    QualityConfigValues values = 3;
+  }
+}
+
+
+
+// Request to load a specific datamodel by name
+message LoadDatamodelRequest {
+  string datamodel = 1;  // e.g., "imageTransfer", "security", ...
+}
+
+
+
+
+// Progression d’exécution (avant transfert “massif”)
+message ExecutionProgress {
+  string message = 1;             // message humain (optionnel)
+}
+
+
+
+// Progression de téléchargement des données (pendant la lecture “longue”)
+message DownloadProgress {
+  uint64 rows_total = 1;          // si connu (0 sinon)
+  int32 percent = 2;              // 0..100 (si rows_total connu)
+  uint64 bytes_total = 3;         // si connu (0 sinon)
+  uint64 bytes_read = 4;          // cumul
+  double rate_bytes_per_sec = 5;  // débit moyen estimé
+}
+
+
+message GetLoadProfileStreamItem {
+  oneof item {
+    ExecutionProgress exec = 1;
+    DownloadProgress download = 2;
+	GetLoadProfileResponse result = 3;
+  }
+}
+
+
+message ActivationDateTime {
+  int32 year = 1;   // e.g., 2026
+  int32 month = 2;  // 1..12
+  int32 day = 3;    // 1..31 (validate server-side)
+  int32 hour = 4;   // 0..23 (24h)
+  int32 minute = 5; // 0..59
+  int32 second = 6; // 0..59
+}
+
+message DaylightSavingsTime {
+  int32 day = 1;    // 1..31, or special values: 253 (second-to-last), 254 (last), 255 (unspecified)
+  int32 month = 2;  // 1..12
+  int32 hour = 3;   // 0..23
+  int32 minute = 4; // 0..59
+  int32 second = 5; // 0..59
+  int32 dayOfWeek = 6; // 1..7 (1=Monday, 7=Sunday), or 255 (unspecified)
+}
+
+
+
+
+// Each phase reading: voltage (u), current (i), phase angle (phi).
+message PhaseData {
+  double u = 1;   // e.g., volts
+  double i = 2;   // e.g., amperes
+  double phi = 3; // radians or degrees (document your convention)
+}
+
+// Wrap the list to keep response extensible.
+message FresnelResponse {
+  repeated PhaseData phases = 1;
+}
+
+
+// ==========================
+// Device Identification (NEW)
+// ==========================
+// New generic pair
+message DeviceIDResponse {
+  string name = 1;
+  string value = 2;
+}
+ 
+// New list-based response
+message DeviceIDList {
+  repeated DeviceIDResponse items = 1;
+}
+
+// ==========================
+// Firmware Version (NEW)
+// ==========================
+// New generic pair
+message FirmwareVersionResponse {
+  string name = 1;
+  string value = 2;
+}
+ 
+// New list-based response
+message FirmwareVersionList {
+  repeated FirmwareVersionResponse items = 1;
+}
+
+// ==========================
+// Energy Register (NEW)
+// ==========================
+// New generic pair
+message EnergyRegisterResponse {
+  string description = 1;
+  string value = 2;
+}
+ 
+// New list-based response
+message EnergyRegisterList {
+  repeated EnergyRegisterResponse items = 1;
+}
+
+// ==========================
+// Average (NEW)
+// ==========================
+message AverageResponse {
+  string description = 1;
+  string value = 2;
+}
+
+message AverageList {
+  repeated AverageResponse items = 1;
+}
+
+// ==========================
+// Load Profile (NEW)
+// ==========================
+
+
+message LoadProfilePartialRead {
+  google.protobuf.Timestamp datetime = 1;
+  string deviation_hex = 2;
+  string status = 3;
+}
+
+
+// Request: takes the DLMS/COSEM object name (e.g., "profileGeneric_1" or OBIS-linked name)
+message GetLoadProfileRequest {
+  string objectName = 1;
+  optional LoadProfilePartialRead start = 2;
+  optional LoadProfilePartialRead end   = 3;
+  int32 page = 10;
+  int32 page_size = 11;
+
+}
+
+// Response:
+// - headerTypes: list of header/type names describing each column
+// - values: rows of string values; each row is a StringList (list of strings)
+//   Example:
+//     headerTypes = ["timestamp", "activeEnergy", "reactiveEnergy"]
+//     values[0].items = ["2025-12-25T10:00:00Z", "1234.56", "78.90"]
+message GetLoadProfileResponse {
+  repeated string headerTypes = 1;
+  repeated StringList values = 2;
+  int32 total_entries = 10;
+  int32 current_page = 11;
+  int32 total_pages = 12;
+}
+
+
+// Request/Response to get or set a single load profile parameter.
+// We support: MAX_RECORD, RECORD_NUMBER, CAPTURE_PERIOD.
+enum LoadProfileParam {
+  LOAD_PROFILE_PARAM_UNSPECIFIED = 0;
+  MAX_RECORD = 1;
+  RECORD_NUMBER = 2;
+  CAPTURE_PERIOD = 3; // e.g., seconds (define your unit convention in docs)
+}
+
+// Identify which profile-generic object (by name) and which parameter.
+message GetLoadProfileParamRequest {
+  string objectName = 1;        // e.g., "profileGeneric_1" or OBIS-linked name
+  LoadProfileParam param = 2;   // which parameter to read
+}
+
+// Set a single parameter to an int32 value.
+message SetLoadProfileParamRequest {
+  string objectName = 1;        // target profile-generic object
+  LoadProfileParam param = 2;   // which parameter to write
+  int32 value = 3;              // new value
+}
+
+
+message BitStatusRequest {
+  string dataSource = 1;       // the raw value (string representation of the number)
+  string descriptionJson = 2;  // JSON string containing bitsDescripTable[]
+}
+
+message BitStatus {
+  string mask = 1;
+  string bitValue = 2;
+  string description = 3;
+  bool isActive = 4;
+}
+
+message BitStatusResponse {
+  repeated BitStatus bits = 1;
+}
+
+
+
+
+
+
+
+
+
+
+// ==========================
+// SIM Config messages
+// ==========================
+
+// Group 1 – Modem Config
+message ModemConfigResponse {
+  string apn          = 1;
+  uint32 pin_code     = 2;
+  string ppp_username = 3;
+  string ppp_password = 4;
+}
+
+message SetApnRequest {
+  string value = 1;
+}
+
+message SetPinCodeRequest {
+  uint32 pin_code = 1;
+}
+
+message SetPppAuthRequest {
+  string username = 1;
+  string password = 2;
+}
+
+// Group 2 – IP Address
+message IpAddressResponse {
+  bool   is_ipv6  = 1;
+  string address  = 2;
+}
+
+message SetIpAddressRequest {
+  string address = 1;
+  bool   is_ipv6 = 2;
+}
+
+// Group 3 – Cellular Diagnostics
+message CellularDiagResponse {
+  string operator_name  = 1;
+  uint32 status         = 2;
+  uint32 cs_attachment  = 3;
+  uint32 ps_status      = 4;
+  bool   show_cell_info = 5;  // true if association has rights on cell_info (attr 6)
+  bool   show_qos       = 6;  // true if association has rights on quality_of_service (attr 9)
+  bool   is_lte_mode    = 7;  // true if gprs_type == 0 in association config (LTE mode)
+}
+
+message SetCellularFieldRequest {
+  int32  attribute    = 1; // 2=operator,3=status,4=cs_attachment,5=ps_status
+  string string_value = 2; // used for attribute 2 (operator)
+  uint32 enum_value   = 3; // used for attributes 3,4,5 (enumerations)
+}
+
+// Group 4 – Cell Info
+message CellInfoEntry {
+  string name  = 1;
+  string value = 2;
+}
+
+message CellInfoResponse {
+  repeated CellInfoEntry entries  = 1;
+  bool                   is_lte   = 2; // true = Class 51 (ENEA LTE)
+}
+
+message SetCellInfoEntryRequest {
+  int32  entry_index = 1;
+  string value       = 2;
+  bool   is_lte      = 3;
+}
+
+// Group 5 – Quality of Service
+message QosEntry {
+  uint32 precedence      = 1;
+  uint32 delay           = 2;
+  uint32 reliability     = 3;
+  uint32 peak_throughput = 4;
+  uint32 mean_throughput = 5;
+}
+
+message GetQosResponse {
+  repeated QosEntry profiles = 1;
+}
+
+message SetQosRequest {
+  QosEntry profile      = 1;
+  int32    profile_index = 2;
+}
+
+// ==========================
+// Mobile Network Identifier messages
+// ==========================
+
+message MobileNetworkIdentifiersResponse {
+  string imsi   = 1;  // 0-0:96.12.6.255 – max 15 chars
+  string msisdn = 2;  // 0-1:96.12.6.255 – max 20 chars
+  string imei   = 3;  // 0-2:96.12.6.255 – max 15 chars
+  string iccid  = 4;  // 0-3:96.12.6.255 – max 22 chars
+}
+
+// Single request type reused for all four SET operations
+message SetMniFieldRequest {
+  string value = 1;
+}
+
+message ModemStatusResponse {
+  bool is_active = 1;
+}
+
+message MniRightsResponse {
+  bool imsi_get   = 1;
+  bool imsi_set   = 2;
+  bool msisdn_get = 3;
+  bool msisdn_set = 4;
+  bool imei_get   = 5;
+  bool imei_set   = 6;
+  bool iccid_get  = 7;
+  bool iccid_set  = 8;
+  bool modem_get  = 9;
+  bool modem_set  = 10;
+}
+
+// ==========================
+
+// Modem Config messages (P2P Setup)
+// ==========================
+
+// Onglet 1 – Modem Configuration (Class 27)
+message ModemInitStringEntry {
+  string request  = 1;  // AT command
+  string expected = 2;  // expected response
+  int32  delay_ms = 3;  // delay after response (ms)
+}
+
+message ModemConfigSettingsResponse {
+  int32                      comm_speed       = 1;  // index into speed list (0=300..9=115200)
+  string                     modem_profile    = 2;
+  repeated ModemInitStringEntry init_strings  = 3;
+  bool                       show_init_string = 4;  // false if InitString=0 in config
+}
+
+message SetCommSpeedRequest {
+  int32 speed_index = 1;  // 0=300, 1=600, 2=1200, 3=2400, 4=4800, 5=9600, 6=19200, 7=38400, 8=57600, 9=115200
+}
+
+message SetModemProfileRequest {
+  string profile = 1;
+}
+
+message SetInitStringsRequest {
+  repeated ModemInitStringEntry entries = 1;
+}
+
+// Onglet 2 – Auto Connect (Class 29)
+message CallingWindowEntry {
+  string start_time = 1;  // DLMS datetime string
+  string end_time   = 2;
+}
+
+message DestinationEntry {
+  string ip_address = 1;
+  int32  port       = 2;
+}
+
+message AutoConnectResponse {
+  int32                       mode              = 1;  // 101..104
+  int32                       repetitions       = 2;
+  int32                       repetition_delay  = 3;
+  repeated CallingWindowEntry calling_window    = 4;
+  repeated DestinationEntry   destination_list  = 5;
+}
+
+message SetAutoConnectRequest {
+  int32                       mode             = 1;
+  int32                       repetitions      = 2;
+  int32                       repetition_delay = 3;
+  repeated CallingWindowEntry calling_window   = 4;
+}
+
+// Onglet 3 – Auto Answer (Class 30)
+message AllowedCallerEntry {
+  string caller_id  = 1;
+  int32  call_type  = 2;
+}
+
+message AutoAnswerResponse {
+  int32                       mode              = 1;
+  int32                       number_of_calls   = 2;
+  int32                       rings_in_window   = 3;
+  int32                       rings_out_window  = 4;
+  int32                       status            = 5;
+  repeated AllowedCallerEntry allowed_callers   = 6;
+  repeated CallingWindowEntry listening_window  = 7;
+}
+
+message SetAutoAnswerRequest {
+  int32                       mode             = 1;
+  int32                       number_of_calls  = 2;
+  int32                       rings_in_window  = 3;
+  int32                       rings_out_window = 4;
+  repeated AllowedCallerEntry allowed_callers  = 5;
+  repeated CallingWindowEntry listening_window = 6;
+}
+
+// Onglet 4 – TCP/UDP Setup (Class 41)
+// attr 2=port, attr 3=IP_reference(read-only), attr 4=MSS, attr 5=nb_of_sim_conn, attr 6=inactivity_timeout
+message TcpUdpSetupResponse {
+  int32  port               = 1;  // attr 2
+  string ip_reference       = 2;  // attr 3 – read-only OBIS octet-string
+  int32  mss                = 3;  // attr 4
+  int32  nb_connections     = 4;  // attr 5
+  int32  inactivity_timeout = 5;  // attr 6
+}
+
+message SetTcpUdpSetupRequest {
+  int32 port                = 1;  // attr 2
+  int32 mss                 = 2;  // attr 4
+  int32 nb_connections      = 3;  // attr 5
+  int32 inactivity_timeout  = 4;  // attr 6
+}
+
+// Activity Calendar (DLMS Class 20 / Class 11)
+// ==========================
+
+// Compact time value matching DLMS time octet-string layout.
+message CalendarTimeValue {
+  int32 hour       = 1; // 0..23, or 255 = not specified
+  int32 minute     = 2; // 0..59, or 255 = not specified
+  int32 second     = 3; // 0..59, or 255 = not specified
+  int32 hundredths = 4; // 0..99, or 255 = not specified
+}
+
+// Compact date value matching DLMS date octet-string layout.
+message CalendarDateValue {
+  int32 year         = 1; // e.g. 2026, 65535 = not specified
+  int32 month        = 2; // 1..12, 253=daylight_saving_end, 254=daylight_saving_begin
+  int32 day_of_month = 3; // 1..31, 253=2nd_last, 254=last, 255=not_specified
+  int32 day_of_week  = 4; // 1=Mon..7=Sun, 255 = not specified
+}
+
+// One timed action within a day profile (maps to DLMS day_profile_action).
+message DayProfileAction {
+  CalendarTimeValue start_time         = 1;
+  string            script_logical_name = 2; // OBIS hex of script table, e.g. "0000060100FF"
+  int32             script_selector     = 3; // tariff / rate index (1=T1, 2=T2, ...)
+}
+
+// A single day profile (DLMS day_profile).
+message CalendarDayProfile {
+  int32                    day_id       = 1;
+  repeated DayProfileAction day_schedule = 2;
+}
+
+// A single week profile (DLMS week_profile_table_entry).
+message CalendarWeekProfile {
+  string week_profile_name = 1;
+  int32  monday            = 2;
+  int32  tuesday           = 3;
+  int32  wednesday         = 4;
+  int32  thursday          = 5;
+  int32  friday            = 6;
+  int32  saturday          = 7;
+  int32  sunday            = 8;
+}
+
+// A single season profile entry (DLMS season_profile).
+message CalendarSeasonProfile {
+  string             season_profile_name = 1;
+  CalendarDateValue  season_start        = 2;
+  string             week_profile_name   = 3;
+}
+
+// Full snapshot of one activity calendar (active or passive, Attr 2-5 or 6-9).
+message ActivityCalendarData {
+  string                        calendar_name   = 1;
+  repeated CalendarSeasonProfile season_profiles = 2;
+  repeated CalendarWeekProfile   week_profiles   = 3;
+  repeated CalendarDayProfile    day_profiles    = 4;
+}
+
+// One entry in the special days table (DLMS Class 11 Attr 2).
+message SpecialDayEntry {
+  int32             index            = 1;
+  CalendarDateValue special_day_date = 2;
+  int32             day_id           = 3;
+}
+
+// Full special days table.
+message SpecialDayTable {
+  repeated SpecialDayEntry entries = 1;
+}
+
+// Request to set/get the passive calendar activation time (Attr 10 of Class 20).
+message CalendarActivationTime {
+  int32 year   = 1; // 0 = not set / wildcard
+  int32 month  = 2;
+  int32 day    = 3;
+  int32 hour   = 4;
+  int32 minute = 5;
+  int32 second = 6;
+
+}
+
+// ==========================
+// Export Data
+// ==========================
+message ExportDataRequest {
+  string page_id    = 1; // identifier of the page/view being exported
+  string type       = 2; // export format type (e.g. "xml", "csv", "pdf", "docx")
+  string data       = 3; // page data serialised as a JSON string
+  string folder_path = 4; // destination folder path on the server
+  string page_type  = 5; // type of page (e.g. "load_profile", "event_logs", "device_id")
+  string file_name_suffix = 6; // optional suffix appended to the filename (e.g. device id values)
+}
+
+message ExportDataResponse {
+  bool success = 1;
+}
+
+// ==========================
+// Push Setup Server
+// ==========================
+message StartPushSetupServerRequest {
+  string host = 1;
+  int32  port  = 2;
+  string type  = 3;
+}
+
+message PushNotification {
+  string xml = 1; // XML representation of the received push notification
+}
+// Retry Status Notification
+// ==========================
+message RetryStatusUpdate {
+  int32  attempt      = 1;  // current attempt number (1-based)
+  int32  max_attempts = 2;  // total max attempts configured
+  bool   all_failed   = 3;  // true = all attempts exhausted, connection lost
+  string message      = 4;  // human-readable description
+}
+
+// ==========================
+// LTE Monitoring
+// ==========================
+
+message GetLteNetworkParametersResponse {
+  int32 t3402 = 1;
+  int32 t3412 = 2;
+  int32 t3412ext2 = 3;
+  int32 t3324 = 4;
+  int32 t_edrx = 5;
+  int32 tptw = 6;
+  int32 q_rxlev_min = 7;
+  int32 q_rxlev_min_ce_r13 = 8;
+  int32 q_rxlev_min_ce1_r13 = 9;
+}
+
+message GetLteQosResponse {
+  int32 nrsrq = 1;
+  int32 nrsrp = 2;
+  int32 snr = 3;
+  int32 coverage_enhancement = 4;
+}
+
+// ImageTransfer attribute 6: image_transfer_status (COSEM class 18 enum).
+// 0=not_initiated 1=initiated 2=verification_initiated 3=verification_successful
+// 4=verification_failed 5=activation_initiated 6=activation_successful 7=activation_failed
+message ImageTransferStatusResponse {
+  int32  status = 1;  // raw enum value (0-7), -1 on read error
+  string label  = 2;  // human-readable name
+}
+
+
+
+message GetQualityObjectsRequest {
+  repeated string objects = 1;
+}
+
+message GetQualityObjectsResponse {
+  repeated QualityObject objects = 1;
+}
+
+message QualityObject {
+  string name = 1;
+  double  value = 2;
+  string unit = 3;
+  int32 scaler = 4;
+}
+
+
+message UpdateQualityObjectRequest {
+  double value = 1;
+  int32 scaler = 2;
+  string datasource = 3;
+}
+
+
+
+
+// ==========================
+// Service
+// ==========================
+service MeterService {
+  // Export page data to a file in the given folder.
+  rpc ExportData(ExportDataRequest) returns (ExportDataResponse);
+  // Initialize meter context using a string input named `modulename`.
+  rpc InitMeterContext(InitMeterContextRequest) returns (BoolValue);
+
+  // Connect / disconnect to meter transport.
+  rpc Connect(google.protobuf.Empty) returns (BoolValue);
+  rpc Disconnect(google.protobuf.Empty) returns (BoolValue);
+
+  // ---------- Advanced execution (old behavior) ----------
+  // Keeps the old signature and returns ApplicationResponseList.
+  rpc ExecuteAdvancedGet(GetRequestList) returns (ApplicationResponseList);
+  rpc ExecuteAdvancedSet(SetRequestList) returns (ApplicationResponseList);
+  rpc ExecuteAdvancedAction(ActionRequestList) returns (ApplicationResponseList);
+
+  // ---------- New execution with XML/XDR result ----------
+  // Input: *List* + with_list flag (inside Get/Set/ActionRequestList)
+  // Output: list of items (request, xml_xdr, xdr, success, error).
+  rpc ExecuteGet(GetRequestList) returns (FrameExecutionList);
+  rpc ExecuteSet(SetRequestList) returns (FrameExecutionList);
+  rpc ExecuteAction(ActionRequestList) returns (FrameExecutionList);
+
+  // ---------- Existing RPCs ----------
+  // Return current block size from meter (or configured SDK value).
+  rpc GetBlockSize(google.protobuf.Empty) returns (Int32Value);
+  // NEW: Set block size
+  rpc SetBlockSize(Int32Value) returns (BoolValue);
+
+
+  // Enable image transfer mode on the meter/SDK.
+  rpc EnableImageTransfer(google.protobuf.Empty) returns (BoolValue);
+
+  // Initiate a transfer session with file path + imageId.
+  rpc InitiateTransfer(InitiateTransferRequest) returns (BoolValue);
+
+  // Transfer a file in blocks; server streams progress updates.
+  rpc TransferFile(TransferFileRequest) returns (stream TransferUpdate);
+
+  // ---------- NEW RPCs ----------
+  // Verify transferred chunks; returns an array of booleans (per-chunk OK).
+  rpc VerifyTransfert(VerifyTransfertRequest) returns (VerifyTransfertResponse);
+
+  // Resend missing/failed chunks discovered by verification; streams updates.
+  rpc ResendMissingChunks(ResendMissingChunksRequest) returns (stream TransferUpdate);
+  rpc ResumeTransfer(ResumeTransferRequest) returns (stream TransferUpdate);
+
+  // Activate firmware once transfer/verification is done.
+  rpc ActivateFirmware(google.protobuf.Empty) returns (ActivateFirmwareResponse);
+
+  // ---------- Datamodel Browsing (NEW) ----------
+  // List DLMS/COSEM objects; optionally include attributes depending on `withAttributes`.
+  rpc GetDatamodelObjects(GetDatamodelObjectsRequest) returns (GetDatamodelObjectsResponse);
+
+  // List attributes for a specific object (by name) and client context.
+  rpc GetDatamodelAttributesByObjectName(GetDatamodelAttributesByObjectNameRequest)
+      returns (GetDatamodelAttributesByObjectNameResponse);
+
+  rpc TranslateData(TranslateDataRequest) returns (TranslateDataResponse);
+  rpc DlmsTranslate(DlmsTranslateRequest) returns (StringValue);
+  
+  
+  rpc GetClock(google.protobuf.Empty) returns (StringValue);
+  rpc SetClock(StringValue) returns (BoolValue);
+  
+  
+  
+  rpc GetDatamodels(google.protobuf.Empty) returns (StringList);
+  
+  // Output: BoolValue (true if loaded successfully)
+  rpc LoadDatamodel(LoadDatamodelRequest) returns (BoolValue);
+  
+  
+  // Returns load profile table for the given object name:
+  // - headerTypes: list of column headers/types
+  // - values: list of rows; each row is a list of strings
+  rpc GetLoadProfile(GetLoadProfileRequest) returns (stream GetLoadProfileStreamItem);
+  
+  // Get / Set a single load-profile parameter (one info per call).
+  rpc GetLoadProfileParam(GetLoadProfileParamRequest) returns (Int32Value);
+  rpc SetLoadProfileParam(SetLoadProfileParamRequest) returns (BoolValue);
+
+  
+  // Empty request → returns a list of PhaseData.
+  rpc GetFresnelData(google.protobuf.Empty) returns (FresnelResponse);
+
+  // Get device identification data (factory number, COSEM logical device name, and device IDs 2-5)
+  rpc GetDeviceID(google.protobuf.Empty) returns (DeviceIDList);
+    // Get firmware version data
+  rpc GetFirmwareVersion(google.protobuf.Empty) returns (FirmwareVersionList);
+  
+	// Returns the currently configured activation datetime (UTC).
+	rpc GetImageTransfertActivationDateTime(google.protobuf.Empty) returns (ActivationDateTime);
+
+	// Sets the activation datetime (expects UTC Timestamp); returns success.
+	rpc SetImageTransfertActivationDateTime(ActivationDateTime) returns (BoolValue);
+
+	// Get/Set incremental date for daylight savings (DST activation)
+	rpc GetIncrementalDate(google.protobuf.Empty) returns (DaylightSavingsTime);
+	rpc SetIncrementalDate(DaylightSavingsTime) returns (BoolValue);
+
+	// Get/Set decremental date for daylight savings (DST deactivation)
+	rpc GetDecrementalDate(google.protobuf.Empty) returns (DaylightSavingsTime);
+	rpc SetDecrementalDate(DaylightSavingsTime) returns (BoolValue);
+
+  // Get/Set daylight saving deviation (minutes)
+  rpc GetDaylightSavingDeviation(google.protobuf.Empty) returns (Int32Value);
+  rpc SetDaylightSavingDeviation(Int32Value) returns (BoolValue);
+
+  // Get/Set daylight saving activation (enabled/disabled)
+  rpc GetDaylightSavingActivation(google.protobuf.Empty) returns (BoolValue);
+  rpc SetDaylightSavingActivation(BoolValue) returns (BoolValue);
+
+  // Get/Set timezone (minutes offset from UTC)
+  rpc GetTimezone(google.protobuf.Empty) returns (Int32Value);
+  rpc SetTimezone(Int32Value) returns (BoolValue);
+
+    // Get energy register objects
+  rpc GetEnergyRegister(google.protobuf.Empty) returns (EnergyRegisterList);
+    // Get average voltage and current objects
+  rpc GetAverage(google.protobuf.Empty) returns (AverageList);
+  // Get load profile bit status
+  rpc GetBitStatus(BitStatusRequest) returns (BitStatusResponse);
+
+  // Get push object list for a given data source
+  rpc GetPushObjectList(GetPushObjectListRequest) returns (GetPushObjectListResponse);
+  // ---- Activity Calendar (DLMS Class 20 + Class 11) ----
+  // Read the currently active calendar (Attr 2..5 of Class 20).
+  rpc GetActiveCalendar(google.protobuf.Empty)      returns (ActivityCalendarData);
+  // Read the passive (staging) calendar (Attr 6..9 of Class 20).
+  rpc GetPassiveCalendar(google.protobuf.Empty)     returns (ActivityCalendarData);
+  // Read only the passive day profile table (Attr 9 of Class 20).
+  rpc GetPassiveDayProfiles(google.protobuf.Empty)  returns (ActivityCalendarData);
+  // Read only the passive week profile table (Attr 8 of Class 20).
+  rpc GetPassiveWeekProfiles(google.protobuf.Empty) returns (ActivityCalendarData);
+  // Read only the passive season profile table (Attr 7 of Class 20).
+  rpc GetPassiveSeasonProfiles(google.protobuf.Empty) returns (ActivityCalendarData);
+  // Write the passive calendar to the meter (Attr 6..9 of Class 20).
+  rpc SetPassiveCalendar(ActivityCalendarData)      returns (BoolValue);
+  // Read the active special-days table (Class 11 for Active calendar).
+  rpc GetSpecialDays(google.protobuf.Empty)         returns (SpecialDayTable);
+  // Read the passive special-days table (Class 11 for Passive calendar).
+  rpc GetPassiveSpecialDays(google.protobuf.Empty)  returns (SpecialDayTable);
+  // Write the passive special-days table (Class 11 for Passive calendar).
+  rpc SetPassiveSpecialDays(SpecialDayTable)        returns (BoolValue);
+  // Execute Method 1 on Class 20 – immediately activate the passive calendar.
+  rpc ActivatePassiveCalendar(google.protobuf.Empty) returns (BoolValue);
+
+  // Set push object list for a given data source
+  rpc SetPushObjectList(SetPushObjectListRequest) returns (google.protobuf.Empty);
+
+  // Get randomisation start interval for a given data source
+  rpc GetRandomisationStartInterval(GetRandomisationStartIntervalRequest) returns (GetRandomisationStartIntervalResponse);
+
+  // Set randomisation start interval for a given data source
+  rpc SetRandomisationStartInterval(SetRandomisationStartIntervalRequest) returns (google.protobuf.Empty);
+
+  // Get number of retries for a given data source
+  rpc GetNumberOfRetries(GetNumberOfRetriesRequest) returns (GetNumberOfRetriesResponse);
+
+  // Set number of retries for a given data source
+  rpc SetNumberOfRetries(SetNumberOfRetriesRequest) returns (google.protobuf.Empty);
+
+  // Get repetition delay (min, exponent, max) for a given data source
+  rpc GetRepetitionDelay(GetRepetitionDelayRequest) returns (GetRepetitionDelayResponse);
+
+  // Set repetition delay for a given data source
+  rpc SetRepetitionDelay(SetRepetitionDelayRequest) returns (google.protobuf.Empty);
+
+  // Get last confirmation datetime for a given data source
+  rpc GetLastConfirmationDatetime(GetLastConfirmationDatetimeRequest) returns (GetLastConfirmationDatetimeResponse);
+
+  // Set last confirmation datetime for a given data source
+  rpc SetLastConfirmationDatetime(SetLastConfirmationDatetimeRequest) returns (google.protobuf.Empty);
+
+  // Get send destination (transport service, destination, message) for a given data source
+  rpc GetSendDestination(GetSendDestinationRequest) returns (GetSendDestinationResponse);
+
+  // Set send destination for a given data source
+  rpc SetSendDestination(SetSendDestinationRequest) returns (google.protobuf.Empty);
+
+  // Get communication window (list of start/end time pairs) for a given data source
+  rpc GetCommunicationWindow(GetCommunicationWindowRequest) returns (GetCommunicationWindowResponse);
+
+  // Set communication window for a given data source
+  rpc SetCommunicationWindow(SetCommunicationWindowRequest) returns (google.protobuf.Empty);
+
+  // Get execution time (list of datetime strings) for a given data source
+  rpc GetExecutionTime(GetExecutionTimeRequest) returns (StringList);
+
+  // Set execution time for a given data source
+  rpc SetExecutionTime(SetExecutionTimeRequest) returns (google.protobuf.Empty);
+
+  // Get push action type for a given data source
+  rpc GetPushActionType(GetPushActionTypeRequest) returns (Int32Value);
+
+  // Get executed script content for a given data source
+  rpc GetPushActionExecutedScript(GetPushActionExecutedScriptRequest) returns (GetPushActionExecutedScriptResponse);
+
+  // Set executed script content for a given data source
+  rpc SetPushActionExecutedScript(SetPushActionExecutedScriptRequest) returns (google.protobuf.Empty);
+
+  // Get script table entries for a given data source
+  rpc GetScriptTable(GetScriptTableRequest) returns (GetScriptTableResponse);
+
+  // Get capture objects for a given data source
+  rpc GetPushSelectiveCaptureObjects(GetPushSelectiveCaptureObjectsRequest) returns (GetPushSelectiveCaptureObjectsResponse);
+
+  // Get push recovery objects: pass array of (datasource, attribute) pairs, returns array of string results
+  rpc GetPushRecoveryObjects(GetPushRecoveryObjectsRequest) returns (GetPushRecoveryObjectsResponse);
+
+  // Trigger push for a given data source
+  rpc PushSetupPush(PushSetupPushRequest) returns (google.protobuf.Empty);
+
+  // Reset push setup for a given data source
+  rpc PushSetupReset(PushSetupResetRequest) returns (google.protobuf.Empty);
+
+
+  // ==========================
+  // SIM Config RPCs (P2P Setup)
+  // ==========================
+  rpc GetModemConfig(google.protobuf.Empty) returns (ModemConfigResponse);
+  rpc SetApn(SetApnRequest)                 returns (BoolValue);
+  rpc SetPinCode(SetPinCodeRequest)         returns (BoolValue);
+  rpc SetPppAuth(SetPppAuthRequest)         returns (BoolValue);
+
+  rpc GetIpAddress(google.protobuf.Empty)   returns (IpAddressResponse);
+  rpc SetIpAddress(SetIpAddressRequest)     returns (BoolValue);
+
+  rpc GetCellularDiag(google.protobuf.Empty)    returns (CellularDiagResponse);
+  rpc SetCellularField(SetCellularFieldRequest) returns (BoolValue);
+
+  rpc GetCellInfo(google.protobuf.Empty)        returns (CellInfoResponse);
+  rpc SetCellInfoEntry(SetCellInfoEntryRequest) returns (BoolValue);
+
+  rpc GetQos(google.protobuf.Empty) returns (GetQosResponse);
+  rpc SetQos(SetQosRequest)         returns (BoolValue);
+
+  // ==========================
+  // Mobile Network Identifier RPCs (P2P Setup)
+  // ==========================
+  rpc GetMobileNetworkIdentifiers(google.protobuf.Empty) returns (MobileNetworkIdentifiersResponse);
+  rpc SetImsi(SetMniFieldRequest)   returns (BoolValue);
+  rpc SetMsisdn(SetMniFieldRequest) returns (BoolValue);
+  rpc SetImei(SetMniFieldRequest)   returns (BoolValue);
+  rpc SetIccid(SetMniFieldRequest)  returns (BoolValue);
+  rpc GetModemStatus(google.protobuf.Empty) returns (ModemStatusResponse);
+  rpc SetModemStatus(BoolValue)     returns (BoolValue);
+  rpc RestartModem(google.protobuf.Empty)  returns (BoolValue);
+  rpc GetMniRights(google.protobuf.Empty)  returns (MniRightsResponse);
+
+  // ==========================
+  // Modem Config RPCs (P2P Setup)
+  // ==========================
+  rpc GetModemConfigSettings(google.protobuf.Empty)       returns (ModemConfigSettingsResponse);
+  rpc SetCommSpeed(SetCommSpeedRequest)                   returns (BoolValue);
+  rpc SetModemProfile(SetModemProfileRequest)             returns (BoolValue);
+  rpc SetInitStrings(SetInitStringsRequest)               returns (BoolValue);
+
+  rpc GetAutoConnect(google.protobuf.Empty)               returns (AutoConnectResponse);
+  rpc SetAutoConnect(SetAutoConnectRequest)               returns (BoolValue);
+  rpc ModemConnect(google.protobuf.Empty)                 returns (BoolValue);
+
+  rpc GetAutoAnswer(google.protobuf.Empty)                returns (AutoAnswerResponse);
+  rpc SetAutoAnswer(SetAutoAnswerRequest)                 returns (BoolValue);
+
+  rpc GetTcpUdpSetup(google.protobuf.Empty)               returns (TcpUdpSetupResponse);
+  rpc SetTcpUdpSetup(SetTcpUdpSetupRequest)               returns (BoolValue);
+
+  // Returns a JSON map {attr_id: can_write} for a COSEM object class.
+  rpc GetObjectWriteRights(Int32Value) returns (StringValue);
+
+  // Execute script table for a given data source
+  rpc ExecuteScriptTable(ExecuteScriptTableRequest) returns (google.protobuf.Empty);
+
+  // ==========================
+  // Push Setup Server RPCs
+  // ==========================
+  // Start a local TCP server to receive push notifications from the meter.
+  // Streams push notifications as XML strings as they arrive.
+  rpc StartPushSetupServer(StartPushSetupServerRequest) returns (stream PushNotification);
+
+  // Stop the running push setup server.
+  rpc StopPushSetupServer(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // Send a test push notification through the push setup server.
+  rpc SendTestNotification(google.protobuf.Empty) returns (google.protobuf.Empty);
+  // Stream retry status updates from the ng_sdk communication layer.
+  // The server pushes one update per retry attempt and a final update when
+  // all attempts fail. The stream stays open until the client disconnects.
+  rpc WatchRetryStatus(google.protobuf.Empty) returns (stream RetryStatusUpdate);
+
+
+  // ==========================
+  // CT VT Management
+  // ==========================
+  
+  rpc GetPrimaryCt(google.protobuf.Empty) returns (Int32Value);
+  rpc SetPrimaryCt(Int32Value) returns (google.protobuf.Empty);
+
+  rpc GetSecondaryCt(google.protobuf.Empty) returns (Int32Value);
+  rpc SetSecondaryCt(Int32Value) returns (google.protobuf.Empty);
+
+  rpc GetPrimaryVt(google.protobuf.Empty) returns (Int32Value);
+  rpc SetPrimaryVt(Int32Value) returns (google.protobuf.Empty);
+
+  rpc GetRatioValueVt(google.protobuf.Empty) returns (Int32Value);
+  rpc SetRatioValueVt(Int32Value) returns (google.protobuf.Empty);
+
+ 
+
+ // Read ImageTransfer attribute 6: image_transfer_status enum.
+  rpc GetImageTransferStatus(google.protobuf.Empty) returns (ImageTransferStatusResponse);
+
+
+  // Quality
+  rpc GetQualityObjects(GetQualityObjectsRequest) returns (GetQualityObjectsResponse);
+  rpc UpdateQualityObject(UpdateQualityObjectRequest) returns (google.protobuf.Empty);
+  rpc ReadQualityConfig(ReadQualityConfigRequest) returns (ReadQualityConfigResponse);
+  rpc WriteQualityConfig(WriteQualityConfigRequest) returns (google.protobuf.Empty);
+
+
+
+
+
+}

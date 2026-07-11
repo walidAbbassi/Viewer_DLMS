@@ -1,0 +1,16 @@
+{
+  items: [
+    {
+      "name": "Producer Serial Number",
+      "objectName": "DeviceId2",
+    },
+    {
+      "name": "Logic Device Name",
+      "objectName": "CosemLogicalDeviceName",
+    },
+    {
+      "name": "PDL",
+      "objectName": "DeviceId4",
+    }
+  ],
+}

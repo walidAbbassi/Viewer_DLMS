@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package logs;
+
+import "google/protobuf/empty.proto";
+
+// Service pour streamer les logs en temps réel
+service LogService {
+  // Appel gRPC de type server-streaming
+  rpc StreamLogs(google.protobuf.Empty) returns (stream LogLine);
+}
+
+
+// Message représentant une ligne de log
+message LogLine {
+  string message = 1;  // Contenu texte du log
+}

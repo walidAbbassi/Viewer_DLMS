@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+  <title>Device ID</title>
+  <logicalDeviceName>{{ deviceId.Logic_Device_Name }}</logicalDeviceName>
+  <fields>
+  {% for key, value in fields.items() %}
+    <field>
+      <name>{{ key }}</name>
+      <value>{{ value }}</value>
+    </field>
+  {% endfor %}
+  </fields>
+</report>

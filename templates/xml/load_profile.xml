@@ -1,0 +1,19 @@
+<report>
+  <title>{{ name }}</title>
+  <logicalDeviceName>{{ deviceId.Logic_Device_Name }}</logicalDeviceName>
+  <description>{{ description }}</description>
+  <datasource>{{datasource }}</datasource>
+
+  <items>
+  {% for row in data %}
+    <row>
+    {% for i in range(columns|length) %}
+      <item>
+        <label>{{ columns[i] }}</label>
+        <value>{{ row[i] }}</value>
+      </item>
+    {% endfor %}
+    </row>
+  {% endfor %}
+  </items>
+</report>

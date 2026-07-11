@@ -1,0 +1,9 @@
+{
+  "scriptTables": [
+    {
+      "id": "1",
+      "label": "Script Table",
+      "datasource": "PushScriptTable"
+    }
+  ]
+}

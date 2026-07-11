@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+  <title>Fresnel Diagram</title>
+  <logicalDeviceName>{{ deviceId.Logic_Device_Name }}</logicalDeviceName>
+  <lastRefresh>{{ lastRefresh }}</lastRefresh>
+  <phases>
+  {% for phase, values in phases.items() %}
+    <phase>
+      <name>{{ phase }}</name>
+      <u unit="V">{{ "%.3f"|format(values.u) }}</u>
+      <i unit="A">{{ "%.3f"|format(values.i) }}</i>
+      <phi unit="deg">{{ "%.2f"|format(values.phi) }}</phi>
+    </phase>
+  {% endfor %}
+  </phases>
+</report>

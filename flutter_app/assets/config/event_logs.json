@@ -1,0 +1,283 @@
+{
+  "eventLogs": [
+    {
+      "id": "DisconnectorControlLog",
+      "name": "Disconnector Control Log",
+      "description": "Disconnector Control Log",
+      "dataSource": "DisconnectorControlLog",
+      "statColumnName": "EventObjectDisconnectorControlLog ( 96.11.2 )",
+      
+  "statColumns": [
+    { "value": 30, "label": "Remote disconnection relay 1", "color": "#4D8EE0" },
+    { "value": 31, "label": "Remote disconnection relay 2", "color": "#E8A04D" },
+    { "value": 32, "label": "Remote reconnection relay 1", "color": "#4DCBD4" },
+    { "value": 33, "label": "Remote reconnection relay 2", "color": "#8E4DE8" },
+
+    { "value": 34, "label": "Local reconnection relay 1", "color": "#E98A4D" },
+    { "value": 35, "label": "Local reconnection relay 2", "color": "#4DD3B2" },
+    { "value": 36, "label": "Local disconnection relay 1", "color": "#4DB8D4" },
+    { "value": 37, "label": "Local disconnection relay 2", "color": "#8CC14E" },
+
+    { "value": 59, "label": "Disconnector ready for manual reconnection", "color": "#4DC2D6" },
+    { "value": 60, "label": "Manual disconnection", "color": "#C64DF2" },
+    { "value": 61, "label": "Manual connection", "color": "#E6804C" },
+
+    { "value": 62, "label": "Remote disconnection", "color": "#51C5A2" },
+    { "value": 63, "label": "Remote connection", "color": "#E6AF4A" },
+    { "value": 64, "label": "Local disconnection", "color": "#4DCBD4" },
+    { "value": 65, "label": "Limiter threshold exceeded", "color": "#7BC14D" },
+    { "value": 66, "label": "Limiter threshold ok", "color": "#4DB8CE" },
+    { "value": 67, "label": "Limiter threshold changed", "color": "#B64DEB" },
+    { "value": 68, "label": "Disconnect/Reconnect failure", "color": "#E77A55" },
+    { "value": 69, "label": "Local reconnection", "color": "#4DD6C0" },
+
+    { "value": 70, "label": "Supervision monitor 1 threshold exceeded", "color": "#9AE04D" },
+    { "value": 71, "label": "Supervision monitor 1 threshold ok", "color": "#95C14D" },
+    { "value": 72, "label": "Supervision monitor 2 threshold exceeded", "color": "#4DC9DF" },
+    { "value": 73, "label": "Supervision monitor 2 threshold ok", "color": "#CD4DF4" },
+    { "value": 74, "label": "Supervision monitor 3 threshold exceeded", "color": "#E9864C" },
+    { "value": 75, "label": "Supervision monitor 3 threshold ok", "color": "#4DD4C5" },
+
+    { "value": 95, "label": "Disconnector activity calendar activated", "color": "#8E4DE8" },
+    { "value": 96, "label": "Disconnector passive activity calendar programmed", "color": "#7FC14D" },
+    { "value": 97, "label": "Load Mgmt activity calendar activated", "color": "#4DBCDA" },
+    { "value": 98, "label": "Load Mgmt passive activity calendar programmed", "color": "#B54DF0" },
+
+    { "value": 255, "label": "Event log cleared", "color": "#4DC8D0" }
+  ]
+
+    },{
+      "id": "FraudDetectionLog",
+      "name": "Fraud Detection Log",
+      "description": "Fraud Detection Log",
+      "dataSource": "FraudDetectionLog",
+      "statColumnName": "EventObjectFraudDetectionLog ( 96.11.1 )",
+      
+  "statColumns": [
+    { "value": 40, "label": "Terminal cover removed", "color": "#4DB8D4" },
+    { "value": 41, "label": "Terminal cover closed", "color": "#4DA9C8" },
+    { "value": 42, "label": "Strong DC field detected", "color": "#B44DF1" },
+    { "value": 43, "label": "No strong DC field anymore", "color": "#E77E4D" },
+    { "value": 44, "label": "Meter cover removed", "color": "#4DD4B8" },
+    { "value": 45, "label": "Meter cover closed", "color": "#D4C24D" },
+    { "value": 46, "label": "Association authentication failure (n time failed authentication)", "color": "#E86A4D" },
+
+    { "value": 49, "label": "Decryption or authentication failure (n time failure)", "color": "#8BC14D" },
+    { "value": 50, "label": "Replay attack", "color": "#4DC2D3" },
+
+    { "value": 91, "label": "Current Reversal", "color": "#CD4DF0" },
+
+    { "value": 197, "label": "Modem Cover Removed", "color": "#E5864D" },
+    { "value": 198, "label": "Modem Cover Closed", "color": "#4DCFC3" },
+
+    { "value": 200, "label": "Detection of a difference between current on phases and neutral", "color": "#7B4DE8" },
+
+    { "value": 232, "label": "install/uninstall Wmbus: only for SIAME", "color": "#F05A9C" },
+
+    { "value": 255, "label": "Event log cleared", "color": "#4DC8D0" }
+  ]
+
+    },{
+      "id": "PowerFailureEventLog",
+      "name": "Power Failure Event Log",
+      "description": "Power Failure Event Log",
+      "dataSource": "PowerFailureEventLog",
+      "statColumnName": "EventObjectPowerFailureEventLog"
+    },{
+      "id": "PowerQualityLog",
+      "name": "Power Quality Log",
+      "description": "Power Quality Log",
+      "dataSource": "PowerQualityLog",
+      "statColumnName": "EventObjectPowerQualityLog ( 96.11.4 )",
+      
+  "statColumns": [
+    { "value": 76, "label": "Undervoltage L1", "color": "#4D8EE0" },
+    { "value": 77, "label": "Undervoltage L2", "color": "#4DA8D1" },
+    { "value": 78, "label": "Undervoltage L3", "color": "#B44DF0" },
+
+    { "value": 79, "label": "Overvoltage L1", "color": "#E77F4D" },
+    { "value": 80, "label": "Overvoltage L2", "color": "#4DD5BE" },
+    { "value": 81, "label": "Overvoltage L3", "color": "#E8C44D" },
+
+    { "value": 82, "label": "Missing voltage L1", "color": "#91C14D" },
+    { "value": 83, "label": "Missing voltage L2", "color": "#4DC3D4" },
+    { "value": 84, "label": "Missing voltage L3", "color": "#C74DF3" },
+
+    { "value": 85, "label": "Voltage L1 normal", "color": "#E8944D" },
+    { "value": 86, "label": "Voltage L2 normal", "color": "#4DD4C4" },
+    { "value": 87, "label": "Voltage L3 normal", "color": "#7A4DE8" },
+
+    { "value": 90, "label": "Phase Asymmetry", "color": "#8BC14E" },
+
+    { "value": 92, "label": "Bad Voltage Quality L1", "color": "#4DB1CE" },
+    { "value": 93, "label": "Bad Voltage Quality L2", "color": "#B84DEF" },
+    { "value": 94, "label": "Bad Voltage Quality L3", "color": "#E67A52" },
+
+    { "value": 202, "label": "Phase asymmetry End", "color": "#4DD5C7" },
+
+    { "value": 205, "label": "Total Harmonic Distortion Voltage L1", "color": "#4DB6E8" },
+    { "value": 206, "label": "Total Harmonic Distortion Voltage L2", "color": "#7EC14D" },
+    { "value": 207, "label": "Total Harmonic Distortion Voltage L3", "color": "#4DC9DD" },
+
+    { "value": 208, "label": "Total Harmonic Distortion Current L1", "color": "#CB4DF4" },
+    { "value": 209, "label": "Total Harmonic Distortion Current L2", "color": "#E68C4D" },
+    { "value": 210, "label": "Total Harmonic Distortion Current L3", "color": "#4DD4B0" },
+
+    { "value": 211, "label": "Total Harmonic Distortion Voltage L1 Normal", "color": "#D4A84D" },
+    { "value": 212, "label": "Total Harmonic Distortion Voltage L2 Normal", "color": "#92C14D" },
+    { "value": 213, "label": "Total Harmonic Distortion Voltage L3 Normal", "color": "#4DCED8" },
+
+    { "value": 214, "label": "Total Harmonic Distortion Current L1 Normal", "color": "#C74DF1" },
+    { "value": 215, "label": "Total Harmonic Distortion Current L2 Normal", "color": "#E7834D" },
+    { "value": 216, "label": "Total Harmonic Distortion Current L3 Normal", "color": "#4DD4C1" },
+
+    { "value": 217, "label": "Current reversal End", "color": "#F05A9A" },
+    { "value": 218, "label": "Reserved for future use", "color": "#7DC14D" },
+
+    { "value": 219, "label": "Power factor deviation L1", "color": "#4DBBDA" },
+    { "value": 220, "label": "Power factor deviation L2", "color": "#B94DEF" },
+    { "value": 221, "label": "Power factor deviation L3", "color": "#E67455" },
+
+    { "value": 222, "label": "PF normal L1", "color": "#4DD7B8" },
+    { "value": 223, "label": "PF normal L2", "color": "#6E9EE8" },
+    { "value": 224, "label": "PF normal L3", "color": "#8EC14D" },
+
+    { "value": 226, "label": "End of under voltage L1", "color": "#4DC3CB" },
+    { "value": 227, "label": "End of under voltage L2", "color": "#C94DF2" },
+    { "value": 228, "label": "End of under voltage L3", "color": "#E5844D" },
+
+    { "value": 229, "label": "End of over voltage L1", "color": "#4DDAC0" },
+    { "value": 230, "label": "End of over voltage L2", "color": "#5AE0B8" },
+    { "value": 231, "label": "End of over voltage L3", "color": "#9DC14D" },
+
+    { "value": 255, "label": "Event log cleared", "color": "#4DC8D0" }
+  ]
+
+    },{
+      "id": "Communication Log",
+      "name": "Communication Log",
+      "description": "Communication Log",
+      "dataSource": "CommunicationLog",
+      "statColumnName": "EventObjectCommunicationLog ( 96.11.5 )",
+      
+  "statColumns": [
+    { "value": 26, "label": "Communication start on remote interface I3 or I3.1", "color": "#4DC9E0" },
+    { "value": 27, "label": "Communication end on remote interface I3 or I3.1", "color": "#4D9CE8" },
+    { "value": 28, "label": "Communication start on local interface IE-M", "color": "#A74DE1" },
+    { "value": 29, "label": "Communication end on local interface IE-M", "color": "#4DD5A6" },
+
+    { "value": 53, "label": "PLC modem has reset", "color": "#E0A44C" },
+    { "value": 55, "label": "PLC Modem configuration loss", "color": "#D4A84D" },
+    { "value": 56, "label": "PLC Modem communication timed out", "color": "#7BC14E" },
+
+    { "value": 140, "label": "No connection timeout", "color": "#4D74E8" },
+    { "value": 141, "label": "Modem Initialization failure", "color": "#D27EF1" },
+    { "value": 142, "label": "SIM Card failure", "color": "#E4784E" },
+    { "value": 143, "label": "SIM Card ok", "color": "#51C59D" },
+    { "value": 144, "label": "GSM registration failure", "color": "#E6AD4A" },
+    { "value": 145, "label": "GPRS registration failure", "color": "#A6E04D" },
+    { "value": 146, "label": "PDP context established", "color": "#84C14D" },
+    { "value": 147, "label": "PDP context destroyed", "color": "#6E4DE8" },
+    { "value": 148, "label": "PDP context failure", "color": "#B54DEB" },
+    { "value": 149, "label": "Modem SW reset", "color": "#E07852" },
+    { "value": 150, "label": "Modem HW reset", "color": "#4DD6B5" },
+    { "value": 151, "label": "GSM outgoing connection", "color": "#D96D57" },
+    { "value": 152, "label": "GSM incoming connection", "color": "#5FC14D" },
+    { "value": 153, "label": "GSM hang up", "color": "#4D9ED4" },
+    { "value": 154, "label": "Diagnostic failure", "color": "#4DECCC" },
+    { "value": 155, "label": "User initialization failure", "color": "#A2C14D" },
+    { "value": 156, "label": "Signal quality low", "color": "#E0C44D" },
+    { "value": 157, "label": "Auto Answer Number of calls exceeded", "color": "#C74DF3" },
+    { "value": 158, "label": "Local communication attempt", "color": "#E4804B" },
+
+    { "value": 255, "label": "Event log cleared", "color": "#4DC8D0" }
+  ]
+
+    },{
+      "id": "Standard Event Log",
+      "name": "Standard Event Log",
+      "description": "Standard Event Log",
+      "dataSource": "StandardEventLog",
+      "statColumnName": "EventObjectStandardEventLog ( 96.11.0 )",
+      
+   "statColumns": [
+    { "value": 1, "label": "Power Down", "color": "#5A8DE3" },
+    { "value": 2, "label": "Power Up", "color": "#E4804B" },
+    { "value": 3, "label": "Daylight saving time enabled or disabled", "color": "#C17DE8" },
+    { "value": 4, "label": "Clock adjusted (old date/time)", "color": "#4DC2A1" },
+    { "value": 5, "label": "Clock adjusted (new date/time)", "color": "#E0A14B" },
+    { "value": 6, "label": "Clock invalid", "color": "#4D74E8" },
+    { "value": 7, "label": "Replace battery", "color": "#7AC14D" },
+    { "value": 8, "label": "Battery voltage low", "color": "#4D9BC1" },
+    { "value": 9, "label": "TOU activated", "color": "#B44DE0" },
+    { "value": 10, "label": "Error register cleared", "color": "#E0784D" },
+    { "value": 11, "label": "Alarm register cleared", "color": "#4DD4A9" },
+    { "value": 12, "label": "Program memory error", "color": "#E8A04D" },
+    { "value": 13, "label": "RAM error", "color": "#69A34D" },
+    { "value": 14, "label": "NV memory error", "color": "#4D8BD0" },
+    { "value": 15, "label": "Watchdog error", "color": "#E0664A" },
+    { "value": 16, "label": "Measurement system error", "color": "#4DC9E0" },
+    { "value": 17, "label": "Firmware ready for activation", "color": "#4DC2B2" },
+    { "value": 18, "label": "Firmware activated", "color": "#E0AD4B" },
+    { "value": 19, "label": "Passive TOU programmed", "color": "#4DECCE" },
+    { "value": 20, "label": "External alert detected", "color": "#7BC14D" },
+    { "value": 21, "label": "Power failure grid", "color": "#4DB3C1" },
+    { "value": 22, "label": "IF_LO_2W enabled", "color": "#4DE8A4" },
+    { "value": 23, "label": "IF_LO_2W disabled", "color": "#E84D7A" },
+
+    { "value": 47, "label": "One or more parameters changed", "color": "#A6E04D" },
+    { "value": 48, "label": "Global key(s) changed", "color": "#E57852" },
+    { "value": 51, "label": "FW verification failed", "color": "#57C49E" },
+    { "value": 52, "label": "Unexpected consumption", "color": "#E5A34D" },
+
+    { "value": 88, "label": "Phase sequence reversal", "color": "#E8C04D" },
+    { "value": 89, "label": "Missing neutral", "color": "#8BC14D" },
+
+    { "value": 97, "label": "Load Mgmt activity calendar activated", "color": "#4DBEE8" },
+    { "value": 98, "label": "Load Mgmt passive activity calendar programmed", "color": "#D94DE0" },
+
+    { "value": 109, "label": "LPCAP_1 enabled", "color": "#4DC87D" },
+    { "value": 117, "label": "LPCAP_1 disabled", "color": "#E87A4D" },
+    { "value": 118, "label": "LPCAP_2 enabled", "color": "#4D9AE8" },
+    { "value": 119, "label": "LPCAP_2 disabled", "color": "#C44DE0" },
+
+    { "value": 177, "label": "CT Ratio Change", "color": "#4D9EC1" },
+    { "value": 178, "label": "VT Ratio Change", "color": "#DC6F52" },
+    { "value": 179, "label": "CT/VT Modification Without DLMS Request", "color": "#B04DE9" },
+    { "value": 187, "label": "Bad CT Value", "color": "#4DD4BD" },
+    { "value": 188, "label": "Bad VT Value", "color": "#E6B64A" },
+
+    { "value": 200, "label": "E-meter configuration locally modified", "color": "#9A4DE8" },
+    { "value": 201, "label": "Entering installation menu", "color": "#72C14D" },
+    { "value": 203, "label": "Phase sequence reversal End", "color": "#4D9CCF" },
+    { "value": 204, "label": "Missing neutral End", "color": "#E47750" },
+
+    { "value": 241, "label": "Neutral current Exceed Start", "color": "#C24DF1" },
+    { "value": 242, "label": "Neutral current Exceed End", "color": "#4DC2C2" },
+
+    { "value": 252, "label": "Net-metering/Consumer mode reprogramming", "color": "#E0A94B" },
+    { "value": 253, "label": "Non-consumption", "color": "#4DC9E8" },
+
+    { "value": 254, "label": "Load profile cleared", "color": "#E8B44D" },
+    { "value": 255, "label": "Event log cleared", "color": "#4DC8D0" }
+  ]
+
+    },{
+      "id": "Security Event Log",
+      "name": "Security Event Log",
+      "description": "Security Event Log",
+      "dataSource": "SecurityEventLog",
+      "statColumnName": "EventObjectSecurityEventLog ( 96.11.9 )"
+    },{
+      "id": "LR Event Log",
+      "name": "LR Event Log",
+      "description": "LR Event Log",
+      "dataSource": "LREventLog",
+      "statColumnName": "EventObjectLREventLog"
+    }
+   
+  ]
+}
+
+
+

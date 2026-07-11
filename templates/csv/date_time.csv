@@ -1,0 +1,19 @@
+# Page: Date Time
+# ----------------
+# Logical Device Name: {{ deviceId.Logic_Device_Name }}
+
+## Clock Setting
+Day,Month,Year,Hour,Minute,Second,Timezone Offset (min)
+{{ clock.day }},{{ clock.month }},{{ clock.year }},{{ clock.hour }},{{ clock.minute }},{{ clock.second }},{{ clock.timezone_offset_min }}
+
+## DST Incremental
+Day,Month,Hour,Minute,Second,Day of Week
+{{ dst_incremental.day }},{{ dst_incremental.month }},{{ dst_incremental.hour }},{{ dst_incremental.minute }},{{ dst_incremental.second }},{{ dst_incremental.day_of_week }}
+
+## DST Decremental
+Day,Month,Hour,Minute,Second,Day of Week
+{{ dst_decremental.day }},{{ dst_decremental.month }},{{ dst_decremental.hour }},{{ dst_decremental.minute }},{{ dst_decremental.second }},{{ dst_decremental.day_of_week }}
+
+## DST Settings
+Deviation (min),Active
+{{ dst.deviation_min }},{{ dst.active }}

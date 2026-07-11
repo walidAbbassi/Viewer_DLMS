@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; margin: 40px; color: #222; }
+    h1 { border-bottom: 2px solid #1976D2; color: #1976D2; padding-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th { background: #E3F2FD; color: #1976D2; text-align: left; padding: 10px 12px; border: 1px solid #BBDEFB; }
+    td { padding: 9px 12px; border: 1px solid #ddd; }
+    tr:nth-child(even) td { background: #F9FAFB; }
+  </style>
+</head>
+<body>
+
+<h1>Device ID</h1>
+<p style="font-size:12px;color:#888;margin:4px 0 12px 0;">Logical Device Name: {{ deviceId.Logic_Device_Name }}</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for key, value in fields.items() %}
+    <tr>
+      <td>{{ key }}</td>
+      <td>{{ value }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+</body>
+</html>

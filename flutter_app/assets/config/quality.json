@@ -1,0 +1,551 @@
+{
+  "qualityPages": [
+    {
+        "id": "parameters",
+      "name": "Parameters",
+      "description": "Parameters",
+      "type": "no_config",
+      "items": [
+        {
+          "id": "TimeThresholdForLongPowerFailure",
+          "label": "Time Threshold For Long Power Failure",
+          "dataSource": "TimeThresholdForLongPowerFailure"
+        },
+        
+        {
+          "id": "ThresholdForVoltageSag",
+          "label": "Threshold for voltage sag",
+          "dataSource": "ThresholdForVoltageSag"
+        },
+        {
+          "id": "TimeThresholdForVoltageSag",
+          "label": "Time threshold for voltage sag",
+          "dataSource": "TimeThresholdForVoltageSag"
+        }
+        ,
+        
+        {
+          "id": "ThresholdForVoltageSwell",
+          "label": "Threshold for voltage swell",
+          "dataSource": "ThresholdForVoltageSwell"
+        },
+        {
+          "id": "TimeThresholdForVoltageSwell",
+          "label": "Time threshold for voltage swell",
+          "dataSource": "TimeThresholdForVoltageSwell"
+        },
+        {
+          "id": "ThresholdForMissingVoltage",
+          "label": "Threshold for missing voltage",
+          "dataSource": "ThresholdForMissingVoltage(VoltageCut)"
+        },
+        {
+          "id": "TimeThresholdForVoltageCut",
+          "label": "Time threshold for voltage cut",
+          "dataSource": "TimeThresholdForVoltageCut"
+        }
+      ]
+    },
+    {
+      "id": "sag",
+      "name": "Sag",
+      "description": "Sag",
+      "type": "no_config",
+      "items": [
+        {
+          "id": "DurationOfLastVoltageSagInPhaseL1",
+          "label": "Duration of Last Voltage Sag in Phase L1",
+          "dataSource": "DurationOfLastVoltageSagInPhaseL1"
+        },
+        
+        {
+          "id": "DurationOfLastVoltageSagInPhaseL2",
+          "label": "Duration of Last Voltage Sag in Phase L2",
+          "dataSource": "DurationOfLastVoltageSagInPhaseL2"
+        },
+        {
+          "id": "DurationOfLastVoltageSagInPhaseL3",
+          "label": "Duration of Last Voltage Sag in Phase L3",
+          "dataSource": "DurationOfLastVoltageSagInPhaseL3"
+        }
+        ,
+        
+        {
+          "id": "MagnitudeOfLastVoltageSagInPhaseL1",
+          "label": "Magnitude of Last Voltage Sag in Phase L1",
+          "dataSource": "MagnitudeOfLastVoltageSagInPhaseL1"
+        },
+        {
+          "id": "MagnitudeOfLastVoltageSagInPhaseL2",
+          "label": "Magnitude of Last Voltage Sag in Phase L2",
+          "dataSource": "MagnitudeOfLastVoltageSagInPhaseL2"
+        },
+        {
+          "id": "MagnitudeOfLastVoltageSagInPhaseL3",
+          "label": "Magnitude of Last Voltage Sag in Phase L3",
+          "dataSource": "MagnitudeOfLastVoltageSagInPhaseL3"
+        }
+      ]
+    },
+    {
+      "id": "min_max",
+      "name": "Min/Max",
+      "description": "Min/Max",
+      "type": "no_config",
+      
+        "items": [
+            { "id": "obj0", "label": "Max Voltage L1", "dataSource": "MaxVoltageL1" },
+            { "id": "obj1", "label": "Max Voltage L2", "dataSource": "MaxVoltageL2" },
+            { "id": "obj2", "label": "Max Voltage L3", "dataSource": "MaxVoltageL3" },
+            { "id": "obj3", "label": "Min Voltage L1", "dataSource": "MinVoltageL1" },
+            { "id": "obj4", "label": "Min Voltage L2", "dataSource": "MinVoltageL2" },
+            { "id": "obj5", "label": "Min Voltage L3", "dataSource": "MinVoltageL3" },
+            { "id": "obj6", "label": "Max Current L1", "dataSource": "MaxCurrentL1" },
+            { "id": "obj7", "label": "Max Current L2", "dataSource": "MaxCurrentL2" },
+            { "id": "obj8", "label": "Max Current L3", "dataSource": "MaxCurrentL3" },
+            { "id": "obj9", "label": "Min Current L1", "dataSource": "MinCurrentL1" },
+            { "id": "obj10", "label": "Min Current L2", "dataSource": "MinCurrentL2" },
+            { "id": "obj11", "label": "Min Current L3", "dataSource": "MinCurrentL3" },
+
+            { "id": "obj12", "label": "Max Active Export Power L1", "dataSource": "MaxActiveExportPowerL1" },
+            { "id": "obj13", "label": "Max Active Export Power L2", "dataSource": "MaxActiveExportPowerL2" },
+            { "id": "obj14", "label": "Max Active Export Power L3", "dataSource": "MaxActiveExportPowerL3" },
+
+            { "id": "obj15", "label": "Max Active Import Power L1", "dataSource": "MaxActiveImportPowerL1" },
+            { "id": "obj16", "label": "Max Active Import Power L2", "dataSource": "MaxActiveImportPowerL2" },
+            { "id": "obj17", "label": "Max Active Import Power L3", "dataSource": "MaxActiveImportPowerL3" },
+
+            { "id": "obj18", "label": "Max Reactive Export Power L1", "dataSource": "MaxReactiveExportPowerL1" },
+            { "id": "obj19", "label": "Max Reactive Export Power L2", "dataSource": "MaxReactiveExportPowerL2" },
+            { "id": "obj20", "label": "Max Reactive Export Power L3", "dataSource": "MaxReactiveExportPowerL3" },
+
+            { "id": "obj21", "label": "Max Reactive Import Power L1", "dataSource": "MaxReactiveImportPowerL1" },
+            { "id": "obj22", "label": "Max Reactive Import Power L2", "dataSource": "MaxReactiveImportPowerL2" },
+            { "id": "obj23", "label": "Max Reactive Import Power L3", "dataSource": "MaxReactiveImportPowerL3" },
+
+            { "id": "obj24", "label": "Max Active Import Power", "dataSource": "MaxActiveImportPower" },
+            { "id": "obj25", "label": "Max Active Export Power", "dataSource": "MaxActiveExportPower" },
+
+            { "id": "obj26", "label": "Min Active Import Power L1", "dataSource": "MinActiveImportPowerL1" },
+            { "id": "obj27", "label": "Min Active Import Power L2", "dataSource": "MinActiveImportPowerL2" },
+            { "id": "obj28", "label": "Min Active Import Power L3", "dataSource": "MinActiveImportPowerL3" },
+            { "id": "obj29", "label": "Min Active Import Power", "dataSource": "MinActiveImportPower" },
+
+            { "id": "obj30", "label": "Min Active Export Power L1", "dataSource": "MinActiveExportPowerL1" },
+            { "id": "obj31", "label": "Min Active Export Power L2", "dataSource": "MinActiveExportPowerL2" },
+            { "id": "obj32", "label": "Min Active Export Power L3", "dataSource": "MinActiveExportPowerL3" },
+            { "id": "obj33", "label": "Min Active Export Power", "dataSource": "MinActiveExportPower" },
+
+            { "id": "obj34", "label": "Max Reactive Export Power", "dataSource": "MaxReactiveExportPower" },
+            { "id": "obj35", "label": "Max Reactive Import Power", "dataSource": "MaxReactiveImportPower" },
+
+            { "id": "obj36", "label": "Min Reactive Import Power L1", "dataSource": "MinReactiveImportPowerL1" },
+            { "id": "obj37", "label": "Min Reactive Import Power L2", "dataSource": "MinReactiveImportPowerL2" },
+            { "id": "obj38", "label": "Min Reactive Import Power L3", "dataSource": "MinReactiveImportPowerL3" },
+
+            { "id": "obj39", "label": "Min Reactive Export Power", "dataSource": "MinReactiveExportPower" },
+            { "id": "obj40", "label": "Min Reactive Import Power", "dataSource": "MinReactiveImportPower" },
+
+            { "id": "obj41", "label": "Min Reactive Export Power L1", "dataSource": "MinReactiveExportPowerL1" },
+            { "id": "obj42", "label": "Min Reactive Export Power L2", "dataSource": "MinReactiveExportPowerL2" },
+            { "id": "obj43", "label": "Min Reactive Export Power L3", "dataSource": "MinReactiveExportPowerL3" }
+        ]
+
+    }
+    ,
+    {
+      "id": "neutral",
+      "name": "Neutral",
+      "description": "Neutral",
+      "type": "no_config",
+      
+        "items": [
+            
+           {
+                "id": "obj0",
+                "label": "Voltage Level Last Neutral Failure L1",
+                "dataSource": "VoltageLevelLastNeutralFailureL1"
+            },
+            {
+                "id": "obj1",
+                "label": "Voltage Level Last Neutral Failure L2",
+                "dataSource": "VoltageLevelLastNeutralFailureL2"
+            },
+            {
+                "id": "obj2",
+                "label": "Voltage Level Last Neutral Failure L3",
+                "dataSource": "VoltageLevelLastNeutralFailureL3"
+            },
+            {
+                "id": "obj3",
+                "label": "Duration Of Last Missing Neutral",
+                "dataSource": "DurationOfLastMissingNeutral"
+            }
+
+        ]
+
+    }
+    ,
+    {
+      "id": "overcurrent",
+      "name": "Overcurrent",
+      "description": "Overcurrent",
+      "type": "no_config",
+      
+        "items": [
+            
+           
+            {
+            "id": "obj0",
+            "label": "Duration Of Last Overcurrent L1",
+            "dataSource": "DurationOfLastOvercurrentL1"
+            },
+            {
+            "id": "obj1",
+            "label": "Duration Of Last Overcurrent L2",
+            "dataSource": "DurationOfLastOvercurrentL2"
+            },
+            {
+            "id": "obj2",
+            "label": "Duration Of Last Overcurrent L3",
+            "dataSource": "DurationOfLastOvercurrentL3"
+            },
+            {
+            "id": "obj3",
+            "label": "Magnitude Of Last Over Current L1",
+            "dataSource": "MagnitudeOfLastOverCurrentL1"
+            },
+            {
+            "id": "obj4",
+            "label": "Magnitude Of Last Over Current L2",
+            "dataSource": "MagnitudeOfLastOverCurrentL2"
+            },
+            {
+            "id": "obj5",
+            "label": "Magnitude Of Last Over Current L3",
+            "dataSource": "MagnitudeOfLastOverCurrentL3"
+            }
+
+
+        ]
+
+    }
+    ,
+    {
+      "id": "power_factor",
+      "name": "Power Factor",
+      "description": "Power Factor",
+      "type": "no_config",
+      
+        "items": [
+            
+           
+            
+{
+      "id": "obj0",
+      "label": "Duration Of Last Power Factor Deviation L1",
+      "dataSource": "DurationOfLastPowerFactorDeviationL1"
+    },
+    {
+      "id": "obj1",
+      "label": "Duration Of Last Power Factor Deviation L2",
+      "dataSource": "DurationOfLastPowerFactorDeviationL2"
+    },
+    {
+      "id": "obj2",
+      "label": "Duration Of Last Power Factor Deviation L3",
+      "dataSource": "DurationOfLastPowerFactorDeviationL3"
+    },
+    {
+      "id": "obj3",
+      "label": "Magnitude Of Last Power Factor Deviation L1",
+      "dataSource": "MagnitudeOfLastPowerFactorDeviationL1"
+    },
+    {
+      "id": "obj4",
+      "label": "Magnitude Of Last Power Factor Deviation L2",
+      "dataSource": "MagnitudeOfLastPowerFactorDeviationL2"
+    },
+    {
+      "id": "obj5",
+      "label": "Magnitude Of Last Power Factor Deviation L3",
+      "dataSource": "MagnitudeOfLastPowerFactorDeviationL3"
+    },
+    {
+      "id": "obj6",
+      "label": "Time Threshold For Power Factor Deviation",
+      "dataSource": "TimeThresholdForPowerFactorDeviation"
+    },
+    {
+      "id": "obj7",
+      "label": "Threshold For Power Factor Deviation",
+      "dataSource": "ThresholdForPowerFactorDeviation"
+    }
+
+
+        ]
+
+    }
+,
+    {
+      "id": "swell",
+      "name": "Swell",
+      "description": "Swell",
+      "type": "no_config",
+      
+        "items": [
+        
+
+    {
+      "id": "obj3",
+      "label": "Duration Of Last Voltage Swell In Phase L1",
+      "dataSource": "DurationOfLastVoltageSwellInPhaseL1"
+    },
+    {
+      "id": "obj4",
+      "label": "Duration Of Last Voltage Swell In Phase L2",
+      "dataSource": "DurationOfLastVoltageSwellInPhaseL2"
+    },
+    {
+      "id": "obj5",
+      "label": "Duration Of Last Voltage Swell In Phase L3",
+      "dataSource": "DurationOfLastVoltageSwellInPhaseL3"
+    },
+    {
+      "id": "obj6",
+      "label": "Magnitude Of Last Voltage Swell In Phase L1",
+      "dataSource": "MagnitudeOfLastVoltageSwellInPhaseL1"
+    },
+    {
+      "id": "obj7",
+      "label": "Magnitude Of Last Voltage Swell In Phase L2",
+      "dataSource": "MagnitudeOfLastVoltageSwellInPhaseL2"
+    },
+    {
+      "id": "obj8",
+      "label": "Magnitude Of Last Voltage Swell In Phase L3",
+      "dataSource": "MagnitudeOfLastVoltageSwellInPhaseL3"
+    }
+
+
+
+        ]
+
+    }
+
+
+    ,
+    {
+      "id": "thd",
+      "name": "THD",
+      "description": "THD",
+      "type": "no_config",
+      
+        "items": [
+        
+
+{
+      "id": "obj0",
+      "label": "Duration Of Last THD Voltage L1",
+      "dataSource": "DurationOfLastTHDVoltageL1"
+    },
+    {
+      "id": "obj1",
+      "label": "Duration Of Last THD Voltage L2",
+      "dataSource": "DurationOfLastTHDVoltageL2"
+    },
+    {
+      "id": "obj2",
+      "label": "Duration Of Last THD Voltage L3",
+      "dataSource": "MagnitudeOfLastPowerFactorDeviationL1"
+    },
+    {
+      "id": "obj3",
+      "label": "Magnitude Of Last THD Voltage L1",
+      "dataSource": "MagnitudeOfLastTHDVoltageL1"
+    },
+    {
+      "id": "obj4",
+      "label": "Magnitude Of Last THD Voltage L2",
+      "dataSource": "MagnitudeOfLastTHDVoltageL2"
+    },
+    {
+      "id": "obj5",
+      "label": "Magnitude Of Last THD Voltage L3",
+      "dataSource": "MagnitudeOfLastTHDVoltageL3"
+    },
+    {
+      "id": "obj6",
+      "label": "Duration Of Last THD Current L1",
+      "dataSource": "DurationOfLastTHDCurrentL1"
+    },
+    {
+      "id": "obj7",
+      "label": "Duration Of Last THD Current L2",
+      "dataSource": "DurationOfLastTHDCurrentL2"
+    },
+    {
+      "id": "obj8",
+      "label": "Duration Of Last THD Current L3",
+      "dataSource": "DurationOfLastTHDCurrentL3"
+    },
+    {
+      "id": "obj9",
+      "label": "Magnitude Of Last THD Current L1",
+      "dataSource": "MagnitudeOfLastTHDCurrentL1"
+    },
+    {
+      "id": "obj10",
+      "label": "Magnitude Of Last THD Current L2",
+      "dataSource": "MagnitudeOfLastTHDCurrentL2"
+    },
+    {
+      "id": "obj11",
+      "label": "Magnitude Of Last THD Current L3",
+      "dataSource": "MagnitudeOfLastTHDCurrentL3"
+    },
+    {
+      "id": "obj12",
+      "label": "Time Threshold For THD Voltage",
+      "dataSource": "TimeThresholdForTHDVoltage"
+    },
+    {
+      "id": "obj13",
+      "label": "Threshold For THD Voltage",
+      "dataSource": "ThresholdForTHDVoltage"
+    },
+    {
+      "id": "obj14",
+      "label": "Time Threshold For THD Current",
+      "dataSource": "TimeThresholdForTHDCurrent"
+    },
+    {
+      "id": "obj15",
+      "label": "Threshold For THD Current",
+      "dataSource": "ThresholdForTHDCurrent"
+    }
+
+
+
+        ]
+
+    },
+    {
+      "id": "abnormal_state",
+      "name": "Abnormal State",
+      "description": "Abnormal State",
+      "type": "no_config",
+      
+        "items": [
+        
+
+    
+{
+      "id": "obj0",
+      "label": "Duration Of Last Abnormal State L1",
+      "dataSource": "DurationOfLastAbnormalstateL1"
+    },
+    {
+      "id": "obj1",
+      "label": "Duration Of Last Abnormal State L2",
+      "dataSource": "DurationOfLastAbnormalstateL2"
+    },
+    {
+      "id": "obj2",
+      "label": "Duration Of Last Abnormal State L3",
+      "dataSource": "DurationOfLastAbnormalstateL3"
+    },
+    {
+      "id": "obj3",
+      "label": "Time Threshold For Phase Assymetry",
+      "dataSource": "TimeThresholdForPhaseAssymetry"
+    },
+    {
+      "id": "obj4",
+      "label": "Threshold For Phase Assymetry",
+      "dataSource": "ThresholdForPhaseAssymetry"
+    }
+
+
+
+
+        ]
+
+    },
+    {
+      "id": "power_failure",
+      "name": "Power Failure",
+      "description": "Power Failure page with tabs and sections",
+      "tabs": [
+        {
+            
+          "id": "power_failure_resume_notification_configuration",
+          "label": "Power Failure Resume Notification Configuration",
+          "type": "config",
+          "items": [
+            {
+                "id": "PowerFailureResumeNotificationConfiguration",
+                "label": "Power Failure Resume Notification Configuration",
+                "dataSource": "PowerFailureResumeNotificationConfiguration",
+                "structure": [
+                    {
+                        "id": "th1",
+                        "label": "TH1",
+                        "dataSource": "PowerFailureResumeNotificationConfiguration_"
+                    },
+                    {
+                        "id": "th2",
+                        "label": "TH2",
+                        "dataSource": "PowerFailureResumeNotificationConfiguration_"
+                    }
+                ]
+            }
+          ]
+        },
+        {
+            
+          "id": "partial_power_failure_resume_notification_configuration",
+          "label": "Partial Power Failure Resume Notification Configuration",
+          "type": "config",
+          "items": [
+            {
+                "id": "PowerFailureResumeNotificationConfiguration",
+                "label": "Partial Power Failure Resume Notification Configuration",
+                "dataSource": "PartialPowerFailureResumeNotificationConfiguration",
+                "structure": [
+                    {
+                        "id": "th1",
+                        "label": "TH1",
+                        "dataSource": "PartialPowerFailureResumeNotificationConfiguration"
+                    },
+                    {
+                        "id": "th2",
+                        "label": "TH2",
+                        "dataSource": "PartialPowerFailureResumeNotificationConfiguration"
+                    }
+                ]
+            }
+          ]
+        },
+        {
+            
+          "id": "power_failure_values",
+          "label": "Power Failure Values",
+          "type": "no_config",
+          "items": [
+                {
+                    "id": "obj1",
+                    "label": "Duration Of Last Long Power Failure In Any Phase",
+                    "dataSource": "DurationOfLastLongPowerFailureInAnyPhase"
+                }
+            ]
+        }
+    ]}
+    
+ 
+    
+    
+   
+    
+  ]
+}

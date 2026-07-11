@@ -1,0 +1,1 @@
+ pyinstaller --onedir --noconsole --collect-submodules ng_sdk --add-data ".venv\Lib\site-packages\ng_sdk\mapper\security_config_map.json5;ng_sdk/mapper" .\server.py

@@ -1,0 +1,9 @@
+# Page: {{ name }}
+# {% if description %}{{ description }}{% endif %}
+# Data source: {{ dataSource }}
+# Logical Device Name: {{ deviceId.Logic_Device_Name }}
+# --------------------
+Mask,Bit Value,Description,Active
+{% for bit in bits -%}
+{{ bit.mask }},{{ bit.bitValue }},{{ bit.description }},{{ bit.isActive }}
+{% endfor %}

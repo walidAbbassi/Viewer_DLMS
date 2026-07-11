@@ -1,0 +1,32 @@
+{
+  items: [
+    {
+      "name": "Metrology",
+      "objectName": "ActiveFirmwareIdentifier"
+    },
+    {
+      "name": "Application1",
+      "objectName": "Activefirmwareidentifier1"
+    },
+    {
+      "name": "Application2",
+      "objectName": "Activefirmwareidentifier2"
+    },
+    {
+      "name": "Metrology Signature",
+      "objectName": "ActiveFirmwareSignature"
+    },
+    {
+      "name": "Application1 Signature",
+      "objectName": "ActiveFirmwareSignature1"
+    },
+    {
+      "name": "Application2 Signature",
+      "objectName": "ActiveFirmwareSignature2"
+    },
+    {
+      "name": "Modem PLC Version",
+      "objectName": "Activefirmwareidentifier4"
+    },
+  ]
+}

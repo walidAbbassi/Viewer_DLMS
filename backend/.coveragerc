@@ -1,0 +1,7 @@
+[run]
+omit =
+    *_pb2.py
+    *_pb2.pyi
+    *_grpc.py
+    *__init__.py
+    tests/*

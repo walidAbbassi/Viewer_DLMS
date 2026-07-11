@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+  <title>{{ name }}</title>
+  <description>{{ description }}</description>
+  <dataSource>{{ dataSource }}</dataSource>
+  <totalRecords>{{ rowCount }}</totalRecords>
+  <logicalDeviceName>{{ deviceId.Logic_Device_Name }}</logicalDeviceName>
+
+  <events>
+  {% for row in data %}
+    <event>
+    {% for i in range(columns|length) %}
+      <field>
+        <name>{{ columns[i] }}</name>
+        <value>{{ row[i] }}</value>
+      </field>
+    {% endfor %}
+    </event>
+  {% endfor %}
+  </events>
+</report>

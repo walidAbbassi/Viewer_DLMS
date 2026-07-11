@@ -1,0 +1,34 @@
+{
+  "pushRecoveries": [
+    {
+      "id": "push_recovery",
+      "label": "Push Recovery",
+      "objects": [
+        {
+          "description": "PushRecoveryMaxDepth_Interval_1",
+          "type": "unsigned16",
+          "value": "",
+          "scaleUnitAttrib": "None",
+          "attribute": "2",
+          "datasource": "PushRecoveryMaxDepth_Interval_1"
+        },
+        {
+          "description": "PushRecoveryMaxDepth_Interval_2",
+          "type": "unsigned16",
+          "value": "",
+          "scaleUnitAttrib": "None",
+          "attribute": "2",
+          "datasource": "PushRecoveryMaxDepth_Interval_2"
+        },
+        {
+          "description": "PushRecoveryMaxDepth_Interval_3",
+          "type": "unsigned16",
+          "value": "",
+          "scaleUnitAttrib": "None",
+          "attribute": "2",
+          "datasource": "PushRecoveryMaxDepth_Interval_3"
+        }
+      ]
+    }
+  ]
+}

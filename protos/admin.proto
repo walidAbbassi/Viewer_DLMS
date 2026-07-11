@@ -1,0 +1,10 @@
+syntax = "proto3";
+package admin;
+
+// Simple authenticated shutdown
+service Admin {
+  rpc Shutdown(ShutdownRequest) returns (ShutdownReply);
+}
+
+message ShutdownRequest { string token = 1; }
+message ShutdownReply   { bool ok = 1; }

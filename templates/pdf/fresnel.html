@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; margin: 40px; color: #222; }
+    h1 { border-bottom: 2px solid #1976D2; color: #1976D2; padding-bottom: 8px; }
+    .meta { font-size: 12px; color: #888; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th { background: #E3F2FD; color: #1976D2; text-align: left; padding: 10px 12px; border: 1px solid #BBDEFB; }
+    td { padding: 9px 12px; border: 1px solid #ddd; text-align: right; }
+    td:first-child { text-align: left; font-weight: 600; }
+    tr:nth-child(even) td { background: #F9FAFB; }
+    .chart-section { margin-top: 32px; }
+    .chart-section h2 { color: #1976D2; font-size: 16px; border-bottom: 1px solid #BBDEFB; padding-bottom: 6px; }
+    .chart-img { margin-top: 16px; max-width: 100%; border: 1px solid #ddd; border-radius: 6px; }
+  </style>
+</head>
+<body>
+
+<h1>Fresnel Diagram</h1>
+<div class="meta">Last refresh: {{ lastRefresh }} &nbsp;|&nbsp; Logical Device Name: {{ deviceId.Logic_Device_Name }}</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Phase</th>
+      <th>U (V)</th>
+      <th>I (A)</th>
+      <th>φ (°)</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for phase, values in phases.items() %}
+    <tr>
+      <td>{{ phase }}</td>
+      <td>{{ "%.3f"|format(values.u) }}</td>
+      <td>{{ "%.3f"|format(values.i) }}</td>
+      <td>{{ "%.2f"|format(values.phi) }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if chart_image_src %}
+<div class="chart-section">
+  <h2>Phasor Diagram</h2>
+  <img class="chart-img" src="{{ chart_image_src }}" alt="Fresnel phasor diagram">
+</div>
+{% endif %}
+
+</body>
+</html>
