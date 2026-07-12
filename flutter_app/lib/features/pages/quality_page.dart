@@ -12,6 +12,7 @@ import 'package:collection/collection.dart';
 import 'package:grpc/grpc.dart';
 import '../quality/quality_config.dart';
 import 'package:flutter/services.dart';
+import '../../util/value_format.dart';
 
 class QualityPage extends StatefulWidget {
   final QualityConfig config;
@@ -535,18 +536,10 @@ Future<void> _startPulling() async {
   String _formatDisplayValue(QualityObject object, [QualityItemConfig? item]) {
     // Prefer unit from config item if available
     final unit = (item?.unit?.trim() ?? object.unit.trim()).trim();
-
-    String valueText;
-
     if (object.scaler == 0) {
-      valueText = object.value.toInt().toString();
-    } else {
-      valueText = object.value.toStringAsFixed(
-        object.scaler.abs(),
-      );
+      return formatValue(object.value.toInt(), unit);
     }
-
-    return unit.isEmpty ? valueText : '$valueText $unit';
+    return formatValue(object.value, unit, decimals: object.scaler.abs());
   }
 
   

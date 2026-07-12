@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
-import '../../core/widgets/app_drawer.dart';
+import '../../core/services/feedback_service.dart';
+import '../../core/theme/app_icons.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/widgets/read_only_value.dart';
 import '../../core/widgets/refresh_action_button.dart';
-import '../../core/widgets/app_bottom_toolbar.dart';
 import '../../grpc/meter_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../state/app_controller.dart';
@@ -39,36 +41,25 @@ class _FirmwareVersionPageState extends ConsumerState<FirmwareVersionPage>
   Map<String, dynamic> getExportData() => {
         'deviceId': DeviceIdCache.data,
         'fields': {
-          for (final name in _fieldOrder) name: _controllers[name]?.text ?? '',
+          for (final name in _fieldOrder) name: _values[name] ?? '',
         },
       };
 
   // ---------------------------------------------------------------------------
 
   late IMeterClient _client;
-  final _formKey = GlobalKey<FormState>();
 
-  Map<String, TextEditingController> _controllers = {};
-  Map<String, String> _originalValues = {};
+  Map<String, String> _values = {};
   List<String> _fieldOrder = [];
 
   // State
   bool _isLoading = false;
   String? _error;
-  bool _hasUnsavedChanges = false;
+
   @override
   void initState() {
     super.initState();
     _client = meterClientFactory();
-    _initTemplateFields([
-      'Metrology',
-      'Application1',
-      'Application2',
-      'Metrology Signature',
-      'Application1 Signature',
-      'Application2 Signature',
-      'Modem PLC Version',
-    ]);
     if (ref.read(appControllerProvider).isConnected) {
       _readFirmwareVersion();
     }
@@ -76,34 +67,8 @@ class _FirmwareVersionPageState extends ConsumerState<FirmwareVersionPage>
 
   @override
   void dispose() {
-    for (var controller in _controllers.values) {
-      controller.dispose();
-    }
     _client.close();
     super.dispose();
-  }
-
-  void _initTemplateFields(List<String> fieldNames) {
-    for (final name in fieldNames) {
-      final controller = TextEditingController(text: '');
-      controller.addListener(_checkForChanges);
-      _controllers[name] = controller;
-      _originalValues[name] = '';
-      _fieldOrder.add(name);
-    }
-  }
-
-  void _checkForChanges() {
-    final hasChanges = _controllers.entries.any((entry) {
-      final fieldName = entry.key;
-      final currentValue = entry.value.text;
-      final originalValue = _originalValues[fieldName] ?? '';
-      return currentValue != originalValue;
-    });
-
-    if (hasChanges != _hasUnsavedChanges) {
-      setState(() => _hasUnsavedChanges = hasChanges);
-    }
   }
 
   Future<void> _readFirmwareVersion() async {
@@ -114,85 +79,27 @@ class _FirmwareVersionPageState extends ConsumerState<FirmwareVersionPage>
 
     try {
       final response = await _client.getFirmwareVersion();
-      print('Received firmware version: $response');
-
-      // ✨ Traitement DYNAMIQUE
       final fields = response.items;
 
       setState(() {
-        // 1. Nettoyer les anciens controllers
-        for (var controller in _controllers.values) {
-          controller.dispose();
-        }
-        _controllers.clear();
-        _originalValues.clear();
-        _fieldOrder.clear();
-
-        // 2. Créer dynamiquement un controller par champ reçu
-        for (var entry in fields) {
-          final fieldName = entry.name;
-          final fieldValue = entry.value;
-
-          // Créer le controller
-          final controller = TextEditingController(text: fieldValue);
-          controller.addListener(_checkForChanges);
-
-          _controllers[fieldName] = controller;
-          _originalValues[fieldName] = fieldValue;
-          _fieldOrder.add(fieldName);
-        }
-
-        _hasUnsavedChanges = false;
+        _values = {for (final entry in fields) entry.name: entry.value};
+        _fieldOrder = [for (final entry in fields) entry.name];
         _isLoading = false;
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                  const SizedBox(width: 12),
-                  Text('Loaded ${fields.length} firmware version fields'),
-                ],
-              ),
-              backgroundColor: DesignTokens.success,
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-            ),
-          );
+        feedback.success('Loaded ${fields.length} firmware version fields');
       }
     } catch (e) {
       final msg = extractGrpcMessage(e);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(msg),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 8),
-            ),
-          );
+        feedback.error(msg);
       }
       setState(() {
         _error = msg;
         _isLoading = false;
       });
     }
-  }
-
-  void _resetValues() {
-    setState(() {
-      for (var entry in _controllers.entries) {
-        final fieldName = entry.key;
-        entry.value.text = _originalValues[fieldName] ?? '';
-      }
-      _hasUnsavedChanges = false;
-    });
   }
 
   @override
@@ -278,132 +185,66 @@ class _FirmwareVersionPageState extends ConsumerState<FirmwareVersionPage>
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(32),
-                                  child: Form(
-                                    key: _formKey,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Meter Identification',
-                                          style: TextStyle(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.w600,
-                                            color: isDark
-                                                ? const Color(0xFF60A5FA)
-                                                : DesignTokens.primary600,
-                                          ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Meter Identification',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark
+                                              ? const Color(0xFF60A5FA)
+                                              : DesignTokens.primary600,
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'View and manage core meter identification data',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: isDark
-                                                ? const Color(0xFF94A3B8)
-                                                : DesignTokens.textSecondary,
-                                          ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Read-only meter identification data',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: isDark
+                                              ? const Color(0xFF94A3B8)
+                                              : DesignTokens.textSecondary,
                                         ),
-                                        const SizedBox(height: 32),
-                                        ...List.generate(_fieldOrder.length,
-                                            (index) {
-                                          final fieldName = _fieldOrder[index];
-                                          final controller =
-                                              _controllers[fieldName]!;
-
-                                          return Column(
-                                            children: [
-                                              if (index > 0)
-                                                const SizedBox(height: 20),
-                                              _buildFieldRow(
-                                                  fieldName, controller),
-                                            ],
-                                          );
-                                        }),
-
-                                        const SizedBox(height: 32),
-                                        // Action buttons
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
+                                      ),
+                                      const SizedBox(height: 32),
+                                      ...List.generate(_fieldOrder.length,
+                                          (index) {
+                                        final fieldName = _fieldOrder[index];
+                                        return Column(
                                           children: [
-                                            if (_hasUnsavedChanges)
-                                              TextButton(
-                                                key: const Key(FirmwareVersionKeys.resetBtn),
-                                                onPressed: _resetValues,
-                                                style: TextButton.styleFrom(
-                                                  foregroundColor: isDark
-                                                      ? Colors.white
-                                                      : DesignTokens.primary600,
-                                                ),
-                                                child: const Text('Reset'),
-                                              ),
-                                            const SizedBox(width: 12),
-                                            ElevatedButton.icon(
-                                              key: const Key(FirmwareVersionKeys.readBtn),
-                                              onPressed: (!isConnected ||
-                                                      _isLoading ||
-                                                      !userRights
-                                                          .hasRightForFeature(
-                                                              'Get',
-                                                              FeatureKeys
-                                                                  .fwVersion))
-                                                  ? null
-                                                  : _readFirmwareVersion,
-                                              icon: const Icon(Icons.visibility,
-                                                  size: 18),
-                                              label: const Text('Read'),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    const Color(0xFFFF9800),
-                                                foregroundColor: Colors.white,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                  horizontal: 24,
-                                                  vertical: 14,
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            ElevatedButton.icon(
-                                              key: const Key(FirmwareVersionKeys.writeBtn),
-                                              onPressed: (!isConnected ||
-                                                      _isLoading ||
-                                                      !_hasUnsavedChanges ||
-                                                      !userRights
-                                                          .hasRightForFeature(
-                                                              'Set',
-                                                              FeatureKeys
-                                                                  .fwVersion))
-                                                  ? null
-                                                  : () =>
-                                                      _showWriteConfirmDialog(),
-                                              icon: const Icon(Icons.edit,
-                                                  size: 18),
-                                              label: const Text('Write'),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    const Color(0xFF1976D2),
-                                                foregroundColor: Colors.white,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                  horizontal: 24,
-                                                  vertical: 14,
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                              ),
-                                            ),
+                                            if (index > 0)
+                                              const SizedBox(height: 20),
+                                            _buildFieldRow(fieldName,
+                                                _values[fieldName] ?? ''),
                                           ],
-                                        ),
-                                      ],
-                                    ),
+                                        );
+                                      }),
+                                      const SizedBox(height: 32),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          AppButton.secondary(
+                                            key: const Key(
+                                                FirmwareVersionKeys.readBtn),
+                                            icon: AppIcons.read,
+                                            label: 'Read',
+                                            onPressed: (!isConnected ||
+                                                    _isLoading ||
+                                                    !userRights
+                                                        .hasRightForFeature(
+                                                            'Get',
+                                                            FeatureKeys
+                                                                .fwVersion))
+                                                ? null
+                                                : _readFirmwareVersion,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -417,123 +258,14 @@ class _FirmwareVersionPageState extends ConsumerState<FirmwareVersionPage>
     );
   }
 
-  Widget _buildFieldRow(String label, TextEditingController controller) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 250,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color:
-                    isDark ? const Color(0xFFF1F5F9) : DesignTokens.textPrimary,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 24),
-        Expanded(
-          child: TextFormField(
-            key: Key(FirmwareVersionKeys.fieldKey(label)),
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: 'Enter $label',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                    color: isDark
-                        ? DesignTokens.darkBorder
-                        : DesignTokens.gray300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                    color: isDark
-                        ? DesignTokens.darkBorder
-                        : DesignTokens.gray300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                    color: isDark
-                        ? DesignTokens.darkFocus
-                        : DesignTokens.primary600,
-                    width: 1.2),
-              ),
-              filled: true,
-              fillColor: isDark ? DesignTokens.darkFill : Colors.white,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-            ),
-            style: TextStyle(
-                fontSize: 14, color: DesignTokens.textPrimaryOf(context)),
-          ),
-        ),
-      ],
+  Widget _buildFieldRow(String label, String value) {
+    // ReadOnlyValue renders its own label + value + copy, so no extra label
+    // column here.
+    return ReadOnlyValue(
+      key: Key(FirmwareVersionKeys.fieldKey(label)),
+      label: label,
+      value: value,
     );
-  }
-
-  void _showWriteConfirmDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Write'),
-        content: const Text('Apply changes to meter identification?'),
-        actions: [
-          TextButton(
-            key: const Key(FirmwareVersionKeys.writeConfirmCancelBtn),
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            key: const Key(FirmwareVersionKeys.writeConfirmApplyBtn),
-            onPressed: () {
-              Navigator.pop(context);
-              _writeIdentification();
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: DesignTokens.success,
-            ),
-            child: const Text('Apply'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _writeIdentification() async {
-    // TODO: Implémenter l'écriture dynamique
-    setState(() => _isLoading = true);
-
-    try {
-      // Construire la map des valeurs à écrire
-      final valuesToWrite = <String, String>{};
-      for (var entry in _controllers.entries) {
-        valuesToWrite[entry.key] = entry.value.text;
-      }
-
-      // TODO: Appeler le backend pour écrire
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      setState(() {
-        _originalValues = Map.from(valuesToWrite);
-        _hasUnsavedChanges = false;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Write failed: $e';
-        _isLoading = false;
-      });
-    }
   }
 
   Widget _buildPageSkeleton() {
@@ -575,8 +307,6 @@ class _FirmwareVersionPageState extends ConsumerState<FirmwareVersionPage>
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        SkeletonBox(width: 88, height: 44, borderRadius: 8),
-                        SizedBox(width: 12),
                         SkeletonBox(width: 88, height: 44, borderRadius: 8),
                       ],
                     ),

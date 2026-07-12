@@ -7,11 +7,11 @@ import '../../state/retry_status_provider.dart';
 import '../../grpc/generated/meter.pb.dart';
 import '../../grpc/meter_client.dart';
 import '../../core/navigation/app_route_observer.dart';
-import 'app_bottom_toolbar.dart';
+import 'app_header.dart';
 import 'log_panel.dart';
 import 'refresh_action_button.dart';
 
-/// Wrapper qui ajoute automatiquement AppBottomToolbar si la page n'en a pas
+/// Wrapper qui ajoute automatiquement AppHeader si la page n'en a pas
 class AppScaffoldWrapper extends ConsumerStatefulWidget {
   final Widget child;
   const AppScaffoldWrapper({super.key, required this.child});
@@ -204,10 +204,10 @@ class _AppScaffoldWrapperState extends ConsumerState<AppScaffoldWrapper> {
                       if (logVisible && currentRoute != AppRoutes.connexion)
                         const LogPanel(),
 
-                      // ✅ Toolbar visible partout sauf sur la page Sign In (connexion) et meterConnexion
+                      // ✅ Header visible partout sauf sur la page Sign In (connexion) et meterConnexion
                       if (currentRoute != AppRoutes.connexion &&
                           currentRoute != AppRoutes.meterConnexion)
-                        AppBottomToolbar(
+                        AppHeader(
                           isConnected: isConnected,
                           onDisconnect: () async {
                             final success = await client.disconnect();

@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_python_grpc/core/navigation/app_route_observer.dart';
 import 'package:flutter_python_grpc/core/widgets/app_scaffold_wrapper.dart';
-import 'package:flutter_python_grpc/core/widgets/app_bottom_toolbar.dart';
+import 'package:flutter_python_grpc/core/widgets/app_header.dart';
 
 void main() {
   group('AppScaffoldWrapper', () {
@@ -30,7 +30,7 @@ void main() {
       expect(find.text('Test Content'), findsOneWidget);
     });
 
-    testWidgets('adds AppBottomToolbar when child has no bottomNavigationBar', 
+    testWidgets('adds AppHeader when child has no bottomNavigationBar', 
         (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -44,10 +44,10 @@ void main() {
         ),
       );
 
-      expect(find.byType(AppBottomToolbar), findsOneWidget);
+      expect(find.byType(AppHeader), findsOneWidget);
     });
 
-    testWidgets('does not add AppBottomToolbar when child has bottomNavigationBar', 
+    testWidgets('does not add AppHeader when child has bottomNavigationBar', 
         (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -64,7 +64,7 @@ void main() {
         ),
       );
 
-      expect(find.byType(AppBottomToolbar), findsNothing);
+      expect(find.byType(AppHeader), findsNothing);
       expect(find.text('Custom Bar'), findsOneWidget);
     });
 
@@ -91,7 +91,7 @@ void main() {
     });
   });
 
-  group('AppBottomToolbar', () {
+  group('AppHeader', () {
     testWidgets('renders disconnect button when connected', 
         (WidgetTester tester) async {
       var disconnectCalled = false;
@@ -99,7 +99,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: AppBottomToolbar(
+            body: AppHeader(
               isConnected: true,
               onDisconnect: () async {
                 disconnectCalled = true;
@@ -122,7 +122,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: AppBottomToolbar(
+            body: AppHeader(
               isConnected: false,
               onDisconnect: () async {},
             ),
@@ -146,7 +146,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: AppBottomToolbar(
+            body: AppHeader(
               isConnected: true,
               onDisconnect: () async {},
             ),
@@ -155,7 +155,7 @@ void main() {
       );
 
       // Look for visual indicator (Icon or similar)
-      expect(find.byType(AppBottomToolbar), findsOneWidget);
+      expect(find.byType(AppHeader), findsOneWidget);
     });
 
     testWidgets('toolbar has proper styling', 
@@ -163,7 +163,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: AppBottomToolbar(
+            body: AppHeader(
               isConnected: false,
               onDisconnect: () async {},
             ),
@@ -171,8 +171,8 @@ void main() {
         ),
       );
 
-      final toolbar = tester.widget<AppBottomToolbar>(
-        find.byType(AppBottomToolbar),
+      final toolbar = tester.widget<AppHeader>(
+        find.byType(AppHeader),
       );
       
       expect(toolbar.isConnected, isFalse);

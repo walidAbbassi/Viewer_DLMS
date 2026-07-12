@@ -12,7 +12,6 @@ import '../../core/export/export_action_button.dart';
 import '../../core/theme/design_tokens.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/refresh_action_button.dart';
-import '../../core/widgets/app_bottom_toolbar.dart';
 import '../../grpc/configuration_client.dart';
 import '../../grpc/meter_client.dart';
 import '../../grpc/generated/configuration.pb.dart';

@@ -4,7 +4,6 @@ import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/refresh_action_button.dart';
-import '../../core/widgets/app_bottom_toolbar.dart';
 import '../../core/widgets/attribute_edit_dialog.dart';
 import '../../core/widgets/selective_access_tab.dart';
 import '../../grpc/meter_client.dart';

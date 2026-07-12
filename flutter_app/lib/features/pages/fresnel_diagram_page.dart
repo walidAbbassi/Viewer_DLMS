@@ -11,7 +11,6 @@ import 'dart:typed_data';
 import 'package:lottie/lottie.dart';
 import '../../core/theme/design_tokens.dart';
 import '../../core/widgets/refresh_action_button.dart';
-import '../../core/widgets/app_bottom_toolbar.dart';
 import '../../grpc/generated/meter.pb.dart';
 import '../../grpc/meter_client.dart';
 import '../../core/user_rights.dart';

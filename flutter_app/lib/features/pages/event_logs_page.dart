@@ -15,6 +15,7 @@ import '../../core/export/export_action_button.dart';
 import '../../core/widget_keys.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../event_logs/event_logs_config.dart';
 import '../event_logs/event_logs_service.dart';
 import '../../grpc/meter_client.dart';
@@ -464,15 +465,11 @@ class _EventLogsPageState extends State<EventLogsPage>
 
   void _showResultSnackBar(
       BuildContext context, String message, bool isSuccess) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: isSuccess ? Colors.green : Colors.red,
-          duration: Duration(seconds: isSuccess ? 3 : 8),
-        ),
-      );
+    if (isSuccess) {
+      feedback.success(message);
+    } else {
+      feedback.error(message);
+    }
   }
 
   String _extractErrorMessage(Object e) {
@@ -785,15 +782,7 @@ class _EventLogsPageState extends State<EventLogsPage>
   }
 
   void _showErrorMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 8),
-        ),
-      );
+    feedback.error(message);
   }
 
   String _headerLabel(int index, String fallback) {

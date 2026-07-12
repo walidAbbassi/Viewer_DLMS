@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/widgets/obis_widget.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/refresh_action_button.dart';
-import '../../core/widgets/app_bottom_toolbar.dart';
 import '../../grpc/generated/configuration.pb.dart' show ConfigEntry;
 import '../../grpc/meter_client.dart';
 import '../../grpc/generated/meter.pb.dart';
