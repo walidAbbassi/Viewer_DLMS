@@ -4,6 +4,7 @@ import 'package:grpc/grpc.dart' show GrpcError;
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../grpc/meter_client.dart';
@@ -110,36 +111,12 @@ class _EnergyRegisterPageState extends ConsumerState<EnergyRegisterPage>
       });
 
       if (mounted && registers.isNotEmpty) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                  const SizedBox(width: 12),
-                  Text('${registers.length} energy registers loaded'),
-                ],
-              ),
-              backgroundColor: DesignTokens.success,
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-            ),
-          );
+        feedback.success('${registers.length} energy registers loaded');
       }
     } catch (e) {
       final msg = _getErrorMessage(e);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text(msg),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 8),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-          ));
+        feedback.error(msg);
       }
       setState(() {
         _error = msg;

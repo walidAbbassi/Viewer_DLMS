@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../core/widgets/attribute_edit_dialog.dart';
@@ -113,15 +114,7 @@ class _SuperManualToolPageState extends ConsumerState<SuperManualToolPage>
     }).catchError((error, stackTrace) {
       setState(() => _isLoadingGeneral = false);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(extractGrpcMessage(error)),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 8),
-            ),
-          );
+        feedback.error(extractGrpcMessage(error));
       }
     });
     super.initState();
@@ -187,38 +180,14 @@ class _SuperManualToolPageState extends ConsumerState<SuperManualToolPage>
   }
   // coverage:ignore-end
 
-  // Show message at bottom using SnackBar
+  // Show message at bottom using the feedback service
   void _showMessage(String message, bool isSuccess) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                isSuccess ? Icons.check_circle : Icons.error,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor:
-              isSuccess ? DesignTokens.success : DesignTokens.danger,
-          duration: Duration(seconds: isSuccess ? 3 : 8),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      );
+    if (isSuccess) {
+      feedback.success(message);
+    } else {
+      feedback.error(message);
+    }
   }
 
   String _extractErrorMessage(Object e) {
@@ -880,15 +849,7 @@ class _SuperManualToolPageState extends ConsumerState<SuperManualToolPage>
                 }).catchError((error, stackTrace) {
                   setState(() => _isLoadingGeneral = false);
                   if (mounted) {
-                    ScaffoldMessenger.of(context)
-                      ..clearSnackBars()
-                      ..showSnackBar(
-                        SnackBar(
-                          content: Text(extractGrpcMessage(error)),
-                          backgroundColor: Colors.red,
-                          duration: const Duration(seconds: 8),
-                        ),
-                      );
+                    feedback.error(extractGrpcMessage(error));
                   }
                 });
               },
