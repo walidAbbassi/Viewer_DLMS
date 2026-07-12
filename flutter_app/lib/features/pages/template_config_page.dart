@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/export/export_registry.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../../grpc/configuration_client.dart';
 import '../../grpc/generated/configuration.pb.dart'
     show ExportTemplateFileEntry, GetExportTemplatesResponse;
@@ -395,25 +396,11 @@ class _PageTemplateAssignmentPageState extends State<PageTemplateAssignmentPage>
         docxTemplate: _selected[ExportFormat.docx] ?? '',
       );
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text('Templates saved successfully.'),
-              backgroundColor: DesignTokens.success,
-            ),
-          );
+        feedback.success('Templates saved successfully.');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-              content: Text('Failed to save templates: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        feedback.error('Failed to save templates: $e');
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -502,16 +489,7 @@ class _TokensCardState extends State<_TokensCard> {
   Future<void> _copy(String token) async {
     await Clipboard.setData(ClipboardData(text: '{{ $token }}'));
     if (mounted) {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          SnackBar(
-            content: Text('Copied {{ $token }}'),
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-          ),
-        );
+      feedback.info('Copied {{ $token }}');
     }
   }
 
