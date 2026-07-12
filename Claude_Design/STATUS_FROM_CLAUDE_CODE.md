@@ -5,9 +5,10 @@ partagé avec **d'autres comptes Claude Design & Claude Code** qui reprendraient
 ce chantier. Écrit par une session Claude Code.
 
 Branches à jour (même HEAD) : `ui_ux_design` **et** `claude/github-account-connection-rn0vbe`.
-Dernier commit : `834a9e5`.
+Dernier commit : voir Bloc 4 ci-dessous (branche `claude/viewer-ng-ui-ux-review-m4t078`).
 Repo : https://github.com/walidAbbassi/Viewer_DLMS
 Projet design source : https://claude.ai/design/p/8a32b677-2b52-4b62-9f26-02bee55faee0
+Sweep STEP6 reçu via le projet `1ee44508-26f1-42d0-8d48-7c599417abd6` (Viewer NG UI/UX Review).
 
 ## Historique des commits (du plus ancien au plus récent)
 
@@ -76,6 +77,61 @@ hors scope de cette passe, à traiter en Passe 2.
    (ils n'y sont pas listés), il faudra les y ajouter.**
 2. `event_logs_page.dart` était déjà migré avant le sweep (fait dans `a947679`) —
    le document `SWEEP_STEP3_snackbars.md` le listait comme à faire.
+
+### Bloc 4 — SWEEP STEP6 : meter_connexion + icônes (`sweeps/SWEEP_STEP6_meter_connexion_and_icons.md`)
+Reçu via le fichier `Claude_Design_sweeps/SWEEP_STEP6_meter_connexion_and_icons.md`
+du projet design (même projet que la review `Viewer NG UI/UX Design Review`,
+pas le projet de coordination `8a32b677` — celui-ci n'est pas accessible en
+lecture directe par Claude Code, d'où le passage par ce fichier dans le même
+projet). Appliqué sur la branche `claude/viewer-ng-ui-ux-review-m4t078`.
+
+**Patch 1 — `app_scaffold_wrapper.dart`** : SnackBar `Colors.orange` codé en
+dur remplacé par `feedback.warning(...)`. Le `ScaffoldMessenger.maybeOf(ctx)`
+manuel a été supprimé (inutile, `feedback` gère déjà son propre
+`clearSnackBars()`/`showSnackBar()` via `appMessengerKey`).
+
+**Patch 2 — `meter_connexion_page.dart`** : boutons Connect/Disconnect/
+Configuration migrés vers `AppButton.primary/.danger/.secondary` (icônes
+`AppIcons.connect/.disconnect/.configuration`). AppBar et `_card()` migrés
+vers `SemanticColors.of(context)` (`.primary`, `.surface`, `.outline`) au
+lieu des hex codés en dur par branche light/dark. `Breadcrumb(segments:
+['Menu', 'Meter Connexion'])` ajouté au-dessus du contenu. **Écart constaté** :
+`device_id_page.dart` (cité en modèle par le sweep) n'a en fait *pas* migré
+son AppBar non plus (toujours `isDark ? Color(0xFF1e3a6e) :
+DesignTokens.primary600`) — `SemanticColors.of(context).primary` a été
+utilisé directement plutôt que de copier ce pattern non migré. À corriger
+dans une passe future sur `device_id_page.dart`.
+
+**Patch 3 — icônes** : `app_drawer.dart` importe désormais `AppIcons` et
+n'a plus aucune icône `Icons.*` codée en dur dans `_allMenuItems` (les
+icônes de chrome structurel — menu, logout, chevrons, search, clear, le
+bolt de marque — restent hors périmètre, ce ne sont pas des icônes de
+domaine). La plupart des glyphes suggérés par le sweep étaient déjà corrects
+dans `app_icons.dart` ; seul `AppIcons.calendar` a changé
+(`Icons.event_note` → `Icons.calendar_month`, pour matcher exactement
+l'icône déjà utilisée par le rail de nav). 17 constantes `AppIcons`
+manquantes ont été ajoutées (mêmes glyphes que ceux déjà choisis par le
+drawer, juste déplacés dans `AppIcons` : `meterConnexion`, `mobileNetworkId`,
+`pushSetupServer`, `pushSetup`, `pushAction`, `scriptTable`,
+`pushSelective`, `pushRecovery`, `superManual`, `exportTemplates`,
+`dlmsTranslator`) — le sweep ne les listait pas car il ne couvrait que les
+9 glyphes déjà nommés dans `AppIcons`, pas tout `_allMenuItems`.
+
+**Patch 4 — dialogue de retry** : bouton `Cancel` (`TextButton` →
+`_dismissRetryDialog`) ajouté aux `actions` de l'`AlertDialog`.
+
+**Effet de bord sur les tests** : `meter_connexion_page_test.dart` cherchait
+les boutons Connect/Disconnect par leurs anciennes icônes brutes
+(`Icons.power`/`Icons.power_off`, ~20 occurrences). Mis à jour vers
+`AppIcons.connect`/`AppIcons.disconnect`. Le bouton Configuration n'a pas eu
+besoin de changement de test — `AppIcons.configuration` == `Icons.settings`,
+déjà identique.
+
+**Non vérifié** : `flutter analyze`/`flutter test` n'ont pas pu être
+exécutés dans cet environnement (SDK Flutter absent du conteneur). Relecture
+manuelle ligne à ligne des 5 fichiers modifiés + vérification croisée contre
+les tests existants à la place. À faire tourner dans un environnement avec
+le SDK avant de considérer cette passe définitivement close.
 
 ## ⏸️ Reporté — pas encore fait
 

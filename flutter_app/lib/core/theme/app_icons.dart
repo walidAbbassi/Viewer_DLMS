@@ -15,6 +15,7 @@ class AppIcons {
   static const connected      = Icons.electrical_services; // liaison série active
   static const disconnected   = Icons.power_off;           // pas de liaison
   static const disconnect     = Icons.link_off;            // action déconnexion
+  static const meterConnexion = Icons.home;                 // item nav "Meter Connexion"
 
   // --- Meter Connexion -------------------------------------------------
   static const connection     = Icons.settings_input_component; // setup connexion
@@ -32,7 +33,7 @@ class AppIcons {
   static const timezone        = Icons.public;              // fuseau
 
   // --- Tariff management ----------------------------------------------
-  static const calendar        = Icons.event_note;          // calendrier tarifaire
+  static const calendar        = Icons.calendar_month;      // calendrier tarifaire
   static const tariff          = Icons.sell;                // tarif / TOU
 
   // --- Load profiles ---------------------------------------------------
@@ -69,12 +70,24 @@ class AppIcons {
   static const firmwareUpgrade = Icons.system_update_alt;   // OTA
   static const modem           = Icons.router;              // modem / P2P
   static const sim             = Icons.sim_card;            // SIM
+  static const mobileNetworkId = Icons.sim_card_outlined;   // ID réseau mobile
   static const tcpUdp          = Icons.lan;                 // TCP/UDP
+
+  // --- Push setups -------------------------------------------------------
+  static const pushSetupServer = Icons.dns_outlined;        // serveur push
+  static const pushSetup       = Icons.notifications_active;// push setup
+  static const pushAction      = Icons.play_circle_outline; // push action
+  static const scriptTable     = Icons.code;                // script table
+  static const pushSelective   = Icons.filter_list;         // push selective
+  static const pushRecovery    = Icons.restore;             // push recovery
 
   // --- Outils ----------------------------------------------------------
   static const manualDlms      = Icons.terminal;            // GET/SET/ACTION brut
   static const rawFrame        = Icons.data_object;         // trame hex/XML
   static const configuration   = Icons.settings;            // configuration
+  static const superManual     = Icons.library_books;       // super manual tool
+  static const exportTemplates = Icons.layers;              // export templates
+  static const dlmsTranslator  = Icons.translate;           // DLMS translator
 
   // --- Actions génériques ---------------------------------------------
   static const read            = Icons.download_rounded;    // Read (secondaire)

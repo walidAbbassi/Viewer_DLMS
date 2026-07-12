@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart' show GrpcError;
 
+import 'package:flutter_python_grpc/core/theme/app_icons.dart';
 import 'package:flutter_python_grpc/features/pages/meter_connexion_page.dart';
 import 'package:flutter_python_grpc/grpc/meter_client.dart';
 import 'package:flutter_python_grpc/grpc/configuration_client.dart';
@@ -347,7 +348,7 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.power), findsOneWidget);
+      expect(find.byIcon(AppIcons.connect), findsOneWidget);
       expect(find.byIcon(Icons.settings), findsOneWidget);
     });
 
@@ -503,7 +504,7 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.byType(MeterConnexionPage), findsOneWidget);
@@ -524,8 +525,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.power), findsNothing);
-      expect(find.byIcon(Icons.power_off), findsOneWidget);
+      expect(find.byIcon(AppIcons.connect), findsNothing);
+      expect(find.byIcon(AppIcons.disconnect), findsOneWidget);
     });
 
     testWidgets('Disconnect button is disabled when not connected', (tester) async {
@@ -539,8 +540,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.power), findsOneWidget);
-      expect(find.byIcon(Icons.power_off), findsNothing);
+      expect(find.byIcon(AppIcons.connect), findsOneWidget);
+      expect(find.byIcon(AppIcons.disconnect), findsNothing);
     });
   });
 
@@ -563,7 +564,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.text('Device ID Page'), findsOneWidget);
@@ -584,7 +585,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.text('Not connected'), findsOneWidget);
@@ -609,7 +610,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.text('initMeterContext error'), findsOneWidget);
@@ -629,7 +630,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.text('connect error'), findsOneWidget);
@@ -650,7 +651,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.text('loadDatamodel error'), findsOneWidget);
@@ -671,7 +672,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.text('Failed to load data model'), findsOneWidget);
@@ -700,11 +701,11 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power_off), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.disconnect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       // After disconnect, connect button should be visible again.
-      expect(find.byIcon(Icons.power), findsOneWidget);
+      expect(find.byIcon(AppIcons.connect), findsOneWidget);
     });
 
     testWidgets('disconnect throws shows error SnackBar', (tester) async {
@@ -722,7 +723,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power_off), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.disconnect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.text('disconnect error'), findsOneWidget);
@@ -882,7 +883,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap connect to trigger the loading state
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       // Pump a single frame to process the synchronous setState (sets loader="connecting")
       await tester.pump();
 
@@ -911,7 +912,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power_off), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.disconnect), warnIfMissed: false);
       await tester.pump(); // single frame for synchronous setState
 
       // Disconnect loader should be visible
@@ -1057,7 +1058,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.text('gRPC message error'), findsOneWidget);
@@ -1080,7 +1081,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       // Should show e.toString() for GrpcError without message
@@ -1102,7 +1103,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       // Exception: initMeterContext error → should strip "Exception: "
@@ -1148,7 +1149,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.power), warnIfMissed: false);
+      await tester.tap(find.byIcon(AppIcons.connect), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(setConfigCalled, isTrue);

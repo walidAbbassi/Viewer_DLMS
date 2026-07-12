@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as p;
+import '../theme/app_icons.dart';
 import '../../state/app_controller.dart';
 import '../../core/navigation/app_route_observer.dart';
 import '../../core/user_rights.dart';
@@ -335,35 +336,35 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
   List<Map<String, dynamic>> get _allMenuItems {
     final items = <Map<String, dynamic>>[
       {
-        'icon': Icons.home,
+        'icon': AppIcons.meterConnexion,
         'label': 'Meter Connexion',
         'route': '/meter_connexion',
         'category': null,
         'feature': null
       },
       {
-        'icon': Icons.badge_outlined,
+        'icon': AppIcons.deviceId,
         'label': 'Device ID',
         'route': '/connection/identification/device-id',
         'category': 'Identification',
         'feature': FeatureKeys.deviceId,
       },
       {
-        'icon': Icons.memory,
+        'icon': AppIcons.firmwareVersion,
         'label': 'Firmware Version',
         'route': '/connection/identification/firmware-version',
         'category': 'Identification',
         'feature': FeatureKeys.fwVersion,
       },
       {
-        'icon': Icons.lock_clock,
+        'icon': AppIcons.clock,
         'label': 'Date time',
         'route': '/date_time',
         'category': 'Clock',
         'feature': FeatureKeys.clock,
       },
       {
-        'icon': Icons.calendar_month,
+        'icon': AppIcons.calendar,
         'label': 'Activity Calendars',
         'route': '/calendar_profiles',
         'category': 'Tariff Management',
@@ -375,7 +376,7 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
     if (_loadProfilesLoaded && _loadProfiles.isNotEmpty) {
       for (final profile in _loadProfiles) {
         items.add({
-          'icon': Icons.bar_chart,
+          'icon': AppIcons.loadProfile,
           'label': profile.name,
           'route': AppRoutes.loadProfileRoute(profile.id),
           'category': 'Load Profiles',
@@ -388,7 +389,7 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
     if (_eventLogsLoaded && _eventLogsConfigs.isNotEmpty) {
       for (final logCfg in _eventLogsConfigs) {
         items.add({
-          'icon': Icons.event,
+          'icon': AppIcons.eventLog,
           'label': logCfg.name,
           'route': AppRoutes.eventLogsRoute(logCfg.id),
           'category': 'Event Logs',
@@ -401,7 +402,7 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
     if (_qualityLoaded && _qualityConfigs.isNotEmpty) {
       for (final page in _qualityConfigs) {
         items.add({
-          'icon': Icons.tune,
+          'icon': AppIcons.qualityParams,
           'label': page.name,
           'route': AppRoutes.qualityRoute(page.id),
           'category': 'Quality',
@@ -412,56 +413,56 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
 
     items.addAll([
       {
-        'icon': Icons.electric_meter,
+        'icon': AppIcons.energyRegister,
         'label': 'Energy Register',
         'route': '/electricity-objects/energy-register',
         'category': 'Electricity Objects',
         'feature': FeatureKeys.energyRegister,
       },
       {
-        'icon': Icons.transform,
+        'icon': AppIcons.ctvt,
         'label': 'CT VT Management',
         'route': '/electricity-objects/ct_vt_management',
         'category': 'Electricity Objects',
         'feature': FeatureKeys.ctvtManagement,
       },
       {
-        'icon': Icons.grain,
+        'icon': AppIcons.instant,
         'label': 'Instant',
         'route': '/fresnel_diagram',
         'category': 'Electricity Objects',
         'feature': FeatureKeys.fresnel,
       },
       {
-        'icon': Icons.calculate,
+        'icon': AppIcons.average,
         'label': 'Average',
         'route': '/electricity-objects/average',
         'category': 'Electricity Objects',
         'feature': FeatureKeys.average,
       },
       {
-        'icon': Icons.cloud_download,
+        'icon': AppIcons.firmwareUpgrade,
         'label': 'Firmware Download',
         'route': '/firmware',
         'category': 'Firmware Upgrade',
         'feature': 'FW_Update'
       },
       {
-        'icon': Icons.sim_card,
+        'icon': AppIcons.sim,
         'label': 'SIM Config',
         'route': '/p2p-setup/sim-config',
         'category': 'P2P Setup',
         'feature': FeatureKeys.simConfig,
       },
       {
-        'icon': Icons.settings_input_antenna,
+        'icon': AppIcons.modem,
         'label': 'Modem Config',
         'route': '/p2p-setup/modem-config',
         'category': 'P2P Setup',
         'feature': FeatureKeys.modemConfig,
       },
       {
-        'icon': Icons.sim_card_outlined,
+        'icon': AppIcons.mobileNetworkId,
         'label': 'Mobile Network ID',
         'route': '/p2p-setup/mobile-network-id',
         'category': 'P2P Setup',
@@ -471,7 +472,7 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
 
     // Push Setup Server (static entry)
     items.add({
-      'icon': Icons.dns_outlined,
+      'icon': AppIcons.pushSetupServer,
       'label': 'Push Setup Server',
       'route': AppRoutes.pushSetupServer,
       'category': 'Push Setups',
@@ -482,7 +483,7 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
     if (_pushSetupsLoaded && _pushSetupConfigs.isNotEmpty) {
       for (final setup in _pushSetupConfigs) {
         items.add({
-          'icon': Icons.notifications_active,
+          'icon': AppIcons.pushSetup,
           'label': setup.label,
           'route': AppRoutes.pushSetupRoute(setup.id),
           'category': 'Push Setups',
@@ -495,7 +496,7 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
     if (_pushActionsLoaded && _pushActionConfigs.isNotEmpty) {
       for (final action in _pushActionConfigs) {
         items.add({
-          'icon': Icons.play_circle_outline,
+          'icon': AppIcons.pushAction,
           'label': action.label,
           'route': AppRoutes.pushActionRoute(action.id),
           'category': 'Push Setups',
@@ -508,7 +509,7 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
     if (_scriptTablesLoaded && _scriptTableConfigs.isNotEmpty) {
       for (final table in _scriptTableConfigs) {
         items.add({
-          'icon': Icons.code,
+          'icon': AppIcons.scriptTable,
           'label': table.label,
           'route': AppRoutes.scriptTableRoute(table.id),
           'category': 'Script Tables',
@@ -521,7 +522,7 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
     if (_pushSelectivesLoaded && _pushSelectiveConfigs.isNotEmpty) {
       for (final selective in _pushSelectiveConfigs) {
         items.add({
-          'icon': Icons.filter_list,
+          'icon': AppIcons.pushSelective,
           'label': selective.label,
           'route': AppRoutes.pushSelectiveRoute(selective.id),
           'category': 'Push Selective',
@@ -534,7 +535,7 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
     if (_pushRecoveriesLoaded && _pushRecoveryConfigs.isNotEmpty) {
       for (final recovery in _pushRecoveryConfigs) {
         items.add({
-          'icon': Icons.restore,
+          'icon': AppIcons.pushRecovery,
           'label': recovery.label,
           'route': AppRoutes.pushRecoveryRoute(recovery.id),
           'category': 'Push Recovery',
@@ -546,28 +547,28 @@ class _AppSideNavState extends ConsumerState<AppSideNav> {
     // Bottom items: tools
     items.addAll([
       {
-        'icon': Icons.library_books,
+        'icon': AppIcons.superManual,
         'label': 'Super Manual',
         'route': '/super_manual',
         'category': null,
         'feature': FeatureKeys.superManual,
       },
       {
-        'icon': Icons.layers,
+        'icon': AppIcons.exportTemplates,
         'label': 'Export Templates',
         'route': '/template_config',
         'category': null,
         'feature': FeatureKeys.exportTemplates,
       },
       {
-        'icon': Icons.translate,
+        'icon': AppIcons.dlmsTranslator,
         'label': 'DLMS Translator',
         'route': '/gurux_translator',
         'category': null,
         'feature': FeatureKeys.dlmsTranslator,
       },
       {
-        'icon': Icons.terminal,
+        'icon': AppIcons.manualDlms,
         'label': 'Manual DLMS',
         'route': '/manual_dlms',
         'category': null,

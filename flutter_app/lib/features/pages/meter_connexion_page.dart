@@ -13,6 +13,10 @@ import '../../routes/app_routes.dart';
 import '../../util/any_value_decoder.dart';
 import '../../grpc/configuration_client.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/theme/app_icons.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../core/services/feedback_service.dart';
 import '../../state/app_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -406,61 +410,27 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
           children: [
             Expanded(
               child: isConnected
-                  ? ElevatedButton.icon(
+                  ? AppButton.danger(
                       key: const Key(MeterConnexionKeys.disconnectBtn),
                       onPressed: () => _handleConnection(),
-                      icon: const Icon(Icons.power_off, size: 20),
-                      label: const Text('Disconnect'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        textStyle: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w600),
-                      ),
+                      icon: AppIcons.disconnect,
+                      label: 'Disconnect',
                     )
-                  : ElevatedButton.icon(
+                  : AppButton.primary(
                       key: const Key(MeterConnexionKeys.connectBtn),
                       onPressed: () => _handleConnection(),
-                      icon: const Icon(Icons.power, size: 20),
-                      label: const Text('Connect'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: DesignTokens.success,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        textStyle: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w600),
-                      ),
+                      icon: AppIcons.connect,
+                      label: 'Connect',
                     ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: OutlinedButton.icon(
+              child: AppButton.secondary(
                 key: const Key(MeterConnexionKeys.configurationBtn),
                 onPressed: () =>
                     Navigator.pushNamed(context, AppRoutes.configuration),
-                icon: const Icon(Icons.settings, size: 20),
-                label: const Text('Configuration'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : DesignTokens.success,
-                  side: BorderSide(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : DesignTokens.success,
-                      width: 1.5),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  textStyle: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w600),
-                ),
+                icon: AppIcons.configuration,
+                label: 'Configuration',
               ),
             ),
           ],
@@ -476,13 +446,13 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
       required String title,
       required List<Widget> children}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sc = SemanticColors.of(context);
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1e293b) : DesignTokens.surface,
-        border: Border.all(
-            color: isDark ? const Color(0xFF334155) : DesignTokens.gray200),
+        color: isDark ? sc.surface : DesignTokens.surface,
+        border: Border.all(color: isDark ? sc.outline : DesignTokens.gray200),
         borderRadius: BorderRadius.circular(16),
         boxShadow: DesignTokens.shadowSm,
       ),
@@ -509,9 +479,7 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
               ],
             ),
           ),
-          Divider(
-              height: 1,
-              color: isDark ? const Color(0xFF334155) : DesignTokens.gray200),
+          Divider(height: 1, color: isDark ? sc.outline : DesignTokens.gray200),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             child: Column(
@@ -637,13 +605,13 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sc = SemanticColors.of(context);
     return Scaffold(
       backgroundColor:
           isDark ? const Color(0xFF0f172a) : DesignTokens.background,
       appBar: AppBar(
         title: const Text("Meter Connection"),
-        backgroundColor:
-            isDark ? const Color(0xFF1e3a6e) : DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -658,36 +626,45 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left column â€” form cards
+                const Breadcrumb(segments: ['Menu', 'Meter Connexion']),
+                const SizedBox(height: 12),
                 Expanded(
-                  flex: 3,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Column(
-                      children: [
-                        _buildConnectionSetupCard(),
-                        _buildAuthenticationCard(),
-                        _buildSimulationCard(),
-                      ],
-                    ),
-                  ),
-                ),
-                // Right column â€” status panels
-                Expanded(
-                  flex: 2,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _buildMeterStatusPanel(),
-                        const SizedBox(height: 16),
-                        _buildConnectionInfoPanel(),
-                        const SizedBox(height: 16),
-                        _buildActionsPanel(),
-                      ],
-                    ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left column â€” form cards
+                      Expanded(
+                        flex: 3,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.only(right: 16),
+                          child: Column(
+                            children: [
+                              _buildConnectionSetupCard(),
+                              _buildAuthenticationCard(),
+                              _buildSimulationCard(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Right column â€” status panels
+                      Expanded(
+                        flex: 2,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              _buildMeterStatusPanel(),
+                              const SizedBox(height: 16),
+                              _buildConnectionInfoPanel(),
+                              const SizedBox(height: 16),
+                              _buildActionsPanel(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
