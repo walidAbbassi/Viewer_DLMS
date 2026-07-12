@@ -7,6 +7,7 @@ import '../../state/retry_status_provider.dart';
 import '../../grpc/generated/meter.pb.dart';
 import '../../grpc/meter_client.dart';
 import '../../core/navigation/app_route_observer.dart';
+import '../services/feedback_service.dart';
 import 'app_header.dart';
 import 'log_panel.dart';
 import 'refresh_action_button.dart';
@@ -56,18 +57,7 @@ class _AppScaffoldWrapperState extends ConsumerState<AppScaffoldWrapper> {
     if (isConnected) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final ctx = AppRoutes.navigatorKey.currentContext;
-      if (ctx != null) {
-        ScaffoldMessenger.maybeOf(ctx)
-          ?..clearSnackBars()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text('Not connected — please connect to a meter first.'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
-            ),
-          );
-      }
+      feedback.warning('Not connected — please connect to a meter first.');
     });
   }
 
@@ -122,6 +112,12 @@ class _AppScaffoldWrapperState extends ConsumerState<AppScaffoldWrapper> {
                 ],
               ),
             ),
+            actions: [
+              TextButton(
+                onPressed: _dismissRetryDialog,
+                child: const Text('Cancel'),
+              ),
+            ],
           ),
         );
       },
