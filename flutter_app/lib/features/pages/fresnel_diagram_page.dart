@@ -288,15 +288,7 @@ class _FresnelDiagramPageState extends State<FresnelDiagramPage>
       } catch (e) {
         if (mounted) {
           _stopSimulation();
-          ScaffoldMessenger.of(context)
-            ..clearSnackBars()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(extractGrpcMessage(e)),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 8),
-              ),
-            );
+          feedback.error(extractGrpcMessage(e));
         }
         break;
       }
