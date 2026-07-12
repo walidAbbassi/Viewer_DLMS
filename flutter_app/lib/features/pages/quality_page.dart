@@ -13,6 +13,7 @@ import 'package:grpc/grpc.dart';
 import '../quality/quality_config.dart';
 import 'package:flutter/services.dart';
 import '../../util/value_format.dart';
+import 'package:flutter_python_grpc/core/services/feedback_service.dart';
 
 class QualityPage extends StatefulWidget {
   final QualityConfig config;
@@ -378,15 +379,7 @@ List<TextInputFormatter> _getInputFormatters(QualityObject? object) {
   }
 
   void _showErrorMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 8),
-        ),
-      );
+    feedback.error(message);
   }
 
   Future<void> _readItem(QualityItemConfig item) async {
@@ -586,12 +579,7 @@ Future<void> _writeStructure(QualityItemConfig item) async {
 
   void _showSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
-      ),
-    );
+    isError ? feedback.error(message) : feedback.success(message);
   }
 
   Widget _buildConfigSection(List<QualityItemConfig> items) {
