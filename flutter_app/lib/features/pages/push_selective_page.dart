@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../util/grpc_error.dart';
 import '../../state/app_controller.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/widgets/app_drawer.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../grpc/generated/meter.pb.dart';
 import '../../grpc/meter_client.dart';
 import '../push_setups/push_selective_config.dart';
@@ -141,10 +143,11 @@ class _PushSelectivePageState extends State<PushSelectivePage>
   @override
   Widget build(BuildContext context) {
     final objects = widget.config.objects;
+    final sc = SemanticColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.config.label),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         bottom: PreferredSize(
@@ -185,24 +188,36 @@ class _PushSelectivePageState extends State<PushSelectivePage>
         ),
       ),
       drawer: const AppDrawer(),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              DesignTokens.backgroundOf(context),
-              DesignTokens.surfaceOf(context),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Breadcrumb(
+                segments: ['Menu', 'Push Selective', widget.config.label]),
           ),
-        ),
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            for (int i = 0; i < objects.length; i++)
-              _buildObjectTab(i, objects[i]),
-          ],
-        ),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    DesignTokens.backgroundOf(context),
+                    DesignTokens.surfaceOf(context),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  for (int i = 0; i < objects.length; i++)
+                    _buildObjectTab(i, objects[i]),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

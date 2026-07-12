@@ -14,6 +14,8 @@ import '../quality/quality_config.dart';
 import 'package:flutter/services.dart';
 import '../../util/value_format.dart';
 import 'package:flutter_python_grpc/core/services/feedback_service.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 
 class QualityPage extends StatefulWidget {
   final QualityConfig config;
@@ -874,12 +876,13 @@ Future<void> _writeStructure(QualityItemConfig item) async {
   @override
   Widget build(BuildContext context) {
     final hasTabs = widget.config.tabs != null && widget.config.tabs!.isNotEmpty;
+    final sc = SemanticColors.of(context);
 
     return Stack(
           children: [Scaffold(
       appBar: AppBar(
         title: Text(widget.config.name),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -898,40 +901,55 @@ Future<void> _writeStructure(QualityItemConfig item) async {
               )
             : null,
       ),
-      body: Stack(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: hasTabs
-                ? TabBarView(
-                    controller: _tabController,
-                    children: [
-                      for (final tab in widget.config.tabs!)
-                        SingleChildScrollView(
-                          child: tab.sections != null
-                            ? _buildSections(tab.sections!, tab.type)
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Breadcrumb(segments: [
+              'Menu',
+              'Quality',
+              widget.config.name,
+            ]),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: hasTabs
+                      ? TabBarView(
+                          controller: _tabController,
+                          children: [
+                            for (final tab in widget.config.tabs!)
+                              SingleChildScrollView(
+                                child: tab.sections != null
+                                  ? _buildSections(tab.sections!, tab.type)
+                                    : _buildSectionContent(
+                                    type: tab.type,
+                                        items:
+                                            tab.items ?? const <QualityItemConfig>[],
+                                      ),
+                              ),
+                          ],
+                        )
+                      : SingleChildScrollView(
+                          child: widget.config.sections != null
+                              ? _buildSections(
+                                widget.config.sections!,
+                                widget.config.type ?? 'no_config',
+                                )
                               : _buildSectionContent(
-                              type: tab.type,
+                                  type: widget.config.type ?? 'no_config',
                                   items:
-                                      tab.items ?? const <QualityItemConfig>[],
+                                      widget.config.items ?? const <QualityItemConfig>[],
                                 ),
                         ),
-                    ],
-                  )
-                : SingleChildScrollView(
-                    child: widget.config.sections != null
-                        ? _buildSections(
-                          widget.config.sections!,
-                          widget.config.type ?? 'no_config',
-                          )
-                        : _buildSectionContent(
-                            type: widget.config.type ?? 'no_config',
-                            items:
-                                widget.config.items ?? const <QualityItemConfig>[],
-                          ),
-                  ),
+                ),
+
+              ],
+            ),
           ),
-          
         ],
       ),
     ),

@@ -5,8 +5,10 @@ import '../../util/grpc_error.dart';
 import '../../state/app_controller.dart';
 import '../../core/widget_keys.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../grpc/meter_client.dart';
 import '../push_setups/push_actions_config.dart';
 
@@ -39,11 +41,12 @@ class _PushActionPageState extends State<PushActionPage>
   @override
   Widget build(BuildContext context) {
     final hasTabs = widget.config.tabs != null;
+    final sc = SemanticColors.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.config.label),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         bottom: hasTabs
@@ -61,31 +64,43 @@ class _PushActionPageState extends State<PushActionPage>
             : null,
       ),
       drawer: const AppDrawer(),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              DesignTokens.backgroundOf(context),
-              DesignTokens.surfaceOf(context)
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Breadcrumb(
+                segments: ['Menu', 'Push Setups', widget.config.label]),
           ),
-        ),
-        child: hasTabs
-            ? TabBarView(
-                controller: _tabController,
-                children: widget.config.tabs!
-                    .map((t) => _ScheduleSection(
-                          label: t.label,
-                          dataSource: t.dataSource,
-                        ))
-                    .toList(),
-              )
-            : _ScheduleSection(
-                label: widget.config.label,
-                dataSource: widget.config.dataSource ?? '',
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    DesignTokens.backgroundOf(context),
+                    DesignTokens.surfaceOf(context)
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
+              child: hasTabs
+                  ? TabBarView(
+                      controller: _tabController,
+                      children: widget.config.tabs!
+                          .map((t) => _ScheduleSection(
+                                label: t.label,
+                                dataSource: t.dataSource,
+                              ))
+                          .toList(),
+                    )
+                  : _ScheduleSection(
+                      label: widget.config.label,
+                      dataSource: widget.config.dataSource ?? '',
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }

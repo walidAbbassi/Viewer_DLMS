@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../grpc/meter_client.dart';
 import '../../core/widget_keys.dart';
 
@@ -29,14 +31,24 @@ class _DlmsTranslatorPageState extends State<DlmsTranslatorPage> {
 
   @override
   Widget build(BuildContext context) {
+    final sc = SemanticColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('DLMS Translator'),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
-      body: _DlmsTranslateBody(client: _client),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: const Breadcrumb(segments: ['Menu', 'DLMS Translator']),
+          ),
+          Expanded(child: _DlmsTranslateBody(client: _client)),
+        ],
+      ),
     );
   }
 }

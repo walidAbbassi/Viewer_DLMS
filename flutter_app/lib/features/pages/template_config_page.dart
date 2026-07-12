@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/export/export_registry.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/services/feedback_service.dart';
 import '../../grpc/configuration_client.dart';
 import '../../grpc/generated/configuration.pb.dart'
@@ -9,6 +10,7 @@ import '../../grpc/generated/configuration.pb.dart'
 import '../../core/navigation/app_route_observer.dart';
 import '../../core/widget_keys.dart';
 import '../../core/widgets/app_drawer.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../core/widgets/refresh_action_button.dart';
 
 // ---------------------------------------------------------------------------
@@ -57,12 +59,13 @@ class _TemplateConfigPageState extends State<TemplateConfigPage> {
   @override
   Widget build(BuildContext context) {
     final pages = ExportRegistry.instance.availablePages;
+    final sc = SemanticColors.of(context);
 
     return Scaffold(
       backgroundColor: DesignTokens.backgroundOf(context),
       appBar: AppBar(
         title: const Text('Export Templates'),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -71,23 +74,36 @@ class _TemplateConfigPageState extends State<TemplateConfigPage> {
         ],
       ),
       drawer: const AppDrawer(),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _Header(),
-            Expanded(
-              child: pages.isEmpty
-                  ? const _EmptyState()
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(24),
-                      itemCount: pages.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, i) => _PageCard(info: pages[i]),
-                    ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: const Breadcrumb(segments: ['Menu', 'Export Templates']),
+          ),
+          Expanded(
+            child: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _Header(),
+                  Expanded(
+                    child: pages.isEmpty
+                        ? const _EmptyState()
+                        : ListView.separated(
+                            padding: const EdgeInsets.all(24),
+                            itemCount: pages.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, i) =>
+                                _PageCard(info: pages[i]),
+                          ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

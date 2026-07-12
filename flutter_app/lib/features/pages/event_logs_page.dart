@@ -15,6 +15,8 @@ import '../../core/export/export_action_button.dart';
 import '../../core/widget_keys.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../core/services/feedback_service.dart';
 import '../event_logs/event_logs_config.dart';
 import '../event_logs/event_logs_service.dart';
@@ -850,12 +852,14 @@ class _EventLogsPageState extends State<EventLogsPage>
                 (snapshot.connectionState == ConnectionState.active &&
                     _streamHeader.isEmpty));
 
+        final sc = SemanticColors.of(context);
+
         return Stack(
           children: [
             Scaffold(
               appBar: AppBar(
                 title: Text(widget.config?.name ?? 'Event Logs'),
-                backgroundColor: DesignTokens.primary600,
+                backgroundColor: sc.primary,
                 foregroundColor: Colors.white,
                 automaticallyImplyLeading: false,
                 actions: [
@@ -889,32 +893,47 @@ class _EventLogsPageState extends State<EventLogsPage>
                 ],
               ),
               drawer: const AppDrawer(),
-              body: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      DesignTokens.backgroundOf(context),
-                      DesignTokens.surfaceOf(context),
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Breadcrumb(segments: [
+                      'Menu',
+                      'Event Logs',
+                      widget.config?.name ?? 'Event Logs',
+                    ]),
                   ),
-                ),
-                child: Column(
-                  children: [
-                    _buildHeader(),
-                    _buildTabBar(),
-                    Expanded(
-                      child: TabBarView(
-                        controller: _tabController,
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            DesignTokens.backgroundOf(context),
+                            DesignTokens.surfaceOf(context),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                      child: Column(
                         children: [
-                          _buildEventsTab(),
-                          _buildChartTab(),
+                          _buildHeader(),
+                          _buildTabBar(),
+                          Expanded(
+                            child: TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _buildEventsTab(),
+                                _buildChartTab(),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             if (isLoading)

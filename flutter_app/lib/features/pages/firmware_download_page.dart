@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/widgets/stable_tooltip.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/refresh_action_button.dart';
@@ -166,10 +167,11 @@ class _FirmwareDownloadPageState extends ConsumerState<FirmwareDownloadPage>
 
   @override
   Widget build(BuildContext context) {
+    final sc = SemanticColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Firmware Upgrade"),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -178,49 +180,53 @@ class _FirmwareDownloadPageState extends ConsumerState<FirmwareDownloadPage>
       ),
       drawer: const AppDrawer(),
       backgroundColor: DesignTokens.backgroundOf(context),
+      // No shared Breadcrumb here — _buildHeader() below already renders an
+      // equivalent page-specific breadcrumb ('Menu > Firmware Upgrade >
+      // Firmware Download'), adding the shared widget would duplicate it.
       body: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
+              child: Row(
                 children: [
-                  _buildHeader(),
                   Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.all(16),
-                      padding: EdgeInsets.zero,
-                      decoration: BoxDecoration(
-                        color: DesignTokens.surfaceOf(context),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 16,
-                            offset: Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _buildTabs(),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: _buildTabContent(),
+                    child: Column(
+                      children: [
+                        _buildHeader(),
+                        Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.all(16),
+                            padding: EdgeInsets.zero,
+                            decoration: BoxDecoration(
+                              color: DesignTokens.surfaceOf(context),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 16,
+                                  offset: Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                _buildTabs(),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: _buildTabContent(),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
+
 
   // ---------- HEADER / BREADCRUMB ----------
   Widget _buildHeader() {

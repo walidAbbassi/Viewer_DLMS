@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../grpc/meter_client.dart';
 import '../../grpc/generated/meter.pb.dart';
 import '../../state/app_controller.dart';
@@ -40,12 +42,13 @@ class _PushSetupPageState extends State<PushSetupPage>
 
   @override
   Widget build(BuildContext context) {
+    final sc = SemanticColors.of(context);
     final hasTabs = widget.config.tabs != null;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.config.label),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         bottom: hasTabs
@@ -68,31 +71,43 @@ class _PushSetupPageState extends State<PushSetupPage>
             : null,
       ),
       drawer: const AppDrawer(),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              DesignTokens.backgroundOf(context),
-              DesignTokens.surfaceOf(context)
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Breadcrumb(
+                segments: ['Menu', 'Push Setups', widget.config.label]),
           ),
-        ),
-        child: hasTabs
-            ? TabBarView(
-                controller: _tabController,
-                children: widget.config.tabs!
-                    .map((t) => _CaptureListSection(
-                          label: t.label,
-                          dataSource: t.dataSource,
-                        ))
-                    .toList(),
-              )
-            : _CaptureListSection(
-                label: widget.config.label,
-                dataSource: widget.config.dataSource ?? '',
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    DesignTokens.backgroundOf(context),
+                    DesignTokens.surfaceOf(context)
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
+              child: hasTabs
+                  ? TabBarView(
+                      controller: _tabController,
+                      children: widget.config.tabs!
+                          .map((t) => _CaptureListSection(
+                                label: t.label,
+                                dataSource: t.dataSource,
+                              ))
+                          .toList(),
+                    )
+                  : _CaptureListSection(
+                      label: widget.config.label,
+                      dataSource: widget.config.dataSource ?? '',
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }

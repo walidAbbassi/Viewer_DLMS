@@ -10,8 +10,10 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:lottie/lottie.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/services/feedback_service.dart';
 import '../../core/widgets/refresh_action_button.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../grpc/generated/meter.pb.dart';
 import '../../grpc/meter_client.dart';
 import '../../core/user_rights.dart';
@@ -322,10 +324,11 @@ class _FresnelDiagramPageState extends State<FresnelDiagramPage>
 
   @override
   Widget build(BuildContext context) {
+    final sc = SemanticColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fresnel Diagram'),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -346,59 +349,71 @@ class _FresnelDiagramPageState extends State<FresnelDiagramPage>
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  DesignTokens.backgroundOf(context),
-                  DesignTokens.surfaceOf(context),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: Column(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: const Breadcrumb(
+                segments: ['Menu', 'Electricity Objects', 'Fresnel Diagram']),
+          ),
+          Expanded(
+            child: Stack(
               children: [
-                _buildHeader(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        _buildDataSourceTable(),
-                        const SizedBox(height: 16),
-                        _buildConfigurationCard(),
-                        const SizedBox(height: 16),
-                        _buildMetricsCard(),
-                        const SizedBox(height: 16),
-                        _buildDiagramCard(),
-                        const SizedBox(height: 16),
-                        _buildSinusoidalCard(),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        DesignTokens.backgroundOf(context),
+                        DesignTokens.surfaceOf(context),
                       ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
                   ),
+                  child: Column(
+                    children: [
+                      _buildHeader(),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            children: [
+                              _buildDataSourceTable(),
+                              const SizedBox(height: 16),
+                              _buildConfigurationCard(),
+                              const SizedBox(height: 16),
+                              _buildMetricsCard(),
+                              const SizedBox(height: 16),
+                              _buildDiagramCard(),
+                              const SizedBox(height: 16),
+                              _buildSinusoidalCard(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      _buildStatusBar(),
+                    ],
+                  ),
                 ),
-                _buildStatusBar(),
+                if (_isInitialLoading)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      child: Center(
+                        child: Lottie.asset(
+                          'assets/animations/data.json',
+                          width: 200,
+                          height: 200,
+                          errorBuilder: (context, err, stack) =>
+                              const CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-          if (_isInitialLoading)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.3),
-                child: Center(
-                  child: Lottie.asset(
-                    'assets/animations/data.json',
-                    width: 200,
-                    height: 200,
-                    errorBuilder: (context, err, stack) =>
-                        const CircularProgressIndicator(),
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
