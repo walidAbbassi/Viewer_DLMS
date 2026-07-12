@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/widgets/obis_widget.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/refresh_action_button.dart';
-import '../../core/widgets/app_bottom_toolbar.dart';
 import '../../grpc/generated/configuration.pb.dart' show ConfigEntry;
 import '../../grpc/meter_client.dart';
 import '../../grpc/generated/meter.pb.dart';
@@ -14,6 +13,7 @@ import '../../routes/app_routes.dart';
 import '../../util/any_value_decoder.dart';
 import '../../grpc/configuration_client.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../../state/app_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grpc/grpc.dart' show GrpcError;
@@ -117,15 +117,11 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
 
   void _showResultSnackBar(
       BuildContext context, String message, bool isSuccess) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: isSuccess ? Colors.green : Colors.red,
-          duration: Duration(seconds: isSuccess ? 3 : 8),
-        ),
-      );
+    if (isSuccess) {
+      feedback.success(message);
+    } else {
+      feedback.error(message);
+    }
   }
 
   // â”€â”€ Left column cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -739,14 +735,7 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
       if (data.classController.text.isEmpty ||
           data.obisController.text.isEmpty ||
           data.attributeController.text.isEmpty) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-              content: Text("Please fill all fields in widget ${i + 1}"),
-              backgroundColor: Colors.red,
-            ),
-          );
+        feedback.error("Please fill all fields in widget ${i + 1}");
         return;
       }
     }

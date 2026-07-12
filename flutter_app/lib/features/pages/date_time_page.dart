@@ -16,6 +16,10 @@ import '../../core/export/export_action_button.dart';
 import '../../core/widget_keys.dart';
 import '../../core/export/export_registry.dart';
 import '../../state/device_id_cache.dart';
+import '../../core/widgets/app_tabs.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/services/feedback_service.dart';
+import '../../core/theme/app_icons.dart';
 
 /// Date Time Configuration Screen
 /// Corresponds to date_time_menu.html with 4 tabs:
@@ -80,6 +84,10 @@ class _DateTimePageState extends State<DateTimePage>
   late TabController _tabController;
   late final IMeterClient client;
   bool _loading = false;
+  // Persistent controllers — creating a new TextEditingController on every
+  // build() reset the cursor/selection on each keystroke.
+  final TextEditingController _timezoneCtrl = TextEditingController();
+  final TextEditingController _dstDeviationCtrl = TextEditingController();
   // Clock Setting values
   int _selectedDay = DateTime.now().day;
   int _selectedMonth = DateTime.now().month;
@@ -124,6 +132,8 @@ class _DateTimePageState extends State<DateTimePage>
   void initState() {
     super.initState();
     client = meterClientFactory();
+    _timezoneCtrl.text = '$_timezoneOffset';
+    _dstDeviationCtrl.text = '$_dstDeviation';
     _tabController = TabController(length: 2, vsync: this);
     // Track if tab has been loaded before
     List<bool> _tabLoaded = [false, false];
@@ -158,6 +168,8 @@ class _DateTimePageState extends State<DateTimePage>
   @override
   void dispose() {
     _tabController.dispose();
+    _timezoneCtrl.dispose();
+    _dstDeviationCtrl.dispose();
     super.dispose();
   }
 
@@ -182,30 +194,30 @@ class _DateTimePageState extends State<DateTimePage>
           ),
           RefreshAppBarButton(onPressed: _refreshAll),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
-          tabs: const [
-            Tab(
-              icon: Icon(Icons.schedule, size: 20),
-              text: 'Clock Setting',
-            ),
-            Tab(
-              icon: Icon(Icons.wb_sunny, size: 20),
-              text: 'Daylight Savings',
-            ),
-          ],
-        ),
       ),
       body: Stack(
         children: [
-          TabBarView(
-            controller: _tabController,
+          Column(
             children: [
-              _buildClockTab(),
-              _buildDaylightTab(),
+              Padding(
+                padding: EdgeInsets.all(DesignTokens.spaceMd),
+                child: AppTabs(
+                  controller: _tabController,
+                  tabs: const [
+                    AppTabItem('Clock Setting', icon: Icons.schedule),
+                    AppTabItem('Daylight Savings', icon: Icons.wb_sunny),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildClockTab(),
+                    _buildDaylightTab(),
+                  ],
+                ),
+              ),
             ],
           ),
           if (_loading)
@@ -500,7 +512,7 @@ class _DateTimePageState extends State<DateTimePage>
         children: [
           _buildNumberField(
             label: 'Offset (min)',
-            value: _timezoneOffset,
+            controller: _timezoneCtrl,
             min: -720,
             max: 840,
             onChanged: (val) => setState(() => _timezoneOffset = val),
@@ -722,7 +734,7 @@ class _DateTimePageState extends State<DateTimePage>
         children: [
           _buildNumberField(
             label: 'Deviation (min)',
-            value: _dstDeviation,
+            controller: _dstDeviationCtrl,
             min: 0,
             max: 180,
             onChanged: (val) => setState(() => _dstDeviation = val),
@@ -1011,7 +1023,7 @@ class _DateTimePageState extends State<DateTimePage>
 
   Widget _buildNumberField({
     required String label,
-    required int value,
+    required TextEditingController controller,
     required int min,
     required int max,
     required ValueChanged<int> onChanged,
@@ -1032,7 +1044,7 @@ class _DateTimePageState extends State<DateTimePage>
         SizedBox(height: DesignTokens.spaceSm),
         TextField(
           key: key,
-          controller: TextEditingController(text: value.toString()),
+          controller: controller,
           keyboardType: TextInputType.number,
           style: TextStyle(color: isDark ? const Color(0xFFF1F5F9) : null),
           decoration: InputDecoration(
@@ -1063,6 +1075,8 @@ class _DateTimePageState extends State<DateTimePage>
             final num = int.tryParse(val);
             if (num != null && num >= min && num <= max) {
               onChanged(num);
+            } else if (num != null) {
+              feedback.warning('$label must be between $min and $max');
             }
           },
         ),
@@ -1280,25 +1294,14 @@ class _DateTimePageState extends State<DateTimePage>
     final isConnected = ProviderScope.containerOf(context, listen: false)
         .read(appControllerProvider)
         .isConnected;
-    return ElevatedButton.icon(
+    return AppButton.primary(
       key: key,
+      icon: AppIcons.write,
+      label: label,
       onPressed:
           isConnected && userRights.hasRightForFeature('Set', FeatureKeys.clock)
               ? onPressed
               : null,
-      icon: const Icon(Icons.edit, size: 18),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF1976D2),
-        foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(
-          horizontal: DesignTokens.spaceLg,
-          vertical: 12,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-        ),
-      ),
     );
   }
 
@@ -1309,54 +1312,19 @@ class _DateTimePageState extends State<DateTimePage>
     required VoidCallback onPressed,
     String right = 'Get',
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isConnected = ProviderScope.containerOf(context, listen: false)
         .read(appControllerProvider)
         .isConnected;
-    // "Update" uses the Set right — restore original outlined style for it
-    if (right == 'Set') {
-      final buttonColor = isDark ? Colors.white : DesignTokens.primary600;
-      return OutlinedButton.icon(
-        key: key,
-        onPressed: isConnected &&
-                userRights.hasRightForFeature(right, FeatureKeys.clock)
-            ? onPressed
-            : null,
-        icon: Icon(icon, size: 18),
-        label: Text(label),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: buttonColor,
-          side: BorderSide(color: buttonColor),
-          padding: EdgeInsets.symmetric(
-            horizontal: DesignTokens.spaceLg,
-            vertical: 12,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-          ),
-        ),
-      );
-    }
-    // Read buttons — orange with eye icon
-    return ElevatedButton.icon(
+    final enabled = isConnected &&
+        userRights.hasRightForFeature(right, FeatureKeys.clock);
+    // "Update" (right == 'Set') and "Read" (right == 'Get') are both
+    // secondary actions — the read/write distinction lives in AppButton's
+    // primary/secondary convention, not in per-button color.
+    return AppButton.secondary(
       key: key,
-      onPressed:
-          isConnected && userRights.hasRightForFeature(right, FeatureKeys.clock)
-              ? onPressed
-              : null,
-      icon: const Icon(Icons.visibility, size: 18),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFFF9800),
-        foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(
-          horizontal: DesignTokens.spaceLg,
-          vertical: 12,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-        ),
-      ),
+      icon: right == 'Set' ? AppIcons.refresh : AppIcons.read,
+      label: label,
+      onPressed: enabled ? onPressed : null,
     );
   }
 
@@ -1464,6 +1432,7 @@ class _DateTimePageState extends State<DateTimePage>
       final resp = await client.getTimezone();
       setState(() {
         _timezoneOffset = resp.value;
+        _timezoneCtrl.text = '$_timezoneOffset';
         _tzFeedback = 'Read offset: $_timezoneOffset min';
       });
     } catch (e) {
@@ -1607,6 +1576,7 @@ class _DateTimePageState extends State<DateTimePage>
       final resp = await client.getDaylightSavingDeviation();
       setState(() {
         _dstDeviation = resp.value;
+        _dstDeviationCtrl.text = '$_dstDeviation';
         _dstDevFeedback = 'Deviation read: ${_dstDeviation} min';
       });
     } catch (e) {

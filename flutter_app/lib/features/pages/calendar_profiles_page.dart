@@ -2034,7 +2034,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     icon: const Icon(Icons.visibility, size: 16),
                     label: const Text('Read'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF9800),
+                      backgroundColor: _cPrimary600,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
@@ -2873,7 +2873,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     icon: const Icon(Icons.visibility, size: 16),
                     label: const Text('Read'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF9800),
+                      backgroundColor: _cPrimary600,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
@@ -3390,7 +3390,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     icon: const Icon(Icons.visibility, size: 16),
                     label: const Text('Read'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF9800),
+                      backgroundColor: _cPrimary600,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),

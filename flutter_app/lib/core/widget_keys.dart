@@ -1014,17 +1014,6 @@ abstract class GuruxTranslatorKeys {
       'gurux_translator_dlms_dismiss_error_btn';
 }
 
-// ── App Bottom Toolbar (shared widget) ───────────────────────────────────
-abstract class AppBottomToolbarKeys {
-  static const String datetimeBtn = 'bottom_toolbar_datetime_btn';
-  static const String superManualBtn = 'bottom_toolbar_supermanual_btn';
-  static const String manualDlmsBtn = 'bottom_toolbar_configuration_btn';
-  static const String configurationBtn =
-      'bottom_toolbar_configuration_settings_btn';
-  static const String logsBtn = 'bottom_toolbar_logs_btn';
-  static const String disconnectBtn = 'bottom_toolbar_disconnect_btn';
-}
-
 abstract class CTVTKeys {
   static const String mainStack = 'ct_vt_main_stack';
   static const String scrollView = 'ct_vt_scroll_view';

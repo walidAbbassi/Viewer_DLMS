@@ -20,6 +20,7 @@ import '../../core/export/export_action_button.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 
 import '../widgets/class7_info_widget.dart';
 import '../widgets/partial_read_widget.dart';
@@ -380,27 +381,11 @@ class _LoadProfilePageState extends State<LoadProfilePage>
   }
 
   void _showErrorMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 8),
-        ),
-      );
+    feedback.error(message);
   }
 
   void _showSuccessMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+    feedback.success(message);
   }
 
   String _formatBytesPerSec(double bytesPerSec) {

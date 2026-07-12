@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grpc/grpc.dart' show GrpcError;
 import 'package:intl/intl.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../grpc/meter_client.dart';
 import '../../core/user_rights.dart';
@@ -69,36 +70,12 @@ class _AveragePageState extends ConsumerState<AveragePage> {
       });
 
       if (mounted && registers.isNotEmpty) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                  const SizedBox(width: 12),
-                  Text('${registers.length} average values loaded'),
-                ],
-              ),
-              backgroundColor: DesignTokens.success,
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-            ),
-          );
+        feedback.success('${registers.length} average values loaded');
       }
     } catch (e) {
       final msg = _getErrorMessage(e);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text(msg),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 8),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-          ));
+        feedback.error(msg);
       }
       setState(() {
         _error = msg;

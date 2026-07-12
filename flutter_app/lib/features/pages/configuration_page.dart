@@ -10,9 +10,9 @@ import '../../state/device_id_cache.dart';
 import '../../core/export/export_registry.dart';
 import '../../core/export/export_action_button.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/refresh_action_button.dart';
-import '../../core/widgets/app_bottom_toolbar.dart';
 import '../../grpc/configuration_client.dart';
 import '../../grpc/meter_client.dart';
 import '../../grpc/generated/configuration.pb.dart';
@@ -2273,35 +2273,11 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage>
 
   void _showMessage(String message, bool isSuccess) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                isSuccess ? Icons.check_circle : Icons.error,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor:
-              isSuccess ? DesignTokens.success : DesignTokens.danger,
-          duration: Duration(seconds: isSuccess ? 3 : 4),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      );
+    if (isSuccess) {
+      feedback.success(message);
+    } else {
+      feedback.error(message);
+    }
   }
 
 // ===== COLLECT FROM UI -> List<ConfigEntry> =====
@@ -3135,12 +3111,7 @@ class _HdlcTimeoutFieldState extends ConsumerState<_HdlcTimeoutField> {
   Future<void> _save() async {
     final v = int.tryParse(_ctrl.text.trim());
     if (v == null || v < 5) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('HDLC timeout must be ≥ 5 seconds'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      feedback.error('HDLC timeout must be ≥ 5 seconds');
       return;
     }
     await ref.read(hdlcTimeoutProvider.notifier).setSeconds(v);

@@ -10,8 +10,8 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:lottie/lottie.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../../core/widgets/refresh_action_button.dart';
-import '../../core/widgets/app_bottom_toolbar.dart';
 import '../../grpc/generated/meter.pb.dart';
 import '../../grpc/meter_client.dart';
 import '../../core/user_rights.dart';
@@ -229,15 +229,7 @@ class _FresnelDiagramPageState extends State<FresnelDiagramPage>
     } catch (e) {
       if (mounted) {
         setState(() => _isInitialLoading = false);
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(extractGrpcMessage(e)),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 8),
-            ),
-          );
+        feedback.error(extractGrpcMessage(e));
       }
     }
   }
@@ -296,15 +288,7 @@ class _FresnelDiagramPageState extends State<FresnelDiagramPage>
       } catch (e) {
         if (mounted) {
           _stopSimulation();
-          ScaffoldMessenger.of(context)
-            ..clearSnackBars()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(extractGrpcMessage(e)),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 8),
-              ),
-            );
+          feedback.error(extractGrpcMessage(e));
         }
         break;
       }

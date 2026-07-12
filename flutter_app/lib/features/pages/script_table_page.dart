@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../util/grpc_error.dart';
 import '../../state/app_controller.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../grpc/generated/meter.pb.dart';
 import '../../grpc/meter_client.dart';
@@ -86,12 +87,7 @@ class _ScriptTablePageState extends ConsumerState<ScriptTablePage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content: Text('Read failed: ${extractGrpcMessage(e)}'),
-          ));
+        feedback.error('Read failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _reading = false);
@@ -104,20 +100,11 @@ class _ScriptTablePageState extends ConsumerState<ScriptTablePage> {
     try {
       await _client.executeScriptTable(widget.config.datasource);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(const SnackBar(
-            content: Text('Script table executed successfully'),
-          ));
+        feedback.success('Script table executed successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content: Text('Execute failed: ${extractGrpcMessage(e)}'),
-          ));
+        feedback.error('Execute failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _executing = false);

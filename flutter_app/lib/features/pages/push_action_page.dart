@@ -5,6 +5,7 @@ import '../../util/grpc_error.dart';
 import '../../state/app_controller.dart';
 import '../../core/widget_keys.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../grpc/meter_client.dart';
 import '../push_setups/push_actions_config.dart';
@@ -277,13 +278,7 @@ class _ScheduleSectionState extends State<_ScheduleSection> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content:
-                Text('Read execution time failed: ${extractGrpcMessage(e)}'),
-          ));
+        feedback.error('Read execution time failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _execTimeReading = false);
@@ -298,13 +293,7 @@ class _ScheduleSectionState extends State<_ScheduleSection> {
       if (mounted) setState(() => _scheduleType = value);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content:
-                Text('Read schedule type failed: ${extractGrpcMessage(e)}'),
-          ));
+        feedback.error('Read schedule type failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _typeReading = false);
@@ -325,13 +314,7 @@ class _ScheduleSectionState extends State<_ScheduleSection> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content:
-                Text('Read script selector failed: ${extractGrpcMessage(e)}'),
-          ));
+        feedback.error('Read script selector failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _executedScriptReading = false);
@@ -348,13 +331,7 @@ class _ScheduleSectionState extends State<_ScheduleSection> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content:
-                Text('Write executed script failed: ${extractGrpcMessage(e)}'),
-          ));
+        feedback.error('Write executed script failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _executedScriptWriting = false);
@@ -376,13 +353,7 @@ class _ScheduleSectionState extends State<_ScheduleSection> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content:
-                Text('Read executed script failed: ${extractGrpcMessage(e)}'),
-          ));
+        feedback.error('Read executed script failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _executedScriptReading = false);
@@ -504,12 +475,8 @@ class _ScheduleSectionState extends State<_ScheduleSection> {
                                   widget.dataSource, times);
                             } catch (e) {
                               if (mounted) {
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(SnackBar(
-                                  content: Text(
-                                      'Write failed: ${extractGrpcMessage(e)}'),
-                                  backgroundColor: Colors.red.shade700,
-                                ));
+                                feedback
+                                    .error('Write failed: ${extractGrpcMessage(e)}');
                               }
                             } finally {
                               if (mounted)

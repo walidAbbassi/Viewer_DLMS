@@ -10,6 +10,8 @@ import 'core/navigation/app_route_observer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide ChangeNotifierProvider, Provider, Consumer, ConsumerWidget;
 import 'core/theme/theme_notifier.dart';
+import 'core/theme/semantic_colors.dart';
+import 'core/services/feedback_service.dart';
 
 class SmartMeterApp extends ConsumerStatefulWidget {
   const SmartMeterApp({super.key});
@@ -40,10 +42,12 @@ class _SmartMeterAppState extends ConsumerState<SmartMeterApp> {
           if (isReady)
             return MaterialApp(
               navigatorKey: AppRoutes.navigatorKey,
+              scaffoldMessengerKey: appMessengerKey,
               title: 'Smart Meter Application',
               debugShowCheckedModeBanner: false,
               themeMode: ref.watch(themeProvider),
               darkTheme: ThemeData(
+                extensions: const [SemanticColors.dark],
                 colorScheme: ColorScheme.fromSeed(
                   seedColor: const Color(0xFF1e40af),
                   brightness: Brightness.dark,
@@ -156,6 +160,7 @@ class _SmartMeterAppState extends ConsumerState<SmartMeterApp> {
                 ),
               ),
               theme: ThemeData(
+                extensions: const [SemanticColors.light],
                 colorScheme: ColorScheme.fromSeed(
                   seedColor: const Color(0xFF1e40af),
                   brightness: Brightness.light,

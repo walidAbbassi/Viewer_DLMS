@@ -12,6 +12,8 @@ import 'package:collection/collection.dart';
 import 'package:grpc/grpc.dart';
 import '../quality/quality_config.dart';
 import 'package:flutter/services.dart';
+import '../../util/value_format.dart';
+import 'package:flutter_python_grpc/core/services/feedback_service.dart';
 
 class QualityPage extends StatefulWidget {
   final QualityConfig config;
@@ -377,15 +379,7 @@ List<TextInputFormatter> _getInputFormatters(QualityObject? object) {
   }
 
   void _showErrorMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 8),
-        ),
-      );
+    feedback.error(message);
   }
 
   Future<void> _readItem(QualityItemConfig item) async {
@@ -535,18 +529,10 @@ Future<void> _startPulling() async {
   String _formatDisplayValue(QualityObject object, [QualityItemConfig? item]) {
     // Prefer unit from config item if available
     final unit = (item?.unit?.trim() ?? object.unit.trim()).trim();
-
-    String valueText;
-
     if (object.scaler == 0) {
-      valueText = object.value.toInt().toString();
-    } else {
-      valueText = object.value.toStringAsFixed(
-        object.scaler.abs(),
-      );
+      return formatValue(object.value.toInt(), unit);
     }
-
-    return unit.isEmpty ? valueText : '$valueText $unit';
+    return formatValue(object.value, unit, decimals: object.scaler.abs());
   }
 
   
@@ -593,12 +579,7 @@ Future<void> _writeStructure(QualityItemConfig item) async {
 
   void _showSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
-      ),
-    );
+    isError ? feedback.error(message) : feedback.success(message);
   }
 
   Widget _buildConfigSection(List<QualityItemConfig> items) {

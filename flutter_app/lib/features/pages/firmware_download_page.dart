@@ -16,6 +16,7 @@ import '../../core/user_rights.dart';
 import '../../core/feature_keys.dart';
 import '../../routes/app_routes.dart';
 import '../../core/widget_keys.dart';
+import '../../core/services/feedback_service.dart';
 
 /// Firmware Download Screen
 /// ImplÃ©mentation Flutter de la maquette `firmware_download_interface.html`
@@ -420,7 +421,9 @@ class _FirmwareDownloadPageState extends ConsumerState<FirmwareDownloadPage>
                                 label: 'Read',
                                 onPressed: () {
                                   _showSnack(
-                                      'Authorization: ${_authorizationGranted ? 'Granted' : 'Denied'}');
+                                    'Authorization: ${_authorizationGranted ? 'Granted' : 'Denied'}',
+                                    isError: !_authorizationGranted,
+                                  );
                                 },
                               ),
                               _primaryBtn(
@@ -581,9 +584,10 @@ class _FirmwareDownloadPageState extends ConsumerState<FirmwareDownloadPage>
                     setState(() => _transferStatus = isEnabled
                         ? TransferStatus.success
                         : TransferStatus.failed);
-                    _showSnack(isEnabled
-                        ? 'Transfer authorized'
-                        : 'Transfer not authorized');
+                    _showSnack(
+                      isEnabled ? 'Transfer authorized' : 'Transfer not authorized',
+                      isError: !isEnabled,
+                    );
                   } catch (e) {
                     _showSnack(
                       'Error reading transfer status: ${_extractErrorMessage(e)}',
@@ -1743,8 +1747,9 @@ class _FirmwareDownloadPageState extends ConsumerState<FirmwareDownloadPage>
               userRights.hasRightForFeature('Get', FeatureKeys.fwUpdate))
           ? onPressed
           : null,
-      background: const Color(0xFFFF9800),
-      foreground: Colors.white,
+      background: cPrimary600,
+      foreground: cPrimary600,
+      outlined: true,
     );
   }
 
@@ -2172,21 +2177,25 @@ class _FirmwareDownloadPageState extends ConsumerState<FirmwareDownloadPage>
     }
   }
 
-  void _showSnack(String msg) {
+  /// Shows a feedback SnackBar. [isError] should be passed explicitly by the
+  /// caller whenever the message's polarity isn't obvious from generic
+  /// "error/failed" wording (e.g. "Authorization: Denied", "Transfer not
+  /// authorized") — the keyword heuristic alone previously let refusals like
+  /// those render as a green "success" banner.
+  void _showSnack(String msg, {bool? isError}) {
     if (!mounted) return;
     final lower = msg.toLowerCase();
-    final bool isError = lower.contains('erreur') ||
-        lower.contains('error') ||
-        lower.contains('failed');
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          backgroundColor: isError ? Colors.red : cSuccess,
-          duration: const Duration(seconds: 8),
-        ),
-      );
+    final bool resolvedIsError = isError ??
+        (lower.contains('erreur') ||
+            lower.contains('error') ||
+            lower.contains('failed') ||
+            lower.contains('denied') ||
+            lower.contains('not authorized'));
+    if (resolvedIsError) {
+      feedback.error(msg);
+    } else {
+      feedback.success(msg);
+    }
   }
 
   String _extractErrorMessage(Object e) {
