@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../grpc/meter_client.dart';
 import '../../grpc/generated/meter.pb.dart';
@@ -328,14 +329,8 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
       if (mounted) setState(() => _randomStartCtrl.text = value.toString());
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-                backgroundColor: Colors.red.shade700,
-                content: Text(
-                    'Read randomisation interval failed: ${extractGrpcMessage(e)}')),
-          );
+        feedback.error(
+            'Read randomisation interval failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _randomStartReading = false);
@@ -353,14 +348,8 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
       if (mounted) setState(() => _lastConfirmDt = dt);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-                backgroundColor: Colors.red.shade700,
-                content: Text(
-                    'Read last confirmation datetime failed: ${extractGrpcMessage(e)}')),
-          );
+        feedback.error(
+            'Read last confirmation datetime failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _lastConfirmReading = false);
@@ -382,14 +371,7 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-                backgroundColor: Colors.red.shade700,
-                content: Text(
-                    'Read send destination failed: ${extractGrpcMessage(e)}')),
-          );
+        feedback.error('Read send destination failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _sendDestReading = false);
@@ -412,14 +394,8 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-                backgroundColor: Colors.red.shade700,
-                content: Text(
-                    'Read communication window failed: ${extractGrpcMessage(e)}')),
-          );
+        feedback.error(
+            'Read communication window failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _commWindowReading = false);
@@ -441,14 +417,7 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-                backgroundColor: Colors.red.shade700,
-                content: Text(
-                    'Read repetition delay failed: ${extractGrpcMessage(e)}')),
-          );
+        feedback.error('Read repetition delay failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _repDelayReading = false);
@@ -464,14 +433,7 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
       if (mounted) setState(() => _retriesCtrl.text = value.toString());
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(
-            SnackBar(
-                backgroundColor: Colors.red.shade700,
-                content: Text(
-                    'Read number of retries failed: ${extractGrpcMessage(e)}')),
-          );
+        feedback.error('Read number of retries failed: ${extractGrpcMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _retriesReading = false);
@@ -515,13 +477,7 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
     } catch (e) {
       if (mounted) {
         setState(() => _loadingCaptureList = false);
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text(extractGrpcMessage(e)),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 8),
-          ));
+        feedback.error(extractGrpcMessage(e));
       }
     }
   }
@@ -538,13 +494,7 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
     } catch (e) {
       if (mounted) {
         setState(() => _loadingObjects = false);
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text(extractGrpcMessage(e)),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 8),
-          ));
+        feedback.error(extractGrpcMessage(e));
       }
     }
   }
@@ -573,13 +523,7 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
     } catch (e) {
       if (mounted) {
         setState(() => _loadingAttrs = false);
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Text(extractGrpcMessage(e)),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 8),
-          ));
+        feedback.error(extractGrpcMessage(e));
       }
     }
   }
@@ -1197,15 +1141,8 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
                                     widget.dataSource, items);
                               } catch (e) {
                                 if (mounted) {
-                                  ScaffoldMessenger.of(context)
-                                    ..clearSnackBars()
-                                    ..showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'Write failed: ${extractGrpcMessage(e)}'),
-                                        backgroundColor: Colors.red.shade700,
-                                      ),
-                                    );
+                                  feedback.error(
+                                      'Write failed: ${extractGrpcMessage(e)}');
                                 }
                               } finally {
                                 if (mounted)
@@ -1654,13 +1591,7 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
               onWrite: () async {
                 final value = int.tryParse(_randomStartCtrl.text);
                 if (value == null) {
-                  ScaffoldMessenger.of(context)
-                    ..clearSnackBars()
-                    ..showSnackBar(
-                      const SnackBar(
-                          backgroundColor: Colors.red,
-                          content: Text('Invalid interval value')),
-                    );
+                  feedback.error('Invalid interval value');
                   return;
                 }
                 setState(() => _randomStartWriting = true);
@@ -1669,14 +1600,8 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
                       widget.dataSource, value);
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context)
-                      ..clearSnackBars()
-                      ..showSnackBar(
-                        SnackBar(
-                            backgroundColor: Colors.red.shade700,
-                            content: Text(
-                                'Write randomisation interval failed: ${extractGrpcMessage(e)}')),
-                      );
+                    feedback.error(
+                        'Write randomisation interval failed: ${extractGrpcMessage(e)}');
                   }
                 } finally {
                   if (mounted) setState(() => _randomStartWriting = false);
@@ -1700,13 +1625,7 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
               onWrite: () async {
                 final value = int.tryParse(_retriesCtrl.text);
                 if (value == null) {
-                  ScaffoldMessenger.of(context)
-                    ..clearSnackBars()
-                    ..showSnackBar(
-                      const SnackBar(
-                          backgroundColor: Colors.red,
-                          content: Text('Invalid retries value')),
-                    );
+                  feedback.error('Invalid retries value');
                   return;
                 }
                 setState(() => _retriesWriting = true);
@@ -1714,14 +1633,8 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
                   await _client.setNumberOfRetries(widget.dataSource, value);
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context)
-                      ..clearSnackBars()
-                      ..showSnackBar(
-                        SnackBar(
-                            backgroundColor: Colors.red.shade700,
-                            content: Text(
-                                'Write number of retries failed: ${extractGrpcMessage(e)}')),
-                      );
+                    feedback.error(
+                        'Write number of retries failed: ${extractGrpcMessage(e)}');
                   }
                 } finally {
                   if (mounted) setState(() => _retriesWriting = false);
@@ -1747,13 +1660,7 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
                 final exponent = int.tryParse(_repDelayExpCtrl.text);
                 final max = int.tryParse(_repDelayMaxCtrl.text);
                 if (min == null || exponent == null || max == null) {
-                  ScaffoldMessenger.of(context)
-                    ..clearSnackBars()
-                    ..showSnackBar(
-                      const SnackBar(
-                          backgroundColor: Colors.red,
-                          content: Text('Invalid repetition delay values')),
-                    );
+                  feedback.error('Invalid repetition delay values');
                   return;
                 }
                 setState(() => _repDelayWriting = true);
@@ -1762,14 +1669,8 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
                       widget.dataSource, min, exponent, max);
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context)
-                      ..clearSnackBars()
-                      ..showSnackBar(
-                        SnackBar(
-                            backgroundColor: Colors.red.shade700,
-                            content: Text(
-                                'Write repetition delay failed: ${extractGrpcMessage(e)}')),
-                      );
+                    feedback.error(
+                        'Write repetition delay failed: ${extractGrpcMessage(e)}');
                   }
                 } finally {
                   if (mounted) setState(() => _repDelayWriting = false);
@@ -1806,13 +1707,7 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
               onRead: () => _loadLastConfirmationDatetime(),
               onWrite: () async {
                 if (_lastConfirmDt == null) {
-                  ScaffoldMessenger.of(context)
-                    ..clearSnackBars()
-                    ..showSnackBar(
-                      const SnackBar(
-                          backgroundColor: Colors.red,
-                          content: Text('No datetime selected')),
-                    );
+                  feedback.error('No datetime selected');
                   return;
                 }
                 setState(() => _lastConfirmWriting = true);
@@ -1821,14 +1716,8 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
                       widget.dataSource, _lastConfirmDt!.toIso8601String());
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context)
-                      ..clearSnackBars()
-                      ..showSnackBar(
-                        SnackBar(
-                            backgroundColor: Colors.red.shade700,
-                            content: Text(
-                                'Write last confirmation datetime failed: ${extractGrpcMessage(e)}')),
-                      );
+                    feedback.error(
+                        'Write last confirmation datetime failed: ${extractGrpcMessage(e)}');
                   }
                 } finally {
                   if (mounted) setState(() => _lastConfirmWriting = false);
@@ -2141,14 +2030,8 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
           );
         } catch (e) {
           if (mounted) {
-            ScaffoldMessenger.of(context)
-              ..clearSnackBars()
-              ..showSnackBar(
-                SnackBar(
-                    backgroundColor: Colors.red.shade700,
-                    content: Text(
-                        'Write send destination failed: ${extractGrpcMessage(e)}')),
-              );
+            feedback.error(
+                'Write send destination failed: ${extractGrpcMessage(e)}');
           }
         } finally {
           if (mounted) setState(() => _sendDestWriting = false);
@@ -2298,26 +2181,11 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
                     try {
                       await _client.pushSetupPush(widget.dataSource);
                       if (mounted) {
-                        ScaffoldMessenger.of(context)
-                          ..clearSnackBars()
-                          ..showSnackBar(
-                            SnackBar(
-                              backgroundColor: Colors.green.shade700,
-                              content: const Text('Push sent successfully'),
-                            ),
-                          );
+                        feedback.success('Push sent successfully');
                       }
                     } catch (e) {
                       if (mounted) {
-                        ScaffoldMessenger.of(context)
-                          ..clearSnackBars()
-                          ..showSnackBar(
-                            SnackBar(
-                              backgroundColor: Colors.red.shade700,
-                              content:
-                                  Text('Push failed: ${extractGrpcMessage(e)}'),
-                            ),
-                          );
+                        feedback.error('Push failed: ${extractGrpcMessage(e)}');
                       }
                     } finally {
                       if (mounted) setState(() => _pushing = false);
@@ -2377,27 +2245,11 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
                     try {
                       await _client.pushSetupReset(widget.dataSource);
                       if (mounted) {
-                        ScaffoldMessenger.of(context)
-                          ..clearSnackBars()
-                          ..showSnackBar(
-                            SnackBar(
-                              backgroundColor: Colors.green.shade700,
-                              content:
-                                  const Text('Push setup reset successfully'),
-                            ),
-                          );
+                        feedback.success('Push setup reset successfully');
                       }
                     } catch (e) {
                       if (mounted) {
-                        ScaffoldMessenger.of(context)
-                          ..clearSnackBars()
-                          ..showSnackBar(
-                            SnackBar(
-                              backgroundColor: Colors.red.shade700,
-                              content: Text(
-                                  'Reset failed: ${extractGrpcMessage(e)}'),
-                            ),
-                          );
+                        feedback.error('Reset failed: ${extractGrpcMessage(e)}');
                       }
                     } finally {
                       if (mounted) setState(() => _resetting = false);
@@ -2524,15 +2376,8 @@ class _CaptureListSectionState extends ConsumerState<_CaptureListSection> {
                                   widget.dataSource, windows);
                             } catch (e) {
                               if (mounted) {
-                                ScaffoldMessenger.of(context)
-                                  ..clearSnackBars()
-                                  ..showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'Write failed: ${extractGrpcMessage(e)}'),
-                                      backgroundColor: Colors.red.shade700,
-                                    ),
-                                  );
+                                feedback.error(
+                                    'Write failed: ${extractGrpcMessage(e)}');
                               }
                             } finally {
                               if (mounted)
