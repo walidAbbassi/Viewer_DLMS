@@ -5,6 +5,7 @@ import 'package:flutter_python_grpc/grpc/authentication_client.dart';
 import 'package:flutter_python_grpc/grpc/generated/authentication.pb.dart';
 import '../../core/theme/design_tokens.dart';
 import '../../core/theme/theme_notifier.dart';
+import '../../core/services/feedback_service.dart';
 import '../../core/user_rights.dart';
 import '../../core/widget_keys.dart';
 import '../services/credential_storage_service.dart';
@@ -1522,9 +1523,7 @@ class _ConnexionPageState extends ConsumerState<ConnexionPage>
   }
 
   void _showSnack(String msg) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(SnackBar(content: Text(msg)));
+    feedback.info(msg);
   }
 
   
@@ -1687,13 +1686,7 @@ class _LicenseStatusBadge extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: identifier));
-                    ScaffoldMessenger.of(context)
-                      ..clearSnackBars()
-                      ..showSnackBar(
-                        const SnackBar(
-                            content: Text('Identifier copied'),
-                            duration: Duration(seconds: 2)),
-                      );
+                    feedback.info('Identifier copied');
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(4),
