@@ -68,154 +68,158 @@ class AppToolbar extends ConsumerWidget {
     final title = _routeTitles[currentRouteNotifier.value] ?? '';
     final model = DeviceIdCache.data['Model'] ?? '';
 
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(bottom: BorderSide(color: colors.outline)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  if (title.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: colors.onSurface,
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          border: Border(bottom: BorderSide(color: colors.outline)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    if (title.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: colors.onSurface,
+                          ),
+                        ),
+                      ),
+                    _ToolbarIconButton(
+                      toolbarKey: const Key('toolbar_manual_dlms_btn'),
+                      icon: AppIcons.manualDlms,
+                      tooltip: 'Manual DLMS',
+                      colors: colors,
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.manualDlms),
+                    ),
+                    const SizedBox(width: 6),
+                    _ToolbarIconButton(
+                      toolbarKey: const Key('toolbar_super_manual_btn'),
+                      icon: AppIcons.superManual,
+                      tooltip: 'Super Manual',
+                      colors: colors,
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.superManual),
+                    ),
+                    const SizedBox(width: 6),
+                    _ToolbarIconButton(
+                      toolbarKey: const Key('toolbar_get_meter_time_btn'),
+                      icon: AppIcons.clock,
+                      tooltip: isConnected ? 'Get Meter Time' : 'Not connected',
+                      colors: colors,
+                      onPressed: isConnected
+                          ? () async {
+                              try {
+                                final time =
+                                    await meterClientFactory().getClock();
+                                feedback.success('Meter time: $time');
+                              } catch (_) {
+                                feedback.error('Failed to read meter time');
+                              }
+                            }
+                          : null,
+                    ),
+                    const SizedBox(width: 6),
+                    _ToolbarIconButton(
+                      toolbarKey: const Key('toolbar_configuration_btn'),
+                      icon: AppIcons.configuration,
+                      tooltip: 'Configuration',
+                      colors: colors,
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.configuration),
+                    ),
+                    const SizedBox(width: 6),
+                    _ToolbarIconButton(
+                      toolbarKey: const Key('toolbar_export_btn'),
+                      icon: AppIcons.export,
+                      tooltip: 'Export',
+                      colors: colors,
+                      onPressed: () => Navigator.pushNamed(
+                          context, AppRoutes.templateConfig),
+                    ),
+                    const SizedBox(width: 6),
+                    _ToolbarIconButton(
+                      toolbarKey: const Key('toolbar_help_btn'),
+                      icon: AppIcons.help,
+                      tooltip: 'Help',
+                      colors: colors,
+                      onPressed: () => showDialog<void>(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          title: const Text('Viewer_NG'),
+                          content: const Text(
+                              'DLMS/COSEM smart meter client.\nFor support, contact your system administrator.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(),
+                              child: const Text('OK'),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  _ToolbarIconButton(
-                    toolbarKey: const Key('toolbar_manual_dlms_btn'),
-                    icon: AppIcons.manualDlms,
-                    tooltip: 'Manual DLMS',
-                    colors: colors,
-                    onPressed: () =>
-                        Navigator.pushNamed(context, AppRoutes.manualDlms),
-                  ),
-                  const SizedBox(width: 6),
-                  _ToolbarIconButton(
-                    toolbarKey: const Key('toolbar_super_manual_btn'),
-                    icon: AppIcons.superManual,
-                    tooltip: 'Super Manual',
-                    colors: colors,
-                    onPressed: () =>
-                        Navigator.pushNamed(context, AppRoutes.superManual),
-                  ),
-                  const SizedBox(width: 6),
-                  _ToolbarIconButton(
-                    toolbarKey: const Key('toolbar_get_meter_time_btn'),
-                    icon: AppIcons.clock,
-                    tooltip: isConnected ? 'Get Meter Time' : 'Not connected',
-                    colors: colors,
-                    onPressed: isConnected
-                        ? () async {
-                            try {
-                              final time =
-                                  await meterClientFactory().getClock();
-                              feedback.success('Meter time: $time');
-                            } catch (_) {
-                              feedback.error('Failed to read meter time');
-                            }
-                          }
-                        : null,
-                  ),
-                  const SizedBox(width: 6),
-                  _ToolbarIconButton(
-                    toolbarKey: const Key('toolbar_configuration_btn'),
-                    icon: AppIcons.configuration,
-                    tooltip: 'Configuration',
-                    colors: colors,
-                    onPressed: () =>
-                        Navigator.pushNamed(context, AppRoutes.configuration),
-                  ),
-                  const SizedBox(width: 6),
-                  _ToolbarIconButton(
-                    toolbarKey: const Key('toolbar_export_btn'),
-                    icon: AppIcons.export,
-                    tooltip: 'Export',
-                    colors: colors,
-                    onPressed: () => Navigator.pushNamed(
-                        context, AppRoutes.templateConfig),
-                  ),
-                  const SizedBox(width: 6),
-                  _ToolbarIconButton(
-                    toolbarKey: const Key('toolbar_help_btn'),
-                    icon: AppIcons.help,
-                    tooltip: 'Help',
-                    colors: colors,
-                    onPressed: () => showDialog<void>(
-                      context: context,
-                      builder: (dialogContext) => AlertDialog(
-                        title: const Text('Viewer_NG'),
-                        content: const Text(
-                            'DLMS/COSEM smart meter client.\nFor support, contact your system administrator.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          if (model.isNotEmpty) ...[
-            Icon(AppIcons.meter, size: 16, color: colors.onSurfaceVariant),
+            if (model.isNotEmpty) ...[
+              Icon(AppIcons.meter, size: 16, color: colors.onSurfaceVariant),
+              const SizedBox(width: 4),
+              Text(model,
+                  style:
+                      TextStyle(fontSize: 12, color: colors.onSurfaceVariant)),
+              const SizedBox(width: 12),
+            ],
+            _ToolbarIconButton(
+              toolbarKey: const Key('toolbar_logs_btn'),
+              icon: AppIcons.logs,
+              tooltip: logVisible ? 'Hide logs' : 'Show logs',
+              colors: colors,
+              iconColorOverride: logVisible ? colors.primary : null,
+              onPressed: () => LogPanel.show(context),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              isConnected ? AppIcons.connected : AppIcons.disconnected,
+              size: 16,
+              color: isConnected ? colors.success : colors.error,
+            ),
             const SizedBox(width: 4),
-            Text(model,
-                style:
-                    TextStyle(fontSize: 12, color: colors.onSurfaceVariant)),
-            const SizedBox(width: 12),
+            const LanguageSelectorWidget(),
+            const SizedBox(width: 6),
+            _ToolbarIconButton(
+              toolbarKey: const Key('toolbar_disconnect_btn'),
+              icon: AppIcons.disconnect,
+              tooltip: isConnected ? 'Disconnect' : 'Not connected',
+              colors: colors,
+              onPressed: (isConnected && onDisconnect != null)
+                  ? () => onDisconnect!()
+                  : null,
+            ),
+            const SizedBox(width: 6),
+            _ToolbarIconButton(
+              toolbarKey: const Key('toolbar_refresh_btn'),
+              icon: AppIcons.refresh,
+              tooltip: 'Refresh',
+              colors: colors,
+              onPressed: () => feedback.info(
+                  'Use the Refresh button on the page itself to reload its data.'),
+            ),
           ],
-          _ToolbarIconButton(
-            toolbarKey: const Key('toolbar_logs_btn'),
-            icon: AppIcons.logs,
-            tooltip: logVisible ? 'Hide logs' : 'Show logs',
-            colors: colors,
-            iconColorOverride: logVisible ? colors.primary : null,
-            onPressed: () => LogPanel.show(context),
-          ),
-          const SizedBox(width: 8),
-          Icon(
-            isConnected ? AppIcons.connected : AppIcons.disconnected,
-            size: 16,
-            color: isConnected ? colors.success : colors.error,
-          ),
-          const SizedBox(width: 4),
-          const LanguageSelectorWidget(),
-          const SizedBox(width: 6),
-          _ToolbarIconButton(
-            toolbarKey: const Key('toolbar_disconnect_btn'),
-            icon: AppIcons.disconnect,
-            tooltip: isConnected ? 'Disconnect' : 'Not connected',
-            colors: colors,
-            onPressed: (isConnected && onDisconnect != null)
-                ? () => onDisconnect!()
-                : null,
-          ),
-          const SizedBox(width: 6),
-          _ToolbarIconButton(
-            toolbarKey: const Key('toolbar_refresh_btn'),
-            icon: AppIcons.refresh,
-            tooltip: 'Refresh',
-            colors: colors,
-            onPressed: () => feedback.info(
-                'Use the Refresh button on the page itself to reload its data.'),
-          ),
-        ],
+        ),
       ),
     );
   }
