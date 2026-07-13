@@ -4,11 +4,11 @@ Résumé de tout ce qui a été fait sur la branche `ui_ux_design`, destiné à 
 partagé avec **d'autres comptes Claude Design & Claude Code** qui reprendraient
 ce chantier. Écrit par une session Claude Code.
 
-Dernier commit : `f29e5d2` sur `ui_ux_design` (pushé sur GitHub). `main` a été
+Dernier commit : `5c1bdf2` sur `ui_ux_design` (pushé sur GitHub). `main` a été
 fusionné jusqu'à `eed67f1`/`b70c8ec` (le sweep icônes/toolbar sur les 27
-pages) mais **pas encore jusqu'à `5fd2f5b`/`214d340`/`f29e5d2`** (SWEEP
-STEP7 Phase 1, STEP8, et les restes de Passe 2, ci-dessous) — fusion à
-refaire si souhaité.
+pages) mais **pas encore jusqu'à `5fd2f5b`/`214d340`/`f29e5d2`/`5c1bdf2`**
+(SWEEP STEP7 Phase 1, STEP8, les restes de Passe 2, et Passe 3
+calendar_profiles ci-dessous) — fusion à refaire si souhaité.
 Repo : https://github.com/walidAbbassi/Viewer_DLMS
 Projet design source : https://claude.ai/design/p/8a32b677-2b52-4b62-9f26-02bee55faee0
 Sweep STEP6, le sweep icônes/toolbar (27 pages), SWEEP STEP7 et SWEEP
@@ -382,6 +382,98 @@ précédemment** :
 **Non vérifié** (même limite que les sweeps précédents) : pas de SDK
 Flutter dans cet environnement.
 
+### Bloc 9 — Passe 3 : calendar_profiles_page.dart, migration complète (commits `e14be06`…`5c1bdf2`)
+`CALENDAR_full_migration.md` appliqué en 4 étapes + un passage de nettoyage,
+chacune commit + push séparés (fichier de 4547 lignes, le plus lourd du repo).
+
+**Écart vs le doc — Option A non suivie** : le doc proposait de faire
+circuler `SemanticColors sc` en paramètre à travers ~36 signatures de
+méthodes. Un survey du fichier réel montre qu'il s'agit d'une **seule
+classe** (`_CalendarProfilesPageState`) : `context` (donc
+`SemanticColors.of(context)`) est déjà disponible dans toutes les méthodes
+sans changer aucune signature. Utilisé à la place : `final sc =
+SemanticColors.of(context);` en local en tête de chaque méthode concernée
+(38 méthodes). Résultat fonctionnellement identique, diff bien plus petit,
+zéro signature touchée.
+
+**Étape 1 — Couleurs (`e14be06`, + travail non commité séparément avant)** :
+bloc top-level `const _cPrimary600`…`_cBg` (12 constantes) supprimé,
+remplacé par `sc.xxx` dans les 38 méthodes qui les utilisaient (mapping
+exact dans `CALENDAR_full_migration.md`, y compris `_cDanger→sc.error`,
+`_cPrimary50→sc.surfaceVariant`, pas de `primaryContainer`). ~55 `const`
+devenus invalides retirés. 25 ternaires `_isDark ? Color(0xFF…) : _cXxx`
+collapsés en `sc.xxx` unique (23 directs + 2 cas particuliers vérifiés
+valeur hex par valeur hex : fond de `_card()` et couleur de texte de
+`_infoRow()`). Le getter `_isDark` devenu mort a été supprimé.
+
+**Étape 2 — Boutons (`cc538e7`)** : 17 sites `ElevatedButton`/
+`OutlinedButton` bruts → `AppButton` (Read→`.secondary`, Write/Activate/
+Save/Add→`.primary`, Delete/Remove/"Activate Anyway"→`.danger`), plus les
+3 helpers internes `_primaryBtn`/`_outlinedBtn`/`_actionBtn` migrés en
+interne (signatures et sites d'appel inchangés, même schéma que le fix
+`_actionButton` de `modem_config_page.dart` en Bloc 8) — sauf `_actionBtn`
+dont le paramètre `color` est devenu sans objet (les 2 sites d'appel
+voulaient tous les deux `.primary`) et a été retiré avec ses 2 arguments
+d'appel. `_navBtn` (chevrons mois précédent/suivant, bouton carré 36×36
+icône seule) **volontairement laissé en `OutlinedButton` brut** :
+`AppButton` n'a pas de mode icône-seule (toujours un label), ne convient
+pas à ce contrôle ; ses couleurs étaient déjà migrées vers `sc.*` en
+étape 1.
+
+**Étape 3 — Onglets (`24899e2`)** : les 3 paires `TabBar`/`TabBarView`
+(externe Active/Passive/Special Days dans `AppBar.bottom`, 2 internes
+Day/Week/Season) → `AppTabs`. `TabController` (`_outerTab`/`_innerActive`/
+`_innerPassive`) et leur cycle de vie `initState`/`dispose` non touchés.
+
+**Étape 4 — SnackBar (`24899e2`, même commit)** : `_snack()` délègue
+maintenant à `feedback.info(msg)` au lieu de construire son propre
+`SnackBar`/`ScaffoldMessenger`, corrigeant ses 9 sites d'appel d'un coup.
+
+**Nettoyage complémentaire (`5c1bdf2`)** : après les 4 étapes, un balayage
+de `Colors.white` restants a trouvé 6 sites hors du périmètre "boutons/
+onglets/snackbar" strict mais clairement dans l'esprit de la passe couleurs :
+`AppBar.foregroundColor`, texte des en-têtes de jours de la semaine, texte
+de la carte du mois courant, texte de la puce de sélection de profil jour
+→ `sc.onPrimary`/`sc.onSurfaceVariant` (texte sur fond coloré) ; 3 fonds
+`Container` unis → `sc.surface` (cellule calendrier par défaut, barre
+d'action passive, champ date picker) pour un vrai support dark mode. 2
+ternaires `Theme.of(context).brightness == Brightness.dark ? Colors.white
+: sc.primary` sur des `TextButton` (bouton "All months" x2) **laissés
+tels quels** : contrairement aux ternaires `_isDark`/`_cXxx` de l'étape 1,
+la valeur dark ici (`Colors.white`) ne correspond à aucune valeur de
+`SemanticColors.dark` — choix de design distinct, préexistant, hors
+périmètre de cette migration.
+
+**Palette catégorielle non touchée** : `_seasonColor()` (couleurs de
+saisons/types de jour) confirmée hors périmètre, même précédent que tous
+les sweeps précédents. La palette similaire mais différente de
+`calendar_controller.dart` reste confirmée morte/non câblée (zéro
+référence à `CalendarProfilesController` dans `lib/`), non touchée non
+plus.
+
+**Test** : `test/features/pages/calendar_profiles_page_test.dart` existe
+(420 lignes) — vérifié qu'aucune assertion ne dépend de `ElevatedButton`/
+`FilledButton` (seul `OutlinedButton` est cherché, pour `_navBtn`, non
+modifié), ni de couleurs, ni du contenu des SnackBar (seul `clearSnacks()`
+est appelé, sans assertion de présence/contenu). `feedback.info()` dépend
+de la clé globale `appMessengerKey` câblée uniquement dans le vrai
+`app.dart` — le `_wrap()` du test (MaterialApp local sans cette clé) ne la
+voit pas, donc les appels `_snack()` sont des no-op silencieux en test
+(comportement déjà accepté ailleurs dans le repo pour `feedback.*`, aucune
+régression puisqu'aucun test n'attendait de contenu SnackBar). **Trouvaille
+préexistante, non liée à cette migration** : `_goToTab(tester, 'Seasons')`
+(ligne ~324) cherche un texte `'Seasons'` qui n'existe nulle part dans le
+fichier (le libellé a toujours été `'Season Profiles'`) — ce test semble
+déjà cassé indépendamment de mes changements, signalé mais non corrigé
+(hors périmètre de cette passe).
+
+**Non vérifié** (même limite que tous les sweeps précédents) : pas de SDK
+Flutter dans cet environnement — vérification par lecture manuelle du
+diff + scripts Python de comptage d'équilibre `{}/()/[]` après chaque
+étape, comparés à `git show HEAD:<file>` avant modification. À faire
+tourner avec le vrai SDK (`flutter analyze` + `flutter test`) avant de
+considérer cette passe définitivement close.
+
 ## ⏸️ Reporté — pas encore fait
 
 - **Passe 2 — couleurs en dur → SemanticColors** (`SWEEP_STEP4_colors.md`) :
@@ -393,11 +485,10 @@ Flutter dans cet environnement.
   (context)` (couleurs de statut déjà correctes sémantiquement, juste pas
   la bonne API) — cosmétique, pas une violation de règle.
 - **Passe 3 — calendar_profiles migration complète** (`CALENDAR_full_migration.md`) :
-  pas commencée. Le patch mécanique initial (`PATCHES_STEP1.md` §3) ne compile pas
-  tel quel — voir raisons ci-dessous. Seuls 3 boutons "Read" orange→bleu ont été
-  corrigés (dans `a947679`) + AppBar color/Breadcrumb (Bloc 5), en attendant
-  cette migration complète (boutons, onglets, SnackBar de cette page restent
-  à migrer).
+  **fermée** (Bloc 9, commits `e14be06`…`5c1bdf2`) — couleurs, boutons,
+  onglets et SnackBar tous migrés. Voir Bloc 9 pour l'écart documenté
+  (paramètre `sc` local plutôt que threading) et les points laissés hors
+  périmètre.
 - **Passe 4 — i18n** (`STEP5_i18n.md`) : pas commencée. État confirmé du repo :
   `app.dart` n'a aucun `localizationsDelegates`/`supportedLocales`, `pubspec.yaml`
   a `intl` mais pas `flutter_localizations`. C'est une mise en place complète,
@@ -423,7 +514,7 @@ Flutter dans cet environnement.
 - **Historique de navigation** : `pushReplacementNamed` pas encore remplacé par
   `pushNamed`.
 
-## 🚫 Pourquoi PATCHES_STEP1 §3 (calendar_profiles) n'a pas été appliqué tel quel
+## 🚫 Pourquoi PATCHES_STEP1 §3 (calendar_profiles) n'a pas été appliqué tel quel (historique — résolu en Bloc 9)
 
 1. Les `const _cPrimary600 = Color(0xFF1976D2)` … `_cBg` sont **top-level**,
    référencées dans ~12 méthodes qui n'ont pas `context` — les passer en locales
@@ -433,10 +524,13 @@ Flutter dans cet environnement.
    warning, error, info, surface, surfaceVariant, background, onSurface,
    onSurfaceVariant, outline`).
 
-→ Stratégie retenue (documentée dans `CALENDAR_full_migration.md`, Option A) :
-faire circuler `SemanticColors sc` en paramètre des méthodes `_buildX(...)`,
-supprimer le bloc top-level, ne pas toucher à la palette catégorielle de données
-(saisons/journées du calendrier tarifaire).
+Stratégie initialement documentée dans `CALENDAR_full_migration.md`
+(Option A) : faire circuler `SemanticColors sc` en paramètre des méthodes
+`_buildX(...)`. **Non suivie en pratique** — voir Bloc 9 : la classe entière
+a déjà `context` disponible partout (une seule `State`), donc `final sc =
+SemanticColors.of(context);` en local par méthode suffit, sans toucher
+aucune signature. Migration effectivement terminée, palette catégorielle
+de données (saisons/journées) non touchée comme prévu.
 
 ## 📌 Rappels API réels du repo (pour que tout patch futur compile)
 
@@ -458,8 +552,10 @@ par des appels courts aux composants partagés).
 
 ## Prochaines étapes suggérées (ordre)
 
-1. Passe 2 — couleurs en dur → SemanticColors (`SWEEP_STEP4_colors.md`), en
-   ajoutant mobile_network_id/modem_config/push_setup_server à son périmètre.
-2. Passe 3 — calendar_profiles complet (`CALENDAR_full_migration.md`).
+1. ~~Passe 2 — couleurs en dur → SemanticColors~~ fermée (Bloc 8).
+2. ~~Passe 3 — calendar_profiles complet~~ fermée (Bloc 9).
 3. Passe 4 — i18n (`STEP5_i18n.md`).
-4. Breadcrumb généralisé + `pushNamed` partout.
+4. Historique de navigation (`pushReplacementNamed` → `pushNamed`, à
+   auditer ailleurs dans l'app — 0 occurrence dans calendar_profiles_page).
+5. Retrait des AppBar par page au profit de `AppToolbar` seule (Phase 2
+   SWEEP STEP7) — chantier par page, voir "Reporté" ci-dessus.
