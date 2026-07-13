@@ -1,0 +1,8 @@
+# Generated gRPC stubs — force LF so regenerating on Windows (regen_grpc.ps1)
+# does not churn line endings (LF<->CRLF) on every run. See docs/GRPC_CODEGEN.md.
+flutter_app/lib/grpc/generated/*.dart  text eol=lf
+backend/gen/*.py                       text eol=lf
+
+# Collapse generated stubs in GitHub diffs / exclude from language stats.
+flutter_app/lib/grpc/generated/** linguist-generated=true
+backend/gen/**                    linguist-generated=true
