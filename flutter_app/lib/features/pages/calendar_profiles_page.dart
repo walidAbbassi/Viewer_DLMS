@@ -303,7 +303,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
       backgroundColor: sc.background,
       appBar: AppBar(
         backgroundColor: sc.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: sc.onPrimary,
         automaticallyImplyLeading: false,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -586,8 +586,8 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(h,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: sc.onPrimary,
                   fontSize: 11,
                   fontWeight: FontWeight.w600)),
         )));
@@ -669,7 +669,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               ? sc.warning.withOpacity(.06)
               : isTouChange
                   ? sc.info.withOpacity(.06)
-                  : Colors.white,
+                  : sc.surface,
           border: Border(
             top: BorderSide(color: borderColor, width: borderWidth),
             right: BorderSide(color: borderColor, width: borderWidth),
@@ -903,7 +903,9 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
-                        color: isCurrentMonth ? Colors.white : Colors.black87),
+                        color: isCurrentMonth
+                            ? sc.onPrimary
+                            : sc.onSurfaceVariant),
                   ),
                 ),
               ),
@@ -1017,7 +1019,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                   label: Text('Day ${dp.dayId}',
                       style: TextStyle(
                           fontSize: 11,
-                          color: active ? Colors.white : sc.primary)),
+                          color: active ? sc.onPrimary : sc.primary)),
                   selected: active,
                   selectedColor: sc.primary,
                   backgroundColor: sc.surfaceVariant,
@@ -1376,7 +1378,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
     final sc = SemanticColors.of(context);
     final cal = _passiveCalendar;
     return Container(
-      color: Colors.white,
+      color: sc.surface,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -4297,7 +4299,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: sc.surface,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: sc.primary.withOpacity(.5)),
             ),
