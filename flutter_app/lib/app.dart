@@ -133,7 +133,7 @@ class _SmartMeterAppState extends ConsumerState<SmartMeterApp> {
                   ),
                   trackColor: WidgetStateProperty.resolveWith(
                     (s) => s.contains(WidgetState.selected)
-                        ? const Color(0xFF60A5FA).withOpacity(.4)
+                        ? const Color(0xFF60A5FA).withValues(alpha: .4)
                         : null,
                   ),
                 ),
@@ -228,12 +228,12 @@ class _SmartMeterAppState extends ConsumerState<SmartMeterApp> {
                   ),
                   trackColor: WidgetStateProperty.resolveWith(
                     (s) => s.contains(WidgetState.selected)
-                        ? const Color(0xFF1976D2).withOpacity(.4)
+                        ? const Color(0xFF1976D2).withValues(alpha: .4)
                         : null,
                   ),
                 ),
 
-                appBarTheme: const AppBarTheme(
+                appBarTheme: AppBarTheme(
                   elevation: 0,
                   backgroundColor: SemanticColors.light.primary,
                   foregroundColor: Colors.white,
@@ -309,7 +309,7 @@ class SplashScreen extends StatelessWidget {
       home: Scaffold(
           backgroundColor: const Color(0xFF0E1116),
           body: Container(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             child: Center(
               child: Lottie.asset('assets/animations/grid.json',
                   width: 200,
