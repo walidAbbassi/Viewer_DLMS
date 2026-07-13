@@ -14,6 +14,7 @@ import '../../core/widget_keys.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/semantic_colors.dart';
 import '../../core/widgets/breadcrumb.dart';
+import '../../core/widgets/app_button.dart';
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -368,9 +369,9 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               style: TextStyle(color: sc.error),
               textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+          AppButton.primary(
+            icon: Icons.refresh,
+            label: 'Retry',
             onPressed: onRetry,
           ),
         ],
@@ -1410,7 +1411,6 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             key: const Key(CalendarProfilesKeys.passiveActivateBtn),
             icon: Icons.play_arrow,
             label: 'Activate Now',
-            color: sc.success,
             onPressed:
                 _passiveCalendar != null ? _activatePassiveCalendar : null,
           ),
@@ -1757,10 +1757,9 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel'),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: sc.warning),
+            AppButton.danger(
+              label: 'Activate Anyway',
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Activate Anyway'),
             ),
           ],
         ),
@@ -1777,10 +1776,9 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: sc.success),
+          AppButton.primary(
+            label: 'Activate',
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Activate'),
           ),
         ],
       ),
@@ -2042,29 +2040,19 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: AppButton.secondary(
                     key: const Key(CalendarProfilesKeys.dayProfilesReadBtn),
-                    icon: const Icon(Icons.visibility, size: 16),
-                    label: const Text('Read'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: sc.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
+                    icon: Icons.visibility,
+                    label: 'Read',
                     onPressed: _isConnected ? _readPassiveDayProfiles : null,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: AppButton.primary(
                     key: const Key(CalendarProfilesKeys.dayProfilesWriteBtn),
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Write'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1976D2),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
+                    icon: Icons.edit,
+                    label: 'Write',
                     onPressed: _isConnected && _passiveCalendar != null
                         ? _savePassiveDayProfiles
                         : null,
@@ -2302,7 +2290,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             child: SizedBox(
               width: double.infinity,
               height: 48,
-              child: ElevatedButton.icon(
+              child: AppButton.danger(
                 key: const Key(CalendarProfilesKeys.dayProfileDeleteBtn),
                 onPressed: () => setState(() {
                   cal.dayProfiles.removeWhere((p) => p.dayId == d.dayId);
@@ -2312,12 +2300,8 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                       .read(calendarCacheProvider.notifier)
                       .flushPassive();
                 }),
-                icon: const Icon(Icons.delete_outline, size: 20),
-                label: const Text('Delete Profile'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: sc.error,
-                  foregroundColor: Colors.white,
-                ),
+                icon: Icons.delete_outline,
+                label: 'Delete Profile',
               ),
             ),
           ),
@@ -2453,7 +2437,8 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               },
               child: const Text('Cancel'),
             ),
-            ElevatedButton(
+            AppButton.primary(
+              label: 'Save',
               onPressed: () {
                 final newAction = DayProfileAction()
                   ..startTime = (CalendarTimeValue()
@@ -2512,7 +2497,6 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 disposeAll();
                 Navigator.pop(ctx);
               },
-              child: const Text('Save'),
             ),
           ],
         ),
@@ -2886,29 +2870,19 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: AppButton.secondary(
                     key: const Key(CalendarProfilesKeys.weekProfilesReadBtn),
-                    icon: const Icon(Icons.visibility, size: 16),
-                    label: const Text('Read'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: sc.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
+                    icon: Icons.visibility,
+                    label: 'Read',
                     onPressed: _isConnected ? _readPassiveWeekProfiles : null,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: AppButton.primary(
                     key: const Key(CalendarProfilesKeys.weekProfilesWriteBtn),
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Write'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1976D2),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
+                    icon: Icons.edit,
+                    label: 'Write',
                     onPressed: _isConnected && _passiveCalendar != null
                         ? _savePassiveWeekProfiles
                         : null,
@@ -3102,16 +3076,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             const SizedBox(height: 12),
             Row(
               children: [
-                ElevatedButton.icon(
+                AppButton.danger(
                   key: const Key(CalendarProfilesKeys.weekProfileEditorDeleteBtn),
-                  icon: const Icon(Icons.delete_outline, size: 15),
-                  label: const Text('Delete'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: sc.error,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                  ),
+                  icon: Icons.delete_outline,
+                  label: 'Delete',
                   onPressed: () => setState(() {
                     cal.weekProfiles.remove(w);
                     _editingWeekProfile = null;
@@ -3406,29 +3374,19 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: AppButton.secondary(
                     key: const Key(CalendarProfilesKeys.seasonProfilesReadBtn),
-                    icon: const Icon(Icons.visibility, size: 16),
-                    label: const Text('Read'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: sc.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
+                    icon: Icons.visibility,
+                    label: 'Read',
                     onPressed: _isConnected ? _readPassiveSeasonProfiles : null,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: AppButton.primary(
                     key: const Key(CalendarProfilesKeys.seasonProfilesWriteBtn),
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Write'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1976D2),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
+                    icon: Icons.edit,
+                    label: 'Write',
                     onPressed: _isConnected && _passiveCalendar != null
                         ? _savePassiveSeasonProfiles
                         : null,
@@ -3703,15 +3661,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
         if (!readOnly) ...[
           const Divider(height: 1),
           const SizedBox(height: 12),
-          ElevatedButton.icon(
+          AppButton.danger(
             key: const Key(CalendarProfilesKeys.seasonProfileDeleteBtn),
-            icon: const Icon(Icons.delete_outline, size: 16),
-            label: const Text('Delete'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: sc.error,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
+            icon: Icons.delete_outline,
+            label: 'Delete',
             onPressed: () => setState(() {
               cal.seasonProfiles.remove(s);
               _editingSeason = null;
@@ -3990,31 +3943,17 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ElevatedButton.icon(
+              AppButton.primary(
                 key: const Key(CalendarProfilesKeys.specialDayAddBtn),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add holiday to list'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: sc.success,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
+                icon: Icons.add,
+                label: 'Add holiday to list',
                 onPressed: _isConnected ? _spAddEntry : null,
               ),
               const SizedBox(height: 8),
-              ElevatedButton.icon(
+              AppButton.danger(
                 key: const Key(CalendarProfilesKeys.specialDayRemoveBtn),
-                icon: const Icon(Icons.remove_circle_outline, size: 16),
-                label: const Text('Remove holiday from list'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: (_isConnected && _spSelectedIndex != null)
-                      ? sc.error
-                      : sc.outline,
-                  foregroundColor: (_isConnected && _spSelectedIndex != null)
-                      ? Colors.white
-                      : sc.onSurfaceVariant,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
+                icon: Icons.remove_circle_outline,
+                label: 'Remove holiday from list',
                 onPressed: (_isConnected && _spSelectedIndex != null)
                     ? _spRemoveSelected
                     : null,
@@ -4048,7 +3987,6 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 key: const Key(CalendarProfilesKeys.specialDaysWriteBtn),
                 icon: Icons.edit,
                 label: 'Write',
-                color: const Color(0xFF1976D2),
                 onPressed:
                     _specialDays.entries.isNotEmpty ? _saveSpecialDays : null,
               ),
@@ -4471,19 +4409,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
       required String label,
       required VoidCallback? onPressed,
       Key? key}) {
-    return ElevatedButton.icon(
+    return AppButton.primary(
       key: key,
-      icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1976D2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: Color(0xFF1976D2)),
-        ),
-      ),
+      icon: icon,
+      label: label,
       onPressed: onPressed,
     );
   }
@@ -4493,19 +4422,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
       IconData? icon,
       Key? key,
       required VoidCallback? onPressed}) {
-    final sc = SemanticColors.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final btnColor = isDark ? Colors.white : sc.primary;
-    return OutlinedButton.icon(
+    return AppButton.secondary(
       key: key,
-      icon: Icon(icon ?? Icons.check, size: 14),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: btnColor,
-        side: BorderSide(color: btnColor),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
+      icon: icon ?? Icons.check,
+      label: label,
       onPressed: onPressed,
     );
   }
@@ -4513,21 +4433,14 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   Widget _actionBtn({
     required IconData icon,
     required String label,
-    required Color color,
     required VoidCallback? onPressed,
     Key? key,
   }) {
     final isConnected = ref.read(appControllerProvider).isConnected;
-    return ElevatedButton.icon(
+    return AppButton.primary(
       key: key,
-      icon: Icon(icon, size: 14),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
+      icon: icon,
+      label: label,
       onPressed: isConnected ? onPressed : null,
     );
   }
