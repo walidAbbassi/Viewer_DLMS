@@ -4,14 +4,15 @@ Résumé de tout ce qui a été fait sur la branche `ui_ux_design`, destiné à 
 partagé avec **d'autres comptes Claude Design & Claude Code** qui reprendraient
 ce chantier. Écrit par une session Claude Code.
 
-Dernier commit : `5fd2f5b` sur `ui_ux_design` (pushé sur GitHub). `main` a été
+Dernier commit : `214d340` sur `ui_ux_design` (pushé sur GitHub). `main` a été
 fusionné jusqu'à `eed67f1`/`b70c8ec` (le sweep icônes/toolbar sur les 27
-pages) mais **pas encore jusqu'à `5fd2f5b`** (SWEEP STEP7 Phase 1,
-ci-dessous) — fusion à refaire si souhaité.
+pages) mais **pas encore jusqu'à `5fd2f5b`/`214d340`** (SWEEP STEP7 Phase 1
++ STEP8, ci-dessous) — fusion à refaire si souhaité.
 Repo : https://github.com/walidAbbassi/Viewer_DLMS
 Projet design source : https://claude.ai/design/p/8a32b677-2b52-4b62-9f26-02bee55faee0
-Sweep STEP6, le sweep icônes/toolbar (27 pages) et SWEEP STEP7 reçus via
-le projet `1ee44508-26f1-42d0-8d48-7c599417abd6` (Viewer NG UI/UX Review).
+Sweep STEP6, le sweep icônes/toolbar (27 pages), SWEEP STEP7 et SWEEP
+STEP8 reçus via le projet `1ee44508-26f1-42d0-8d48-7c599417abd6`
+(Viewer NG UI/UX Review).
 **Tout le travail se fait désormais uniquement sur `ui_ux_design`** (consigne
 explicite de l'utilisateur) — ne plus pousser sur
 `claude/viewer-ng-ui-ux-review-m4t078` ni `claude/github-account-connection-rn0vbe`.
@@ -275,6 +276,58 @@ monté nulle part par l'app.
 
 **Non vérifié** (même limite que les sweeps précédents) : pas de SDK
 Flutter dans cet environnement.
+
+### Bloc 7 — SWEEP STEP8 : glyphes domaine dans AppIcons (commit `214d340`)
+Reçu via `Claude_Design_sweeps/SWEEP_STEP8_domain_icons.md`. Édition
+mono-fichier de `core/theme/app_icons.dart` — clés et sites d'appel
+inchangés (le sweep le demandait explicitement), donc aucun autre fichier
+touché ; le rail de nav et `AppToolbar` récupèrent le changement
+automatiquement puisqu'ils lisent déjà `AppIcons` (STEP6/7).
+
+**Décision de prudence** : le sweep lui-même signale 4 glyphes comme
+"relativement récents" (`vital_signs`, `cell_tower`, `monitoring`,
+`switch_access_shortcut`) et fournit des fallbacks explicites en cas
+d'absence de la police Material Icons pour la version Flutter du projet.
+Cet environnement n'a pas de SDK Flutter pour vérifier — plutôt que de
+deviner et risquer une erreur de compilation sur un fichier à 100+ sites
+d'appel, **les 4 fallbacks documentés par le sweep ont été appliqués
+systématiquement** :
+- `pqProfile`/`powerQualityLog` : `vital_signs` → `monitor_heart` (les
+  deux — préserve le partage de glyphe voulu par le sweep entre ces deux
+  clés, juste avec un glyphe plus sûr).
+- `communicationLog`/`modem` : `cell_tower` → `sync_alt` (les deux, même
+  logique).
+- `qualityParams`/`loadProfile` : `monitoring` → `show_chart` (les deux,
+  même logique).
+- `disconnector` : `switch_access_shortcut` → `toggle_on` (seule clé sur ce
+  glyphe, donc le fallback revient à ne rien changer).
+
+**Effet net** : `loadProfile`, `powerQualityLog`, `communicationLog` et
+`disconnector` finissent par ne pas changer du tout (le fallback = valeur
+d'origine) — volontaire et documenté ici, pas un oubli. Vraiment changés :
+`qualityParams`, `sag`, `swell`, `overcurrent`, `neutral`,
+`energyRegister`, `ctvt`, `instant`, `average`, `profileStatus`,
+`pqProfile`, `modem`, `pushSetupServer`.
+
+**Collision intentionnelle notée** : `average` (`ssid_chart`) et `thd`
+(`ssid_chart`, déjà existant, non touché) partagent maintenant le même
+glyphe — c'est ce que demandait le sweep, signalé ici pour traçabilité,
+pas un bug.
+
+**Tests** : grep sur toute la suite de tests pour les anciens glyphes
+littéraux (`Icons.tune`, `Icons.trending_down/up`, `Icons.transform`,
+`Icons.electric_bolt`, `Icons.stacked_line_chart`, `Icons.router`,
+`Icons.dns_outlined`, `Icons.playlist_add_check`, `Icons.graphic_eq`,
+`Icons.flash_on`) — un seul hit (`Icons.electric_bolt` dans
+`app_drawer_test.dart`), confirmé sans rapport (teste le logo de marque
+"Viewer_NG" du rail de nav, une icône codée en dur séparément, pas
+`AppIcons.instant`). Aucune mise à jour de test nécessaire.
+
+**À vérifier avec le vrai SDK** (le sweep le demande explicitement) : que
+les 4 fallbacks appliqués ici étaient bien nécessaires — si la police
+Material Icons du projet supporte en fait `vital_signs`/`cell_tower`/
+`monitoring`/`switch_access_shortcut`, le Claude Design peut redemander les
+glyphes originaux en confirmant que `flutter analyze` passe avec eux.
 
 ## ⏸️ Reporté — pas encore fait
 
