@@ -4,10 +4,11 @@ Résumé de tout ce qui a été fait sur la branche `ui_ux_design`, destiné à 
 partagé avec **d'autres comptes Claude Design & Claude Code** qui reprendraient
 ce chantier. Écrit par une session Claude Code.
 
-Dernier commit : `214d340` sur `ui_ux_design` (pushé sur GitHub). `main` a été
+Dernier commit : `f29e5d2` sur `ui_ux_design` (pushé sur GitHub). `main` a été
 fusionné jusqu'à `eed67f1`/`b70c8ec` (le sweep icônes/toolbar sur les 27
-pages) mais **pas encore jusqu'à `5fd2f5b`/`214d340`** (SWEEP STEP7 Phase 1
-+ STEP8, ci-dessous) — fusion à refaire si souhaité.
+pages) mais **pas encore jusqu'à `5fd2f5b`/`214d340`/`f29e5d2`** (SWEEP
+STEP7 Phase 1, STEP8, et les restes de Passe 2, ci-dessous) — fusion à
+refaire si souhaité.
 Repo : https://github.com/walidAbbassi/Viewer_DLMS
 Projet design source : https://claude.ai/design/p/8a32b677-2b52-4b62-9f26-02bee55faee0
 Sweep STEP6, le sweep icônes/toolbar (27 pages), SWEEP STEP7 et SWEEP
@@ -329,14 +330,68 @@ Material Icons du projet supporte en fait `vital_signs`/`cell_tower`/
 `monitoring`/`switch_access_shortcut`, le Claude Design peut redemander les
 glyphes originaux en confirmant que `flutter analyze` passe avec eux.
 
+### Bloc 8 — Passe 2, derniers restes (commit `f29e5d2`)
+Fait de ma propre initiative (pas de nouveau sweep du projet design) en
+reprenant la liste "Reporté" de ce document. Ferme les deux derniers points
+de "Passe 2 — couleurs en dur → SemanticColors".
+
+**`app.dart` — 3ᵉ bleu d'AppBar** : `Color(0xFF1e40af)` (utilisé 3 fois :
+les deux seeds `ColorScheme.fromSeed` light/dark, et `AppBarTheme
+.backgroundColor` global) → `SemanticColors.light.primary`. Une seule
+source de vérité au lieu d'un hex dupliqué. `test/app_test.dart` mis à jour
+(il vérifiait la valeur hex exacte).
+
+**Boutons codés en dur sur les 3 pages identifiées dans l'écart signalé
+précédemment** :
+- `mobile_network_id_page.dart` — son helper `_actionButton` (Read/Write)
+  codait **orange en dur pour Write** (violation directe de la règle "no
+  orange") et un bleu approximatif pour Read. Migré vers
+  `AppButton.primary`/`.secondary` + `AppIcons.write`/`.read`. Aussi migré
+  Activate/Deactivate/Restart/Refresh (`DesignTokens.success`/`danger`
+  comme couleur d'action — même violation que Connect/Disconnect corrigée
+  en STEP6) vers `AppButton.primary`/`.danger`/`.secondary`, et le bouton
+  de confirmation du dialogue "Restart Modem" (`FilledButton` brut) vers
+  `AppButton.primary`. La légende de badges technologie (GSM/GPRS/LTE/
+  NB-IoT, une couleur chacun dont un orange) **volontairement non
+  touchée** — couleur de classification de données, même exception déjà
+  établie pour les palettes calendrier/graphiques, pas une couleur
+  d'action.
+- `modem_config_page.dart` — même helper `_actionButton`, mais ici
+  `isWrite` était dérivé de `color != null` alors que **tous** les appels
+  'Write' passaient un argument `color` (silencieusement ignoré par le
+  corps de la fonction) — donc littéralement **tous les boutons Write de
+  cette page de ~1800 lignes rendaient en orange**. Corrigé en dérivant
+  `isWrite` du texte du label (seuls 'Read'/'Write' sont jamais passés,
+  vérifié par grep) — aucun des 25+ sites d'appel n'a eu besoin d'être
+  touché. Aussi migré les 5 `FilledButton` restants utilisant
+  `DesignTokens.success` comme couleur d'action (Add Row, deux Add to
+  list, Add, Connect) vers `AppButton.primary`.
+- `push_setup_server_page.dart` — boutons Start/Stop Server
+  (`ElevatedButton` brut, `Colors.green`/`Colors.redAccent`) migrés vers
+  `AppButton.primary`/`.danger`, en utilisant le paramètre `loading` au
+  lieu d'échanger manuellement l'icône contre un spinner. La bannière
+  d'erreur et la pastille de statut Running/Stopped **non touchées** —
+  couleurs de statut légitimes (rouge=erreur, vert=en cours), pas des
+  couleurs d'action ; utilisent encore `Colors.*` brut plutôt que
+  `SemanticColors.of(context)` — nettoyage cosmétique restant si souhaité,
+  hors du périmètre "couleurs de bouton" de cette passe.
+
+**Tests** : aucun fichier de test n'existe pour ces 3 pages — seul
+`app_test.dart` (pour le fix `app.dart`) a été mis à jour.
+
+**Non vérifié** (même limite que les sweeps précédents) : pas de SDK
+Flutter dans cet environnement.
+
 ## ⏸️ Reporté — pas encore fait
 
 - **Passe 2 — couleurs en dur → SemanticColors** (`SWEEP_STEP4_colors.md`) :
-  **le sous-ensemble `AppBar.backgroundColor` est fait** (Bloc 5, toutes les
-  pages). Reste non fait : l'unification du 3ᵉ bleu d'AppBar dans `app.dart`
-  (`Color(0xFF1e40af)`/`Color(0xFF1e3a6e)` → `sc.primary`), et les couleurs de
-  bouton en dur (voir écart ci-dessus, à étendre à mobile_network_id/modem_config/
-  push_setup_server) — ces boutons n'ont pas été touchés par le Bloc 5.
+  **fermée** (Bloc 5 : `AppBar.backgroundColor` toutes pages ; Bloc 8 : 3ᵉ
+  bleu `app.dart` + boutons mobile_network_id/modem_config/
+  push_setup_server). Reste hors périmètre "couleurs de bouton" strict :
+  la bannière d'erreur et la pastille de statut de `push_setup_server_page
+  .dart` utilisent encore `Colors.*` brut au lieu de `SemanticColors.of
+  (context)` (couleurs de statut déjà correctes sémantiquement, juste pas
+  la bonne API) — cosmétique, pas une violation de règle.
 - **Passe 3 — calendar_profiles migration complète** (`CALENDAR_full_migration.md`) :
   pas commencée. Le patch mécanique initial (`PATCHES_STEP1.md` §3) ne compile pas
   tel quel — voir raisons ci-dessous. Seuls 3 boutons "Read" orange→bleu ont été
