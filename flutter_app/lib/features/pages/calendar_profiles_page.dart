@@ -15,20 +15,6 @@ import 'package:flutter/services.dart';
 import '../../core/theme/semantic_colors.dart';
 import '../../core/widgets/breadcrumb.dart';
 
-// ─── Color tokens (aligned with firmware screen) ──────────────────────────────
-const _cPrimary600 = Color(0xFF1976D2);
-const _cPrimary50 = Color(0xFFE3F2FD);
-const _cSuccess = Color(0xFF4CAF50);
-const _cWarning = Color(0xFFFF9800);
-const _cDanger = Color(0xFFF44336);
-const _cInfo = Color(0xFF2196F3);
-const _cGray50 = Color(0xFFF5F5F5);
-const _cGray100 = Color(0xFFF5F5F5);
-const _cGray200 = Color(0xFFEEEEEE);
-const _cGray300 = Color(0xFFE0E0E0);
-const _cTextSec = Color(0xFF6B7280);
-const _cBg = Color(0xFFF7F9FC);
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 /// Activity Calendar page – Active / Passive calendars, Special Days,
@@ -130,8 +116,6 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
     _client.close();
     super.dispose();
   }
-
-  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
 
   // ── data loading ──────────────────────────────────────────────────────────
 
@@ -313,7 +297,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
 
     final sc = SemanticColors.of(context);
     return Scaffold(
-      backgroundColor: _isDark ? const Color(0xFF0f172a) : _cBg,
+      backgroundColor: sc.background,
       appBar: AppBar(
         backgroundColor: sc.primary,
         foregroundColor: Colors.white,
@@ -373,14 +357,15 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ── error banner ──────────────────────────────────────────────────────────
 
   Widget _buildErrorBanner(String message, VoidCallback onRetry) {
+    final sc = SemanticColors.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, color: _cDanger, size: 48),
+          Icon(Icons.error_outline, color: sc.error, size: 48),
           const SizedBox(height: 12),
           Text(message,
-              style: const TextStyle(color: _cDanger),
+              style: TextStyle(color: sc.error),
               textAlign: TextAlign.center),
           const SizedBox(height: 16),
           ElevatedButton.icon(
@@ -398,6 +383,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildActiveCalendarTab() {
+    final sc = SemanticColors.of(context);
     if (_calendarError != null)
       return _buildErrorBanner(_calendarError!, _loadAll);
     final cal = _activeCalendar;
@@ -446,7 +432,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                       Theme.of(context).brightness ==
                                               Brightness.dark
                                           ? Colors.white
-                                          : _cPrimary600,
+                                          : sc.primary,
                                   padding: EdgeInsets.zero,
                                   tapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
@@ -475,11 +461,11 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     TabBar(
                       controller: _innerActive,
                       labelColor:
-                          _isDark ? const Color(0xFF60A5FA) : _cPrimary600,
+                          sc.primary,
                       indicatorColor:
-                          _isDark ? const Color(0xFF60A5FA) : _cPrimary600,
+                          sc.primary,
                       unselectedLabelColor:
-                          _isDark ? const Color(0xFF94A3B8) : _cTextSec,
+                          sc.onSurfaceVariant,
                       tabs: const [
                         Tab(text: 'Day Profiles'),
                         Tab(text: 'Week Profiles'),
@@ -512,9 +498,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ── Calendar header ───────────────────────────────────────────────────────
 
   Widget _calendarHeader(ActivityCalendarData? cal) {
+    final sc = SemanticColors.of(context);
     return Row(
       children: [
-        const Icon(Icons.event, color: _cInfo),
+        Icon(Icons.event, color: sc.info),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -596,6 +583,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
 
   Widget _buildCalendarGrid(
       ActivityCalendarData? cal, SpecialDayTable specialDays) {
+    final sc = SemanticColors.of(context);
     final month = _focusedMonth;
     final firstDow = (month.weekday + 6) % 7; // 0 = Mon
     final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
@@ -604,7 +592,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
     final cells = <Widget>[];
     // day-of-week headers
     cells.addAll(dayHeaders.map((h) => Container(
-          color: _cPrimary600,
+          color: sc.primary,
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(h,
@@ -664,22 +652,23 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
     required CalendarSeasonProfile? season,
     required ActivityCalendarData? cal,
   }) {
+    final sc = SemanticColors.of(context);
     final idx = (cal != null && season != null)
         ? cal.seasonProfiles.indexOf(season)
         : -1;
     final seasonColor =
-        (season != null && idx >= 0) ? _seasonColor(idx) : _cGray100;
+        (season != null && idx >= 0) ? _seasonColor(idx) : sc.surfaceVariant;
 
     final borderColor = isSelected
-        ? _cPrimary600
+        ? sc.primary
         : isToday
-            ? _cInfo
-            : _cGray200;
+            ? sc.info
+            : sc.outline;
     final borderWidth = (isSelected || isToday) ? 2.0 : 0.5;
     final leftColor = isSpecial
-        ? _cWarning
+        ? sc.warning
         : isTouChange
-            ? _cInfo
+            ? sc.info
             : Colors.transparent;
 
     return GestureDetector(
@@ -687,9 +676,9 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
       child: Container(
         decoration: BoxDecoration(
           color: isSpecial
-              ? _cWarning.withOpacity(.06)
+              ? sc.warning.withOpacity(.06)
               : isTouChange
-                  ? _cInfo.withOpacity(.06)
+                  ? sc.info.withOpacity(.06)
                   : Colors.white,
           border: Border(
             top: BorderSide(color: borderColor, width: borderWidth),
@@ -712,14 +701,14 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                       ? FontWeight.w800
                       : FontWeight.w500,
                   color: isSelected
-                      ? _cPrimary600
+                      ? sc.primary
                       : isToday
-                          ? _cInfo
+                          ? sc.info
                           : Colors.black87,
                 )),
             const Spacer(),
-            if (isSpecial) _calBadge('Special', _cWarning),
-            if (isTouChange && !isSpecial) _calBadge('TOU', _cInfo),
+            if (isSpecial) _calBadge('Special', sc.warning),
+            if (isTouChange && !isSpecial) _calBadge('TOU', sc.info),
             if (season != null && !isSpecial && !isTouChange)
               _calBadge(
                 season.seasonProfileName.isEmpty
@@ -749,6 +738,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Widget _calendarLegend(ActivityCalendarData? cal) {
+    final sc = SemanticColors.of(context);
     return Wrap(
       spacing: 12,
       runSpacing: 6,
@@ -758,8 +748,8 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             final color = _seasonColor(e.key);
             return _legendItem(e.value.seasonProfileName, color);
           }),
-        _legendItem('Special Day', _cWarning),
-        _legendItem('TOU Change', _cInfo),
+        _legendItem('Special Day', sc.warning),
+        _legendItem('TOU Change', sc.info),
       ],
     );
   }
@@ -834,6 +824,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
     SpecialDayTable specialDays, {
     required VoidCallback onSelect,
   }) {
+    final sc = SemanticColors.of(context);
     final year = _focusedMonth.year;
     final firstDay = DateTime(year, month, 1);
     final firstDow = (firstDay.weekday + 6) % 7; // 0 = Mon
@@ -848,7 +839,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
       cells.add(Center(
         child: Text(h,
             style: TextStyle(
-                fontSize: 7, fontWeight: FontWeight.w700, color: _cPrimary600)),
+                fontSize: 7, fontWeight: FontWeight.w700, color: sc.primary)),
       ));
     }
     // Leading empty cells
@@ -870,10 +861,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
         margin: const EdgeInsets.all(0.5),
         decoration: BoxDecoration(
           color: isSpecial
-              ? _cWarning.withOpacity(0.35)
+              ? sc.warning.withOpacity(0.35)
               : bgColor.withOpacity(0.55),
           shape: isToday ? BoxShape.circle : BoxShape.rectangle,
-          border: isToday ? Border.all(color: _cInfo, width: 1.5) : null,
+          border: isToday ? Border.all(color: sc.info, width: 1.5) : null,
           borderRadius: isToday ? null : BorderRadius.circular(1),
         ),
         child: Center(
@@ -882,7 +873,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             style: TextStyle(
               fontSize: 6.5,
               fontWeight: isToday ? FontWeight.w900 : FontWeight.w500,
-              color: isToday ? _cInfo : Colors.black87,
+              color: isToday ? sc.info : Colors.black87,
             ),
           ),
         ),
@@ -895,7 +886,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: isCurrentMonth
-            ? BorderSide(color: _cPrimary600, width: 1.5)
+            ? BorderSide(color: sc.primary, width: 1.5)
             : BorderSide.none,
       ),
       child: InkWell(
@@ -913,7 +904,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 decoration: BoxDecoration(
-                  color: isCurrentMonth ? _cPrimary600 : _cGray100,
+                  color: isCurrentMonth ? sc.primary : sc.surfaceVariant,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Center(
@@ -964,6 +955,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ── Right panel: day profile for selected date ────────────────────────────
 
   Widget _buildDayProfileViewer(ActivityCalendarData? cal, DateTime date) {
+    final sc = SemanticColors.of(context);
     if (cal == null) {
       return _emptyPlaceholder('No data loaded');
     }
@@ -995,7 +987,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
       children: [
         // Heading
         Row(children: [
-          const Icon(Icons.access_time, color: _cInfo),
+          Icon(Icons.access_time, color: sc.info),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -1007,20 +999,20 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
         const SizedBox(height: 6),
         // Context pills
         Wrap(spacing: 6, runSpacing: 4, children: [
-          if (season != null) _pill(season.seasonProfileName, _cWarning),
+          if (season != null) _pill(season.seasonProfileName, sc.warning),
           if (weekPro != null && weekPro.weekProfileName.isNotEmpty)
-            _pill(weekPro.weekProfileName, _cPrimary600),
+            _pill(weekPro.weekProfileName, sc.primary),
           if (special.index != -1)
-            _pill('Special Day #${special.index}', _cWarning),
+            _pill('Special Day #${special.index}', sc.warning),
           _pill(effectiveDayId > 0 ? 'Day ID $effectiveDayId' : 'No profile',
-              _cInfo),
+              sc.info),
         ]),
         const SizedBox(height: 12),
         // Day profile selector chips
         if (cal.dayProfiles.isNotEmpty) ...[
-          const Text('Day Profiles',
+          Text('Day Profiles',
               style: TextStyle(
-                  fontSize: 11, fontWeight: FontWeight.w600, color: _cTextSec)),
+                  fontSize: 11, fontWeight: FontWeight.w600, color: sc.onSurfaceVariant)),
           const SizedBox(height: 4),
           SizedBox(
             height: 38,
@@ -1035,10 +1027,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                   label: Text('Day ${dp.dayId}',
                       style: TextStyle(
                           fontSize: 11,
-                          color: active ? Colors.white : _cPrimary600)),
+                          color: active ? Colors.white : sc.primary)),
                   selected: active,
-                  selectedColor: _cPrimary600,
-                  backgroundColor: _cPrimary50,
+                  selectedColor: sc.primary,
+                  backgroundColor: sc.surfaceVariant,
                   onSelected: (_) {},
                 );
               },
@@ -1072,19 +1064,19 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                         nowMins < nextMins;
 
                     final sel = slot.scriptSelector;
-                    final rateColor = _cPrimary600;
+                    final rateColor = sc.primary;
                     final rateLabel = 'T$sel';
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
                         color:
-                            isActiveTou ? rateColor.withOpacity(.08) : _cGray50,
+                            isActiveTou ? rateColor.withOpacity(.08) : sc.surfaceVariant,
                         border: Border(
                           left: BorderSide(color: rateColor, width: 3),
-                          top: BorderSide(color: _cGray200, width: 0.5),
-                          right: BorderSide(color: _cGray200, width: 0.5),
-                          bottom: BorderSide(color: _cGray200, width: 0.5),
+                          top: BorderSide(color: sc.outline, width: 0.5),
+                          right: BorderSide(color: sc.outline, width: 0.5),
+                          bottom: BorderSide(color: sc.outline, width: 0.5),
                         ),
                         borderRadius: const BorderRadius.only(
                           topRight: Radius.circular(6),
@@ -1103,18 +1095,18 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700)),
                               if (nextSlot != null) ...[
-                                const Text(' → ',
+                                Text(' → ',
                                     style: TextStyle(
-                                        fontSize: 11, color: _cTextSec)),
+                                        fontSize: 11, color: sc.onSurfaceVariant)),
                                 Text(_fmtTime(nextSlot.startTime),
-                                    style: const TextStyle(
-                                        fontSize: 12, color: _cTextSec)),
+                                    style: TextStyle(
+                                        fontSize: 12, color: sc.onSurfaceVariant)),
                               ],
                             ]),
                             const SizedBox(height: 2),
                             Text('Script: ${slot.scriptLogicalName}',
-                                style: const TextStyle(
-                                    fontSize: 11, color: _cTextSec)),
+                                style: TextStyle(
+                                    fontSize: 11, color: sc.onSurfaceVariant)),
                           ],
                         ),
                         const Spacer(),
@@ -1136,10 +1128,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                               ),
                               if (isActiveTou) ...[
                                 const SizedBox(height: 4),
-                                const Text('▶ Active now',
+                                Text('▶ Active now',
                                     style: TextStyle(
                                         fontSize: 10,
-                                        color: _cSuccess,
+                                        color: sc.success,
                                         fontWeight: FontWeight.w600)),
                               ],
                             ]),
@@ -1173,6 +1165,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
 
   Widget _buildCalendarStatusBar(
       ActivityCalendarData? cal, DateTime targetDay) {
+    final sc = SemanticColors.of(context);
     final now = DateTime.now();
     final season = _findSeason(now, cal);
 
@@ -1209,27 +1202,27 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
 
     final touLabel =
         currentSlot == null ? '--' : 'T${currentSlot.scriptSelector}';
-    final touColor = currentSlot == null ? _cTextSec : _cPrimary600;
+    final touColor = currentSlot == null ? sc.onSurfaceVariant : sc.primary;
     final nextChangeLabel = nextSlot != null
         ? '${_fmtTime(nextSlot.startTime)} → T${nextSlot.scriptSelector}'
         : '--';
 
     return Container(
-      color: _cGray50,
+      color: sc.surfaceVariant,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
           _statusChip(
-              'Active Season', season?.seasonProfileName ?? '--', _cWarning),
+              'Active Season', season?.seasonProfileName ?? '--', sc.warning),
           const SizedBox(width: 12),
           _statusChip(
-              'Week Profile', season?.weekProfileName ?? '--', _cPrimary600),
+              'Week Profile', season?.weekProfileName ?? '--', sc.primary),
           const SizedBox(width: 12),
-          _statusChip('Day Profile', dowId > 0 ? 'ID $dowId' : '--', _cInfo),
+          _statusChip('Day Profile', dowId > 0 ? 'ID $dowId' : '--', sc.info),
           const SizedBox(width: 12),
           _statusChip('Current TOU', touLabel, touColor),
           const SizedBox(width: 12),
-          _statusChip('Next Change', nextChangeLabel, _cSuccess),
+          _statusChip('Next Change', nextChangeLabel, sc.success),
           const Spacer(),
           _outlinedBtn(context,
               label: 'Sync', icon: Icons.sync, key: const Key(CalendarProfilesKeys.statusSyncBtn), onPressed: _loadAll),
@@ -1239,11 +1232,12 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Widget _statusChip(String label, String value, Color color) {
+    final sc = SemanticColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: _cTextSec)),
+        Text(label, style: TextStyle(fontSize: 10, color: sc.onSurfaceVariant)),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
@@ -1285,6 +1279,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildPassiveCalendarTab() {
+    final sc = SemanticColors.of(context);
     if (_calendarError != null)
       return _buildErrorBanner(_calendarError!, _loadAll);
     final cal = _passiveCalendar;
@@ -1332,7 +1327,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                       Theme.of(context).brightness ==
                                               Brightness.dark
                                           ? Colors.white
-                                          : _cPrimary600,
+                                          : sc.primary,
                                   padding: EdgeInsets.zero,
                                   tapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
@@ -1359,11 +1354,11 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     TabBar(
                       controller: _innerPassive,
                       labelColor:
-                          _isDark ? const Color(0xFF60A5FA) : _cPrimary600,
+                          sc.primary,
                       indicatorColor:
-                          _isDark ? const Color(0xFF60A5FA) : _cPrimary600,
+                          sc.primary,
                       unselectedLabelColor:
-                          _isDark ? const Color(0xFF94A3B8) : _cTextSec,
+                          sc.onSurfaceVariant,
                       tabs: const [
                         Tab(text: 'Day Profiles'),
                         Tab(text: 'Week Profiles'),
@@ -1394,13 +1389,14 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Widget _buildPassiveActionBar() {
+    final sc = SemanticColors.of(context);
     final cal = _passiveCalendar;
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          const Icon(Icons.edit_calendar, color: _cInfo),
+          Icon(Icons.edit_calendar, color: sc.info),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -1414,7 +1410,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             key: const Key(CalendarProfilesKeys.passiveActivateBtn),
             icon: Icons.play_arrow,
             label: 'Activate Now',
-            color: _cSuccess,
+            color: sc.success,
             onPressed:
                 _passiveCalendar != null ? _activatePassiveCalendar : null,
           ),
@@ -1698,11 +1694,12 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   void _showWriteError({required String title, required String detail}) {
+    final sc = SemanticColors.of(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        icon: const Icon(Icons.error_outline, color: _cDanger, size: 32),
-        title: Text(title, style: const TextStyle(color: _cDanger)),
+        icon: Icon(Icons.error_outline, color: sc.error, size: 32),
+        title: Text(title, style: TextStyle(color: sc.error)),
         content: SelectableText(
           detail,
           style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
@@ -1718,11 +1715,12 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Future<void> _showWriteSuccess() {
+    final sc = SemanticColors.of(context);
     return showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
         title: Row(children: [
-          Icon(Icons.check_circle, color: _cSuccess),
+          Icon(Icons.check_circle, color: sc.success),
           const SizedBox(width: 10),
           const Text('Write Successful'),
         ]),
@@ -1738,13 +1736,14 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Future<void> _activatePassiveCalendar() async {
+    final sc = SemanticColors.of(context);
     // Warn the user if there are local edits that have not been written to the meter yet.
     if (_passiveCalendarDirty) {
       final proceed = await showDialog<bool>(
         context: context,
         builder: (_) => AlertDialog(
-          icon: const Icon(Icons.warning_amber_rounded,
-              color: _cWarning, size: 36),
+          icon: Icon(Icons.warning_amber_rounded,
+              color: sc.warning, size: 36),
           title: const Text('Unwritten Changes'),
           content: const Text(
             'The passive calendar has local modifications that have not been '
@@ -1759,7 +1758,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: _cWarning),
+              style: ElevatedButton.styleFrom(backgroundColor: sc.warning),
               onPressed: () => Navigator.pop(context, true),
               child: const Text('Activate Anyway'),
             ),
@@ -1779,7 +1778,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: _cSuccess),
+            style: ElevatedButton.styleFrom(backgroundColor: sc.success),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Activate'),
           ),
@@ -1862,6 +1861,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ── LEFT PANEL: Liste des Profils ─────────────────────────────────────────
 
   Widget _dayProfileListPanel(ActivityCalendarData cal, bool readOnly) {
+    final sc = SemanticColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1872,7 +1872,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             children: [
               Expanded(
                   child: _sectionHeader(
-                      Icons.view_day, _cPrimary600, 'Day Profile List')),
+                      Icons.view_day, sc.primary, 'Day Profile List')),
             ],
           ),
         ),
@@ -1880,12 +1880,12 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
         // Column headers
         Container(
           decoration: BoxDecoration(
-            color: _isDark ? const Color(0xFF0f1e35) : _cGray100,
+            color: sc.surfaceVariant,
             border: Border(
               top: BorderSide(
-                  color: _isDark ? const Color(0xFF334155) : _cGray300),
+                  color: sc.outline),
               bottom: BorderSide(
-                  color: _isDark ? const Color(0xFF334155) : _cGray300),
+                  color: sc.outline),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1898,7 +1898,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color:
-                              _isDark ? const Color(0xFF94A3B8) : _cTextSec))),
+                              sc.onSurfaceVariant))),
               Expanded(
                   flex: 2,
                   child: Text('Slots',
@@ -1906,7 +1906,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color:
-                              _isDark ? const Color(0xFF94A3B8) : _cTextSec))),
+                              sc.onSurfaceVariant))),
               Expanded(
                   flex: 4,
                   child: Text('Tarifs',
@@ -1914,7 +1914,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color:
-                              _isDark ? const Color(0xFF94A3B8) : _cTextSec))),
+                              sc.onSurfaceVariant))),
               if (!readOnly)
                 SizedBox(
                     width: 60,
@@ -1922,9 +1922,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                         style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: _isDark
-                                ? const Color(0xFF94A3B8)
-                                : _cTextSec))),
+                            color: sc.onSurfaceVariant))),
             ],
           ),
         ),
@@ -1935,7 +1933,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               : ListView.separated(
                   itemCount: cal.dayProfiles.length,
                   separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: _cGray200),
+                      Divider(height: 1, color: sc.outline),
                   itemBuilder: (ctx, i) {
                     final d = cal.dayProfiles[i];
                     final selected = _editingDayProfile?.dayId == d.dayId;
@@ -1943,7 +1941,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     return InkWell(
                       onTap: () => setState(() => _editingDayProfile = d),
                       child: Container(
-                        color: selected ? _cPrimary50 : null,
+                        color: selected ? sc.surfaceVariant : null,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
                         child: Row(
@@ -1959,7 +1957,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                   fontWeight: selected
                                       ? FontWeight.w700
                                       : FontWeight.w500,
-                                  color: selected ? _cPrimary600 : null,
+                                  color: selected ? sc.primary : null,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -1970,16 +1968,16 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                 d.daySchedule.isEmpty
                                     ? '—'
                                     : '${d.daySchedule.length}',
-                                style: const TextStyle(
-                                    fontSize: 12, color: _cTextSec),
+                                style: TextStyle(
+                                    fontSize: 12, color: sc.onSurfaceVariant),
                               ),
                             ),
                             Expanded(
                               flex: 4,
                               child: Text(
                                 tarifs,
-                                style: const TextStyle(
-                                    fontSize: 11, color: _cTextSec),
+                                style: TextStyle(
+                                    fontSize: 11, color: sc.onSurfaceVariant),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -2000,12 +1998,12 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.edit,
-                                          size: 13, color: _cPrimary600),
+                                          size: 13, color: sc.primary),
                                       const SizedBox(width: 3),
                                       Text('Edit',
                                           style: TextStyle(
                                               fontSize: 11,
-                                              color: _cPrimary600)),
+                                              color: sc.primary)),
                                     ],
                                   ),
                                 ),
@@ -2049,7 +2047,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     icon: const Icon(Icons.visibility, size: 16),
                     label: const Text('Read'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _cPrimary600,
+                      backgroundColor: sc.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
@@ -2090,6 +2088,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ── RIGHT PANEL: Éditeur de Profil ────────────────────────────────────────
 
   Widget _dayProfileEditorPanel(ActivityCalendarData cal, bool readOnly) {
+    final sc = SemanticColors.of(context);
     final d = _editingDayProfile;
     if (d == null) {
       return _emptyPlaceholder(
@@ -2102,7 +2101,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
         // Section heading
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-          child: _sectionHeader(Icons.edit_calendar, _cInfo, 'Profile Editor'),
+          child: _sectionHeader(Icons.edit_calendar, sc.info, 'Profile Editor'),
         ),
         const SizedBox(height: 12),
         // Profile name display
@@ -2111,10 +2110,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Profile name',
+              Text('Profile name',
                   style: TextStyle(
                       fontSize: 11,
-                      color: _cTextSec,
+                      color: sc.onSurfaceVariant,
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
               TextFormField(
@@ -2145,18 +2144,18 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
         // Time slots heading
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: _sectionHeader(Icons.access_time, _cPrimary600, 'Time Slots'),
+          child: _sectionHeader(Icons.access_time, sc.primary, 'Time Slots'),
         ),
         const SizedBox(height: 6),
         // Slot column headers
         Container(
           decoration: BoxDecoration(
-            color: _isDark ? const Color(0xFF0f1e35) : _cGray100,
+            color: sc.surfaceVariant,
             border: Border(
               top: BorderSide(
-                  color: _isDark ? const Color(0xFF334155) : _cGray300),
+                  color: sc.outline),
               bottom: BorderSide(
-                  color: _isDark ? const Color(0xFF334155) : _cGray300),
+                  color: sc.outline),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -2169,7 +2168,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color:
-                              _isDark ? const Color(0xFF94A3B8) : _cTextSec))),
+                              sc.onSurfaceVariant))),
               Expanded(
                   flex: 3,
                   child: Text('Label',
@@ -2177,7 +2176,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color:
-                              _isDark ? const Color(0xFF94A3B8) : _cTextSec))),
+                              sc.onSurfaceVariant))),
               if (!readOnly)
                 SizedBox(
                     width: 72,
@@ -2185,9 +2184,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                         style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: _isDark
-                                ? const Color(0xFF94A3B8)
-                                : _cTextSec))),
+                            color: sc.onSurfaceVariant))),
             ],
           ),
         ),
@@ -2198,7 +2195,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               : ListView.separated(
                   itemCount: d.daySchedule.length,
                   separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: _cGray200),
+                      Divider(height: 1, color: sc.outline),
                   itemBuilder: (ctx, i) {
                     final action = d.daySchedule[i];
                     final nextAction = i + 1 < d.daySchedule.length
@@ -2208,7 +2205,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                         ? _fmtTimeHM(nextAction.startTime)
                         : '24:00';
                     final sel = action.scriptSelector;
-                    final rateColor = _cPrimary600;
+                    final rateColor = sc.primary;
                     final rateLabel = 'T$sel';
                     return Container(
                       padding: const EdgeInsets.symmetric(
@@ -2257,7 +2254,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                     padding: EdgeInsets.zero,
                                     constraints: const BoxConstraints(),
                                     icon: Icon(Icons.edit,
-                                        size: 16, color: _cInfo),
+                                        size: 16, color: sc.info),
                                     tooltip: 'Edit',
                                     onPressed: () => _showSlotDialog(d, i),
                                   ),
@@ -2266,7 +2263,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                     padding: EdgeInsets.zero,
                                     constraints: const BoxConstraints(),
                                     icon: Icon(Icons.delete_outline,
-                                        size: 16, color: _cDanger),
+                                        size: 16, color: sc.error),
                                     tooltip: 'Delete',
                                     onPressed: () => setState(() {
                                       d.daySchedule.removeAt(i);
@@ -2318,7 +2315,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 icon: const Icon(Icons.delete_outline, size: 20),
                 label: const Text('Delete Profile'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _cDanger,
+                  backgroundColor: sc.error,
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -2337,6 +2334,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   void _showSlotDialog(CalendarDayProfile d, int? editIndex) {
+    final sc = SemanticColors.of(context);
     final existing = editIndex != null ? d.daySchedule[editIndex] : null;
 
     // ── Start time ───────────────────────────────────────────────────────────
@@ -2380,7 +2378,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     selHour: selHour,
                     selMinute: selMinute,
                     selSecond: selSecond,
-                    color: _cPrimary600,
+                    color: sc.primary,
                     onHourChanged: (v) => setLocal(() => selHour = v),
                     onMinuteChanged: (v) => setLocal(() => selMinute = v),
                     onSecondChanged: (v) => setLocal(() => selSecond = v),
@@ -2393,7 +2391,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Icon(Icons.arrow_downward,
-                            size: 16, color: _cTextSec),
+                            size: 16, color: sc.onSurfaceVariant),
                       ),
                       const Expanded(child: Divider()),
                     ],
@@ -2409,7 +2407,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     selHour: endHour,
                     selMinute: endMinute,
                     selSecond: endSecond,
-                    color: _cInfo,
+                    color: sc.info,
                     onHourChanged: (v) => setLocal(() => endHour = v),
                     onMinuteChanged: (v) => setLocal(() => endMinute = v),
                     onSecondChanged: (v) => setLocal(() => endSecond = v),
@@ -2528,16 +2526,17 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
     required String label,
     required ValueChanged<int> onChanged,
   }) {
+    final sc = SemanticColors.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 0),
           child: Text(label,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: _cTextSec)),
+                  color: sc.onSurfaceVariant)),
         ),
         Expanded(
           child: Column(
@@ -2545,8 +2544,8 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             children: [
               InkWell(
                 onTap: () => onChanged((value - 1 + count) % count),
-                child: const Icon(Icons.keyboard_arrow_up,
-                    size: 22, color: _cTextSec),
+                child: Icon(Icons.keyboard_arrow_up,
+                    size: 22, color: sc.onSurfaceVariant),
               ),
               const SizedBox(height: 2),
               Text(
@@ -2559,8 +2558,8 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               const SizedBox(height: 2),
               InkWell(
                 onTap: () => onChanged((value + 1) % count),
-                child: const Icon(Icons.keyboard_arrow_down,
-                    size: 22, color: _cTextSec),
+                child: Icon(Icons.keyboard_arrow_down,
+                    size: 22, color: sc.onSurfaceVariant),
               ),
             ],
           ),
@@ -2570,13 +2569,14 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Widget _drumColon() {
-    return const Padding(
+    final sc = SemanticColors.of(context);
+    return Padding(
       padding: EdgeInsets.only(bottom: 14),
       child: Text(':',
           style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w900,
-              color: _cTextSec,
+              color: sc.onSurfaceVariant,
               height: 1)),
     );
   }
@@ -2594,6 +2594,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
     required ValueChanged<int> onMinuteChanged,
     required ValueChanged<int> onSecondChanged,
   }) {
+    final sc = SemanticColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -2602,15 +2603,15 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: readOnly ? _cTextSec : color)),
+                color: readOnly ? sc.onSurfaceVariant : color)),
         const SizedBox(height: 6),
         Container(
           height: 148,
           decoration: BoxDecoration(
-            color: readOnly ? _cGray100 : _cGray50,
+            color: readOnly ? sc.surfaceVariant : sc.surfaceVariant,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-                color: readOnly ? _cGray300 : color.withOpacity(.45)),
+                color: readOnly ? sc.outline : color.withOpacity(.45)),
           ),
           child: IgnorePointer(
             ignoring: readOnly,
@@ -2651,7 +2652,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 4,
-                color: readOnly ? _cTextSec : color,
+                color: readOnly ? sc.onSurfaceVariant : color,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
@@ -2665,6 +2666,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
 
   Widget _buildWeekProfilesView(ActivityCalendarData? cal,
       {required bool readOnly}) {
+    final sc = SemanticColors.of(context);
     if (cal == null) return _emptyPlaceholder('No data loaded');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2674,18 +2676,18 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: _cPrimary50,
+            color: sc.surfaceVariant,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: _cPrimary600.withOpacity(.3)),
+            border: Border.all(color: sc.primary.withOpacity(.3)),
           ),
           child: Row(
             children: [
-              Icon(Icons.info_outline, color: _cPrimary600, size: 16),
+              Icon(Icons.info_outline, color: sc.primary, size: 16),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Week Profiles — Associate a Day Profile with each day of the week.',
-                  style: TextStyle(fontSize: 12, color: _cPrimary600),
+                  style: TextStyle(fontSize: 12, color: sc.primary),
                 ),
               ),
             ],
@@ -2701,6 +2703,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Widget _weekProfileTablePanel(ActivityCalendarData cal, bool readOnly) {
+    final sc = SemanticColors.of(context);
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     String _resolveLabel(ActivityCalendarData cal, int dayId) {
@@ -2717,46 +2720,46 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           children: [
             Expanded(
                 child: _sectionHeader(
-                    Icons.calendar_view_week, _cPrimary600, 'Configuration')),
+                    Icons.calendar_view_week, sc.primary, 'Configuration')),
           ],
         ),
         const SizedBox(height: 8),
         // ── Column headers ───────────────────────────────────────────────────
         Container(
           decoration: BoxDecoration(
-            color: _cGray100,
+            color: sc.surfaceVariant,
             border: Border(
-              top: BorderSide(color: _cGray300),
-              bottom: BorderSide(color: _cGray300),
+              top: BorderSide(color: sc.outline),
+              bottom: BorderSide(color: sc.outline),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Row(
             children: [
-              const SizedBox(
+              SizedBox(
                 width: 160,
                 child: Text('Week Profile',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
               ),
               ...days.map((d) => Expanded(
                     child: Text(d,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: _cTextSec),
+                            color: sc.onSurfaceVariant),
                         textAlign: TextAlign.center),
                   )),
               if (!readOnly)
-                const SizedBox(
+                SizedBox(
                   width: 60,
                   child: Text('Actions',
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: _cTextSec)),
+                          color: sc.onSurfaceVariant)),
                 ),
             ],
           ),
@@ -2768,7 +2771,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               : ListView.separated(
                   itemCount: cal.weekProfiles.length,
                   separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: _cGray200),
+                      Divider(height: 1, color: sc.outline),
                   itemBuilder: (ctx, i) {
                     final w = cal.weekProfiles[i];
                     final selected = _editingWeekProfile != null &&
@@ -2784,7 +2787,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                       w.sunday
                     ];
                     return Container(
-                      color: selected ? _cPrimary50 : null,
+                      color: selected ? sc.surfaceVariant : null,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       child: Row(
@@ -2800,7 +2803,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                 fontWeight: selected
                                     ? FontWeight.w700
                                     : FontWeight.w500,
-                                color: selected ? _cPrimary600 : null,
+                                color: selected ? sc.primary : null,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -2808,8 +2811,8 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                           ...dayIds.map((id) => Expanded(
                                 child: Text(
                                   _resolveLabel(cal, id),
-                                  style: const TextStyle(
-                                      fontSize: 11, color: _cInfo),
+                                  style: TextStyle(
+                                      fontSize: 11, color: sc.info),
                                   textAlign: TextAlign.center,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -2833,11 +2836,11 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(Icons.edit,
-                                        size: 13, color: _cPrimary600),
+                                        size: 13, color: sc.primary),
                                     const SizedBox(width: 3),
                                     Text('Edit',
                                         style: TextStyle(
-                                            fontSize: 11, color: _cPrimary600)),
+                                            fontSize: 11, color: sc.primary)),
                                   ],
                                 ),
                               ),
@@ -2888,7 +2891,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     icon: const Icon(Icons.visibility, size: 16),
                     label: const Text('Read'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _cPrimary600,
+                      backgroundColor: sc.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
@@ -2922,6 +2925,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
 
   Widget _weekProfileInlineEditor(
       CalendarWeekProfile w, ActivityCalendarData cal, bool readOnly) {
+    final sc = SemanticColors.of(context);
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final dayIds = [
       w.monday,
@@ -2967,10 +2971,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
 
     return Container(
       decoration: BoxDecoration(
-        color: _cPrimary50,
+        color: sc.surfaceVariant,
         border: Border(
-          top: BorderSide(color: _cPrimary600.withOpacity(.25)),
-          bottom: BorderSide(color: _cPrimary600.withOpacity(.25)),
+          top: BorderSide(color: sc.primary.withOpacity(.25)),
+          bottom: BorderSide(color: sc.primary.withOpacity(.25)),
         ),
       ),
       padding: const EdgeInsets.all(12),
@@ -2979,7 +2983,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
         children: [
           Row(
             children: [
-              Icon(Icons.edit, size: 16, color: _cInfo),
+              Icon(Icons.edit, size: 16, color: sc.info),
               const SizedBox(width: 6),
               Text(
                 readOnly
@@ -3048,19 +3052,19 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(days[i],
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: _cTextSec)),
+                              color: sc.onSurfaceVariant)),
                       const SizedBox(height: 4),
                       readOnly
                           ? Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 6),
                               decoration: BoxDecoration(
-                                color: _cGray100,
+                                color: sc.surfaceVariant,
                                 borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: _cGray300),
+                                border: Border.all(color: sc.outline),
                               ),
                               child: Text(() {
                                 final name = _dayProfileNames[dayId];
@@ -3068,8 +3072,8 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                     ? name
                                     : 'Profile $dayId';
                               }(),
-                                  style: const TextStyle(
-                                      fontSize: 11, color: _cInfo)),
+                                  style: TextStyle(
+                                      fontSize: 11, color: sc.info)),
                             )
                           : items.isEmpty
                               ? const Text('--', style: TextStyle(fontSize: 11))
@@ -3103,7 +3107,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                   icon: const Icon(Icons.delete_outline, size: 15),
                   label: const Text('Delete'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _cDanger,
+                    backgroundColor: sc.error,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 10),
@@ -3133,6 +3137,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
 
   Widget _buildSeasonProfilesView(ActivityCalendarData? cal,
       {required bool readOnly}) {
+    final sc = SemanticColors.of(context);
     if (cal == null) return _emptyPlaceholder('No data loaded');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3142,20 +3147,20 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: _cPrimary50,
+            color: sc.surfaceVariant,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: _cPrimary600.withOpacity(.3)),
+            border: Border.all(color: sc.primary.withOpacity(.3)),
           ),
           child: Row(
             children: [
-              Icon(Icons.info_outline, color: _cPrimary600, size: 16),
+              Icon(Icons.info_outline, color: sc.primary, size: 16),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Season Profiles — Define seasonal periods by linking a Week Profile '
                   'to an activation date range. Each season activates on its Start Date '
                   'and ends the day before the next season begins.',
-                  style: TextStyle(fontSize: 12, color: _cPrimary600),
+                  style: TextStyle(fontSize: 12, color: sc.primary),
                 ),
               ),
             ],
@@ -3183,6 +3188,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Widget _seasonList(ActivityCalendarData cal, bool readOnly) {
+    final sc = SemanticColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3193,7 +3199,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             children: [
               Expanded(
                   child: _sectionHeader(
-                      Icons.park, _cSuccess, 'Season Profile List')),
+                      Icons.park, sc.success, 'Season Profile List')),
             ],
           ),
         ),
@@ -3201,47 +3207,47 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
         // ── Column headers ────────────────────────────────────────────────────
         Container(
           decoration: BoxDecoration(
-            color: _cGray100,
+            color: sc.surfaceVariant,
             border: Border(
-              top: BorderSide(color: _cGray300),
-              bottom: BorderSide(color: _cGray300),
+              top: BorderSide(color: sc.outline),
+              bottom: BorderSide(color: sc.outline),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Row(
             children: [
-              const Expanded(
+              Expanded(
                 flex: 3,
                 child: Text('Name',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
               ),
-              const Expanded(
+              Expanded(
                 flex: 4,
                 child: Text('Start Date',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
               ),
-              const Expanded(
+              Expanded(
                 flex: 3,
                 child: Text('Week Profile',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
               ),
               if (!readOnly)
-                const SizedBox(
+                SizedBox(
                   width: 60,
                   child: Text('Actions',
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: _cTextSec)),
+                          color: sc.onSurfaceVariant)),
                 ),
             ],
           ),
@@ -3253,7 +3259,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               : ListView.separated(
                   itemCount: cal.seasonProfiles.length,
                   separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: _cGray200),
+                      Divider(height: 1, color: sc.outline),
                   itemBuilder: (ctx, i) {
                     final s = cal.seasonProfiles[i];
                     final selected = identical(_editingSeason, s);
@@ -3268,7 +3274,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                         }
                       }),
                       child: Container(
-                        color: selected ? _cPrimary50 : null,
+                        color: selected ? sc.surfaceVariant : null,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
                         child: Row(
@@ -3297,7 +3303,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                         fontWeight: selected
                                             ? FontWeight.w700
                                             : FontWeight.w500,
-                                        color: selected ? _cPrimary600 : null,
+                                        color: selected ? sc.primary : null,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -3310,8 +3316,8 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                               flex: 4,
                               child: Text(
                                 _fmtDate(s.seasonStart),
-                                style: const TextStyle(
-                                    fontSize: 12, color: _cTextSec),
+                                style: TextStyle(
+                                    fontSize: 12, color: sc.onSurfaceVariant),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -3322,8 +3328,8 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                 s.weekProfileName.isEmpty
                                     ? '--'
                                     : s.weekProfileName,
-                                style: const TextStyle(
-                                    fontSize: 12, color: _cInfo),
+                                style: TextStyle(
+                                    fontSize: 12, color: sc.info),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -3350,12 +3356,12 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.edit,
-                                          size: 13, color: _cPrimary600),
+                                          size: 13, color: sc.primary),
                                       const SizedBox(width: 3),
                                       Text('Edit',
                                           style: TextStyle(
                                               fontSize: 11,
-                                              color: _cPrimary600)),
+                                              color: sc.primary)),
                                     ],
                                   ),
                                 ),
@@ -3405,7 +3411,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     icon: const Icon(Icons.visibility, size: 16),
                     label: const Text('Read'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _cPrimary600,
+                      backgroundColor: sc.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
@@ -3439,19 +3445,20 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
 
   Widget _seasonEditor(
       CalendarSeasonProfile? s, ActivityCalendarData cal, bool readOnly) {
+    final sc = SemanticColors.of(context);
     if (s == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.park, size: 52, color: _cGray300),
+            Icon(Icons.park, size: 52, color: sc.outline),
             const SizedBox(height: 12),
-            const Text('Select a season to view or edit',
-                style: TextStyle(color: _cTextSec, fontSize: 13)),
+            Text('Select a season to view or edit',
+                style: TextStyle(color: sc.onSurfaceVariant, fontSize: 13)),
             if (!readOnly) ...[
               const SizedBox(height: 6),
-              const Text('or tap "+ Add Season" to create one',
-                  style: TextStyle(color: _cTextSec, fontSize: 12)),
+              Text('or tap "+ Add Season" to create one',
+                  style: TextStyle(color: sc.onSurfaceVariant, fontSize: 12)),
             ],
           ],
         ),
@@ -3489,7 +3496,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
     }
 
     final origIdx = cal.seasonProfiles.indexOf(s);
-    final cardColor = origIdx >= 0 ? _seasonColor(origIdx) : _cInfo;
+    final cardColor = origIdx >= 0 ? _seasonColor(origIdx) : sc.info;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3506,7 +3513,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.edit_calendar, color: _cInfo, size: 18),
+            Icon(Icons.edit_calendar, color: sc.info, size: 18),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
@@ -3527,10 +3534,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // ── Season Name ────────────────────────────────────────────────
-                const Text('Season Name',
+                Text('Season Name',
                     style: TextStyle(
                         fontSize: 11,
-                        color: _cTextSec,
+                        color: sc.onSurfaceVariant,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 if (readOnly)
@@ -3554,10 +3561,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                   ),
                 const SizedBox(height: 14),
                 // ── Week Profile ───────────────────────────────────────────────
-                const Text('Week Profile',
+                Text('Week Profile',
                     style: TextStyle(
                         fontSize: 11,
-                        color: _cTextSec,
+                        color: sc.onSurfaceVariant,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 if (readOnly)
@@ -3601,10 +3608,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                   ),
                 const SizedBox(height: 14),
                 // ── Start Date ─────────────────────────────────────────────────
-                const Text('Start Date',
+                Text('Start Date',
                     style: TextStyle(
                         fontSize: 11,
-                        color: _cTextSec,
+                        color: sc.onSurfaceVariant,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 if (readOnly)
@@ -3631,10 +3638,10 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 // ── End Date ───────────────────────────────────────────────────
                 Row(
                   children: [
-                    const Text('End Date',
+                    Text('End Date',
                         style: TextStyle(
                             fontSize: 11,
-                            color: _cTextSec,
+                            color: sc.onSurfaceVariant,
                             fontWeight: FontWeight.w600)),
                     const SizedBox(width: 6),
                     if (nextSeasonProfile == null)
@@ -3642,13 +3649,13 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: _cGray200,
+                          color: sc.outline,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text('last season',
+                        child: Text('last season',
                             style: TextStyle(
                                 fontSize: 9,
-                                color: _cTextSec,
+                                color: sc.onSurfaceVariant,
                                 fontWeight: FontWeight.w600)),
                       )
                     else if (!readOnly)
@@ -3656,13 +3663,13 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: _cInfo.withOpacity(.12),
+                          color: sc.info.withOpacity(.12),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text('adjusts next season start',
+                        child: Text('adjusts next season start',
                             style: TextStyle(
                                 fontSize: 9,
-                                color: _cInfo,
+                                color: sc.info,
                                 fontWeight: FontWeight.w600)),
                       ),
                   ],
@@ -3701,7 +3708,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             icon: const Icon(Icons.delete_outline, size: 16),
             label: const Text('Delete'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _cDanger,
+              backgroundColor: sc.error,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
@@ -3722,6 +3729,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildSpecialDaysTab() {
+    final sc = SemanticColors.of(context);
     if (_specialDaysError != null)
       return _buildErrorBanner(_specialDaysError!, _loadAll);
 
@@ -3733,23 +3741,23 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: _cPrimary50,
+            color: sc.surfaceVariant,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: _cPrimary600.withOpacity(.3)),
+            border: Border.all(color: sc.primary.withOpacity(.3)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _cPrimary600.withOpacity(.12),
+                  color: sc.primary.withOpacity(.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.star_rounded,
-                    color: _cPrimary600, size: 20),
+                child: Icon(Icons.star_rounded,
+                    color: sc.primary, size: 20),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -3758,13 +3766,13 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                       style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: _cPrimary600),
+                          color: sc.primary),
                     ),
                     SizedBox(height: 2),
                     Text(
                       'Define holidays by date, weekday and profile. '
                       'Special Days take highest priority over Season and Week Profiles.',
-                      style: TextStyle(fontSize: 12, color: _cTextSec),
+                      style: TextStyle(fontSize: 12, color: sc.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -3803,6 +3811,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ── LEFT panel – Holiday input form ───────────────────────────────────────
 
   Widget _spFormPanel() {
+    final sc = SemanticColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3810,7 +3819,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
           child: _sectionHeader(
-              Icons.add_circle_outline, _cPrimary600, 'Holiday Details'),
+              Icons.add_circle_outline, sc.primary, 'Holiday Details'),
         ),
         const SizedBox(height: 16),
         // Fields
@@ -3821,11 +3830,11 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Year
-                const Text('Year',
+                Text('Year',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<int>(
                   key: const Key(CalendarProfilesKeys.spYearDropdown),
@@ -3850,11 +3859,11 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 ),
                 const SizedBox(height: 12),
                 // Month
-                const Text('Month',
+                Text('Month',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<int>(
                   key: const Key(CalendarProfilesKeys.spMonthDropdown),
@@ -3881,11 +3890,11 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 ),
                 const SizedBox(height: 12),
                 // Day
-                const Text('Day',
+                Text('Day',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<int>(
                   key: const Key(CalendarProfilesKeys.spDayDropdown),
@@ -3912,11 +3921,11 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 ),
                 const SizedBox(height: 12),
                 // Week Day
-                const Text('Week Day',
+                Text('Week Day',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<int>(
                   key: const Key(CalendarProfilesKeys.spWeekdayDropdown),
@@ -3943,11 +3952,11 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 ),
                 const SizedBox(height: 12),
                 // Profile
-                const Text('Profile',
+                Text('Profile',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<int>(
                   key: const Key(CalendarProfilesKeys.spProfileDropdown),
@@ -3986,7 +3995,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Add holiday to list'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _cSuccess,
+                  backgroundColor: sc.success,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -3999,11 +4008,11 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 label: const Text('Remove holiday from list'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: (_isConnected && _spSelectedIndex != null)
-                      ? _cDanger
-                      : _cGray200,
+                      ? sc.error
+                      : sc.outline,
                   foregroundColor: (_isConnected && _spSelectedIndex != null)
                       ? Colors.white
-                      : _cTextSec,
+                      : sc.onSurfaceVariant,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 onPressed: (_isConnected && _spSelectedIndex != null)
@@ -4020,6 +4029,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ── RIGHT panel – Holidays table ──────────────────────────────────────────
 
   Widget _spTablePanel() {
+    final sc = SemanticColors.of(context);
     final entries = _specialDays.entries;
 
     return Column(
@@ -4032,7 +4042,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             children: [
               Expanded(
                 child: _sectionHeader(
-                    Icons.list_alt, _cPrimary600, 'Holidays List'),
+                    Icons.list_alt, sc.primary, 'Holidays List'),
               ),
               _actionBtn(
                 key: const Key(CalendarProfilesKeys.specialDaysWriteBtn),
@@ -4049,14 +4059,14 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
         // Column headers
         Container(
           decoration: BoxDecoration(
-            color: _cGray100,
+            color: sc.surfaceVariant,
             border: Border(
-              top: BorderSide(color: _cGray300),
-              bottom: BorderSide(color: _cGray300),
+              top: BorderSide(color: sc.outline),
+              bottom: BorderSide(color: sc.outline),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: const Row(
+          child: Row(
             children: [
               Expanded(
                 flex: 4,
@@ -4064,7 +4074,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
               ),
               Expanded(
                 flex: 2,
@@ -4072,7 +4082,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
               ),
               Expanded(
                 flex: 2,
@@ -4080,7 +4090,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: _cTextSec)),
+                        color: sc.onSurfaceVariant)),
               ),
             ],
           ),
@@ -4093,7 +4103,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
               : ListView.separated(
                   itemCount: entries.length,
                   separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: _cGray200),
+                      Divider(height: 1, color: sc.outline),
                   itemBuilder: (ctx, i) {
                     final e = entries[i];
                     final selected = _spSelectedIndex == i;
@@ -4131,7 +4141,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                         }
                       }),
                       child: Container(
-                        color: selected ? _cPrimary50 : null,
+                        color: selected ? sc.surfaceVariant : null,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
                         child: Row(
@@ -4145,7 +4155,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                   fontWeight: selected
                                       ? FontWeight.w700
                                       : FontWeight.normal,
-                                  color: selected ? _cPrimary600 : null,
+                                  color: selected ? sc.primary : null,
                                 ),
                               ),
                             ),
@@ -4155,7 +4165,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                 wdStr,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: selected ? _cPrimary600 : _cTextSec,
+                                  color: selected ? sc.primary : sc.onSurfaceVariant,
                                 ),
                               ),
                             ),
@@ -4165,7 +4175,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                                 '${e.dayId}',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: selected ? _cPrimary600 : _cInfo,
+                                  color: selected ? sc.primary : sc.info,
                                   fontWeight: selected
                                       ? FontWeight.w700
                                       : FontWeight.normal,
@@ -4274,12 +4284,13 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   // ── UI helpers ─────────────────────────────────────────────────────────────
 
   Widget _card({required Widget child, EdgeInsets? margin}) {
+    final sc = SemanticColors.of(context);
     return Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: _isDark ? const Color(0xFF1e293b) : Colors.white,
+        color: sc.surface,
         border:
-            Border.all(color: _isDark ? const Color(0xFF334155) : _cGray200),
+            Border.all(color: sc.outline),
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [BoxShadow(color: Color(0x10000000), blurRadius: 4)],
       ),
@@ -4302,16 +4313,17 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Widget _emptyPlaceholder(String msg) {
+    final sc = SemanticColors.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.layers_clear,
-              color: _isDark ? const Color(0xFF334155) : _cGray300, size: 36),
+              color: sc.outline, size: 36),
           const SizedBox(height: 8),
           Text(msg,
               style: TextStyle(
-                  color: _isDark ? const Color(0xFF94A3B8) : _cTextSec,
+                  color: sc.onSurfaceVariant,
                   fontSize: 13)),
         ],
       ),
@@ -4319,8 +4331,9 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Widget _infoRow(String label, String value) {
+    final sc = SemanticColors.of(context);
     final display = value.trim().isEmpty ? '--' : value;
-    final secColor = _isDark ? const Color(0xFF94A3B8) : _cTextSec;
+    final secColor = sc.onSurfaceVariant;
     return Row(
       children: [
         SizedBox(
@@ -4332,9 +4345,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: display == '--'
-                        ? secColor
-                        : (_isDark ? const Color(0xFFF1F5F9) : null)))),
+                    color: display == '--' ? secColor : sc.onSurface))),
       ],
     );
   }
@@ -4345,6 +4356,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
     required ValueChanged<DateTime> onPicked,
     String? note,
   }) {
+    final sc = SemanticColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -4366,44 +4378,45 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: _cPrimary600.withOpacity(.5)),
+              border: Border.all(color: sc.primary.withOpacity(.5)),
             ),
             child: Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: _cPrimary600),
+                Icon(Icons.calendar_today, size: 16, color: sc.primary),
                 const SizedBox(width: 10),
                 Text(
                   '${date.day.toString().padLeft(2, '0')} '
                   '${_monthName(date.month)} '
                   '${date.year}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _cPrimary600),
+                      color: sc.primary),
                 ),
                 const Spacer(),
                 Icon(Icons.arrow_drop_down,
-                    color: _cPrimary600.withOpacity(.6)),
+                    color: sc.primary.withOpacity(.6)),
               ],
             ),
           ),
         ),
         if (note != null) ...[
           const SizedBox(height: 4),
-          Text(note, style: const TextStyle(fontSize: 10, color: _cTextSec)),
+          Text(note, style: TextStyle(fontSize: 10, color: sc.onSurfaceVariant)),
         ],
       ],
     );
   }
 
   Widget _infoDisplayBox(String value, {String? note}) {
+    final sc = SemanticColors.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: _cGray100,
+        color: sc.surfaceVariant,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: _cGray300),
+        border: Border.all(color: sc.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4414,7 +4427,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                   const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
           if (note != null) ...[
             const SizedBox(height: 2),
-            Text(note, style: const TextStyle(fontSize: 10, color: _cTextSec)),
+            Text(note, style: TextStyle(fontSize: 10, color: sc.onSurfaceVariant)),
           ],
         ],
       ),
@@ -4435,6 +4448,7 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
   }
 
   Widget _navBtn(IconData icon, VoidCallback onPressed, {Key? key}) {
+    final sc = SemanticColors.of(context);
     return SizedBox(
       width: 36,
       height: 36,
@@ -4445,9 +4459,9 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           padding: EdgeInsets.zero,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          side: const BorderSide(color: _cGray300),
+          side: BorderSide(color: sc.outline),
         ),
-        child: Icon(icon, size: 18, color: _cPrimary600),
+        child: Icon(icon, size: 18, color: sc.primary),
       ),
     );
   }
@@ -4479,8 +4493,9 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
       IconData? icon,
       Key? key,
       required VoidCallback? onPressed}) {
+    final sc = SemanticColors.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final btnColor = isDark ? Colors.white : _cPrimary600;
+    final btnColor = isDark ? Colors.white : sc.primary;
     return OutlinedButton.icon(
       key: key,
       icon: Icon(icon ?? Icons.check, size: 14),
