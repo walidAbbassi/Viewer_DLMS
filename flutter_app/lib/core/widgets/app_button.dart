@@ -7,11 +7,15 @@
 //   - danger    : action destructive uniquement (Delete, Reset…)
 // Le vert et le rouge NE sont PAS des couleurs de bouton d'action ici : ils
 // restent réservés au statut. Pas de orange.
+//
+// Exception: `success` / `successOutlined` exist solely to match the Meter
+// Connection page's original green Connect/Configuration look (see
+// docs/SPECS_UI.md). Do not use them elsewhere without updating that doc.
 
 import 'package:flutter/material.dart';
 import '../theme/semantic_colors.dart';
 
-enum AppButtonVariant { primary, secondary, danger }
+enum AppButtonVariant { primary, secondary, danger, success, successOutlined }
 
 class AppButton extends StatelessWidget {
   const AppButton({
@@ -79,6 +83,38 @@ class AppButton extends StatelessWidget {
             loading: loading,
             expand: expand);
 
+  const AppButton.success(
+      {Key? key,
+      required String label,
+      IconData? icon,
+      VoidCallback? onPressed,
+      bool loading = false,
+      bool expand = false})
+      : this(
+            key: key,
+            label: label,
+            icon: icon,
+            onPressed: onPressed,
+            variant: AppButtonVariant.success,
+            loading: loading,
+            expand: expand);
+
+  const AppButton.successOutlined(
+      {Key? key,
+      required String label,
+      IconData? icon,
+      VoidCallback? onPressed,
+      bool loading = false,
+      bool expand = false})
+      : this(
+            key: key,
+            label: label,
+            icon: icon,
+            onPressed: onPressed,
+            variant: AppButtonVariant.successOutlined,
+            loading: loading,
+            expand: expand);
+
   @override
   Widget build(BuildContext context) {
     final c = SemanticColors.of(context);
@@ -132,6 +168,26 @@ class AppButton extends StatelessWidget {
           style: FilledButton.styleFrom(
               backgroundColor: c.error,
               foregroundColor: Colors.white,
+              padding: padding,
+              shape: shape),
+          child: child,
+        );
+      case AppButtonVariant.success:
+        button = FilledButton(
+          onPressed: disabled ? null : onPressed,
+          style: FilledButton.styleFrom(
+              backgroundColor: c.success,
+              foregroundColor: Colors.white,
+              padding: padding,
+              shape: shape),
+          child: child,
+        );
+      case AppButtonVariant.successOutlined:
+        button = OutlinedButton(
+          onPressed: disabled ? null : onPressed,
+          style: OutlinedButton.styleFrom(
+              foregroundColor: c.success,
+              side: BorderSide(color: c.success),
               padding: padding,
               shape: shape),
           child: child,

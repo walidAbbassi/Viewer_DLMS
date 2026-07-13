@@ -95,7 +95,7 @@ class AppIcons {
   static const refresh         = Icons.refresh;
   static const export          = Icons.ios_share;
   static const copy            = Icons.content_copy;
-  static const connect         = Icons.play_circle_fill;    // action Connect (primaire)
+  static const connect         = Icons.electrical_services; // action Connect (plug — original look)
   static const help            = Icons.help_outline;        // aide
   static const logs            = Icons.list_alt;            // panneau de logs (distinct de manualDlms)
 }

@@ -35,6 +35,10 @@ review for the audit that motivated it.
   - `secondary` (outlined) — secondary action (Read / Configuration).
   - `danger` — destructive actions only.
 - No orange buttons; green/red are not used as button colors (see above).
+- **Exception:** the Meter Connection page (`meter_connexion_page.dart`) uses
+  `AppButton.success` / `.successOutlined` for Connect/Configuration to match
+  its original presentation. This is a deliberate, page-scoped exception to
+  the status-only rule above — do not extend it to other pages.
 
 ## Read-only data
 

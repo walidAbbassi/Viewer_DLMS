@@ -16,7 +16,6 @@ import '../../core/theme/design_tokens.dart';
 import '../../core/theme/semantic_colors.dart';
 import '../../core/theme/app_icons.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/breadcrumb.dart';
 import '../../core/services/feedback_service.dart';
 import '../../state/app_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -416,7 +415,7 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
                       icon: AppIcons.disconnect,
                       label: 'Disconnect',
                     )
-                  : AppButton.primary(
+                  : AppButton.success(
                       key: const Key(MeterConnexionKeys.connectBtn),
                       onPressed: () => _handleConnection(),
                       icon: AppIcons.connect,
@@ -425,7 +424,7 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: AppButton.secondary(
+              child: AppButton.successOutlined(
                 key: const Key(MeterConnexionKeys.configurationBtn),
                 onPressed: () =>
                     Navigator.pushNamed(context, AppRoutes.configuration),
@@ -449,29 +448,28 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
     final sc = SemanticColors.of(context);
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         color: isDark ? sc.surface : DesignTokens.surface,
-        border: Border.all(color: isDark ? sc.outline : DesignTokens.gray200),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: DesignTokens.shadowSm,
+        boxShadow: isDark ? DesignTokens.shadowSm : DesignTokens.shadowMd,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            padding: const EdgeInsets.fromLTRB(28, 24, 28, 0),
             child: Row(
               children: [
                 Icon(icon,
-                    size: 22,
+                    size: 24,
                     color: isDark
                         ? const Color(0xFF60A5FA)
                         : DesignTokens.primary600),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Text(title,
                     style: TextStyle(
-                        fontSize: 17,
+                        fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: isDark
                             ? const Color(0xFFF1F5F9)
@@ -479,9 +477,8 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
               ],
             ),
           ),
-          Divider(height: 1, color: isDark ? sc.outline : DesignTokens.gray200),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            padding: const EdgeInsets.fromLTRB(28, 20, 28, 26),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: children,
@@ -629,8 +626,6 @@ class _MeterConnexionPageState extends ConsumerState<MeterConnexionPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Breadcrumb(segments: ['Menu', 'Meter Connexion']),
-                const SizedBox(height: 12),
                 Expanded(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
