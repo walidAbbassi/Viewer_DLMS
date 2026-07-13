@@ -6,6 +6,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:lottie/lottie.dart';
 import 'core/widgets/app_scaffold_wrapper.dart';
 import 'core/widgets/idle_timeout_wrapper.dart';
+import 'core/widgets/language_selector_widget.dart';
 import 'core/navigation/app_route_observer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide ChangeNotifierProvider, Provider, Consumer, ConsumerWidget;
@@ -26,6 +27,7 @@ class _SmartMeterAppState extends ConsumerState<SmartMeterApp> {
   void initState() {
     super.initState();
     windowManager.addListener(_listener);
+    loadPersistedLanguage();
   }
 
   @override

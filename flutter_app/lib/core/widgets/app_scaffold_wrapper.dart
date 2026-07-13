@@ -8,11 +8,11 @@ import '../../grpc/generated/meter.pb.dart';
 import '../../grpc/meter_client.dart';
 import '../../core/navigation/app_route_observer.dart';
 import '../services/feedback_service.dart';
-import 'app_header.dart';
+import 'app_toolbar.dart';
 import 'log_panel.dart';
 import 'refresh_action_button.dart';
 
-/// Wrapper qui ajoute automatiquement AppHeader si la page n'en a pas
+/// Wrapper qui ajoute automatiquement AppToolbar si la page n'en a pas
 class AppScaffoldWrapper extends ConsumerStatefulWidget {
   final Widget child;
   const AppScaffoldWrapper({super.key, required this.child});
@@ -187,24 +187,16 @@ class _AppScaffoldWrapperState extends ConsumerState<AppScaffoldWrapper> {
           maintainState: true,
           builder: (_) => Consumer(
             builder: (context, ref, _) {
-              final isConnected = ref.watch(appControllerProvider).isConnected;
               final logVisible = ref.watch(logPanelVisibleProvider);
               return ValueListenableBuilder<String?>(
                 valueListenable: currentRouteNotifier,
                 builder: (context, currentRoute, _) {
                   return Column(
                     children: [
-                      Expanded(child: widget.child),
-
-                      // ✅ Persistent log panel — always above toolbar, never blocks page interaction
-                      if (logVisible && currentRoute != AppRoutes.connexion)
-                        const LogPanel(),
-
-                      // ✅ Header visible partout sauf sur la page Sign In (connexion) et meterConnexion
+                      // ✅ Toolbar visible partout sauf sur la page Sign In (connexion) et meterConnexion
                       if (currentRoute != AppRoutes.connexion &&
                           currentRoute != AppRoutes.meterConnexion)
-                        AppHeader(
-                          isConnected: isConnected,
+                        AppToolbar(
                           onDisconnect: () async {
                             final success = await client.disconnect();
                             if (success) {
@@ -220,9 +212,12 @@ class _AppScaffoldWrapperState extends ConsumerState<AppScaffoldWrapper> {
                               });
                             }
                           },
-                        )
-                      else
-                        const SizedBox(height: 0), // ✅ évite les crashs
+                        ),
+                      Expanded(child: widget.child),
+
+                      // ✅ Persistent log panel — always above toolbar, never blocks page interaction
+                      if (logVisible && currentRoute != AppRoutes.connexion)
+                        const LogPanel(),
                     ],
                   );
                 },

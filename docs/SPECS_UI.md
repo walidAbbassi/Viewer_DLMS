@@ -65,9 +65,18 @@ review for the audit that motivated it.
 
 - The grouped side rail (with search) is the single navigation surface.
   The old `AppBottomToolbar` (a second, overlapping navigation bar) has
-  been removed; `core/widgets/app_header.dart` (`AppHeader`) now only
-  surfaces what isn't already reachable from the rail: live connection
-  status and a global Disconnect action.
+  been removed. Above it, `core/widgets/app_toolbar.dart` (`AppToolbar`) is
+  mounted once by `AppScaffoldWrapper` on every route except `connexion`
+  and `meter_connexion` — page title, tool shortcuts (Manual DLMS, Super
+  Manual, Get Meter Time, Configuration, Export, Help), the log-panel
+  toggle, connection status, language selector and Disconnect all live
+  there now (SWEEP STEP7 Phase 1). It replaces `core/widgets/app_header.dart`
+  (`AppHeader`, which previously carried only connection status +
+  Disconnect) — `AppHeader` itself still exists and is still tested
+  standalone, but is no longer mounted anywhere in the app. Per-page
+  `AppBar`s (title/tabs/Export/Refresh) are still separately present on
+  each page — retiring them in favor of `AppToolbar` alone is a distinct,
+  larger follow-up (Phase 2), not yet done.
 
 ## Known gaps (not yet migrated)
 
@@ -76,4 +85,10 @@ review for the audit that motivated it.
   `AppButton` is still open.
 - i18n (`supportedLocales` / `localeProvider`) is not wired to the strings
   touched by this pass — the app-wide localization plumbing needs its own
-  change.
+  change. `AppToolbar`'s language selector (EN/FR) is visual-only for the
+  same reason: it persists a preference but does not retranslate anything
+  yet.
+- Per-page `AppBar`s (Phase 2 of the toolbar work) are not retired —
+  `AppToolbar`'s own Refresh button is a soft one for the same reason: it
+  doesn't reload any page's data, each page's own `RefreshAppBarButton`
+  (still on its own `AppBar`) remains the real per-page refresh.

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_python_grpc/core/navigation/app_route_observer.dart';
 import 'package:flutter_python_grpc/core/widgets/app_scaffold_wrapper.dart';
 import 'package:flutter_python_grpc/core/widgets/app_header.dart';
+import 'package:flutter_python_grpc/core/widgets/app_toolbar.dart';
 
 void main() {
   group('AppScaffoldWrapper', () {
@@ -30,7 +31,7 @@ void main() {
       expect(find.text('Test Content'), findsOneWidget);
     });
 
-    testWidgets('adds AppHeader when child has no bottomNavigationBar', 
+    testWidgets('adds AppToolbar when child has no bottomNavigationBar',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -44,10 +45,10 @@ void main() {
         ),
       );
 
-      expect(find.byType(AppHeader), findsOneWidget);
+      expect(find.byType(AppToolbar), findsOneWidget);
     });
 
-    testWidgets('does not add AppHeader when child has bottomNavigationBar', 
+    testWidgets('does not add AppToolbar when child has bottomNavigationBar',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -64,7 +65,7 @@ void main() {
         ),
       );
 
-      expect(find.byType(AppHeader), findsNothing);
+      expect(find.byType(AppToolbar), findsNothing);
       expect(find.text('Custom Bar'), findsOneWidget);
     });
 

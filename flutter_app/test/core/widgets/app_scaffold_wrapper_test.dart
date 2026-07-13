@@ -5,7 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_python_grpc/core/navigation/app_route_observer.dart';
 import 'package:flutter_python_grpc/core/widgets/app_scaffold_wrapper.dart';
-import 'package:flutter_python_grpc/core/widgets/app_header.dart';
+import 'package:flutter_python_grpc/core/widgets/app_toolbar.dart';
+import 'package:flutter_python_grpc/core/theme/app_icons.dart';
 import 'package:flutter_python_grpc/grpc/meter_client.dart';
 import 'package:flutter_python_grpc/routes/app_routes.dart';
 import 'package:flutter_python_grpc/state/app_controller.dart';
@@ -223,10 +224,10 @@ void main() {
   // Layout branching
   // -------------------------------------------------------------------------
   group('AppScaffoldWrapper – layout', () {
-    testWidgets('adds AppHeader for a generic child widget', (tester) async {
+    testWidgets('adds AppToolbar for a generic child widget', (tester) async {
       await tester.pumpWidget(_buildApp(child: const Text('Content')));
       await tester.pumpAndSettle();
-      expect(find.byType(AppHeader), findsOneWidget);
+      expect(find.byType(AppToolbar), findsOneWidget);
     });
 
     testWidgets('generic child is still visible when toolbar is added', (tester) async {
@@ -245,7 +246,7 @@ void main() {
       await tester.pumpWidget(
           _buildConnexionApp(child: const Text('Login page')));
       await tester.pumpAndSettle();
-      expect(find.byType(AppHeader), findsNothing);
+      expect(find.byType(AppToolbar), findsNothing);
       expect(find.text('Login page'), findsOneWidget);
     });
 
@@ -263,7 +264,7 @@ void main() {
       );
       await tester.pumpWidget(_buildApp(child: childWithBar));
       await tester.pumpAndSettle();
-      expect(find.byType(AppHeader), findsNothing);
+      expect(find.byType(AppToolbar), findsNothing);
       expect(find.text('Has bar'), findsOneWidget);
     });
 
@@ -273,20 +274,23 @@ void main() {
       const childScaffold = Scaffold(body: Text('No bar'));
       await tester.pumpWidget(_buildApp(child: childScaffold));
       await tester.pumpAndSettle();
-      expect(find.byType(AppHeader), findsOneWidget);
+      expect(find.byType(AppToolbar), findsOneWidget);
     });
   });
 
   // -------------------------------------------------------------------------
   // isConnected propagation
   // -------------------------------------------------------------------------
+  // AppToolbar reads isConnected internally via ref.watch (it's a
+  // ConsumerWidget, unlike AppHeader which took it as a constructor prop),
+  // so these check the rendered connection-status icon instead of a widget
+  // property.
   group('AppScaffoldWrapper – isConnected propagation', () {
     testWidgets('passes isConnected=false by default', (tester) async {
       await tester.pumpWidget(_buildApp(child: const Text('X')));
       await tester.pumpAndSettle();
-      final toolbar =
-          tester.widget<AppHeader>(find.byType(AppHeader));
-      expect(toolbar.isConnected, isFalse);
+      expect(find.byIcon(AppIcons.disconnected), findsOneWidget);
+      expect(find.byIcon(AppIcons.connected), findsNothing);
     });
 
     testWidgets('passes isConnected=true when provider reports connected',
@@ -301,9 +305,8 @@ void main() {
       await tester.pumpWidget(
           _buildApp(child: const Text('X'), overrides: overrides));
       await tester.pumpAndSettle();
-      final toolbar =
-          tester.widget<AppHeader>(find.byType(AppHeader));
-      expect(toolbar.isConnected, isTrue);
+      expect(find.byIcon(AppIcons.connected), findsOneWidget);
+      expect(find.byIcon(AppIcons.disconnected), findsNothing);
     });
 
     testWidgets('toolbar re-renders when provider isConnected changes',
@@ -319,15 +322,13 @@ void main() {
           _buildApp(child: const Text('X'), overrides: overrides));
       await tester.pumpAndSettle();
 
-      var toolbar =
-          tester.widget<AppHeader>(find.byType(AppHeader));
-      expect(toolbar.isConnected, isFalse);
+      expect(find.byIcon(AppIcons.disconnected), findsOneWidget);
 
       ctrl.setIsConnected(true);
       await tester.pump();
 
-      toolbar = tester.widget<AppHeader>(find.byType(AppHeader));
-      expect(toolbar.isConnected, isTrue);
+      expect(find.byIcon(AppIcons.connected), findsOneWidget);
+      expect(find.byIcon(AppIcons.disconnected), findsNothing);
     });
   });
 
@@ -339,7 +340,7 @@ void main() {
       await tester.pumpWidget(_buildApp(child: const Text('X')));
       await tester.pumpAndSettle();
       final toolbar =
-          tester.widget<AppHeader>(find.byType(AppHeader));
+          tester.widget<AppToolbar>(find.byType(AppToolbar));
       expect(toolbar.onDisconnect, isNotNull);
     });
 
@@ -363,13 +364,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       final toolbar =
-          tester.widget<AppHeader>(find.byType(AppHeader));
+          tester.widget<AppToolbar>(find.byType(AppToolbar));
       await toolbar.onDisconnect!();
       await tester.pump();
 
-      final toolbarAfter =
-          tester.widget<AppHeader>(find.byType(AppHeader));
-      expect(toolbarAfter.isConnected, isFalse);
+      expect(find.byIcon(AppIcons.disconnected), findsOneWidget);
+      expect(find.byIcon(AppIcons.connected), findsNothing);
     // TODO: remove skip once AppScaffoldWrapper uses meterClientFactory().
     }, skip: true); // AppScaffoldWrapper hardcodes MeterClient() — meterClientFactory ignored
 
@@ -391,13 +391,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       final toolbar =
-          tester.widget<AppHeader>(find.byType(AppHeader));
+          tester.widget<AppToolbar>(find.byType(AppToolbar));
       await toolbar.onDisconnect!();
       await tester.pump();
 
-      final toolbarAfter =
-          tester.widget<AppHeader>(find.byType(AppHeader));
-      expect(toolbarAfter.isConnected, isTrue);
+      expect(find.byIcon(AppIcons.connected), findsOneWidget);
+      expect(find.byIcon(AppIcons.disconnected), findsNothing);
     // TODO: remove skip once AppScaffoldWrapper uses meterClientFactory().
     }, skip: true); // AppScaffoldWrapper hardcodes MeterClient() — meterClientFactory ignored
 
@@ -410,7 +409,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final toolbar =
-          tester.widget<AppHeader>(find.byType(AppHeader));
+          tester.widget<AppToolbar>(find.byType(AppToolbar));
       await expectLater(toolbar.onDisconnect, throwsException);
     // TODO: remove skip once AppScaffoldWrapper uses meterClientFactory().
     }, skip: true); // AppScaffoldWrapper hardcodes MeterClient() — meterClientFactory ignored

@@ -96,4 +96,6 @@ class AppIcons {
   static const export          = Icons.ios_share;
   static const copy            = Icons.content_copy;
   static const connect         = Icons.play_circle_fill;    // action Connect (primaire)
+  static const help            = Icons.help_outline;        // aide
+  static const logs            = Icons.list_alt;            // panneau de logs (distinct de manualDlms)
 }
