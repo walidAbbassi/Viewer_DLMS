@@ -38,8 +38,8 @@ class AppIcons {
 
   // --- Load profiles ---------------------------------------------------
   static const loadProfile     = Icons.show_chart;          // courbe de charge
-  static const profileStatus   = Icons.playlist_add_check;  // statut de profil
-  static const pqProfile       = Icons.graphic_eq;          // power-quality profile
+  static const profileStatus   = Icons.fact_check;          // statut de profil
+  static const pqProfile       = Icons.monitor_heart;       // power-quality profile
 
   // --- Event logs ------------------------------------------------------
   static const eventLog        = Icons.receipt_long;        // journaux d'événements
@@ -50,31 +50,31 @@ class AppIcons {
   static const disconnector    = Icons.toggle_on;           // organe de coupure
 
   // --- Quality (grandeurs électriques) --------------------------------
-  static const qualityParams   = Icons.tune;
-  static const sag             = Icons.trending_down;       // creux de tension
-  static const swell           = Icons.trending_up;         // surtension
+  static const qualityParams   = Icons.show_chart;
+  static const sag             = Icons.south_east;          // creux de tension
+  static const swell           = Icons.north_east;          // surtension
   static const thd             = Icons.ssid_chart;          // distorsion harmonique
-  static const neutral         = Icons.horizontal_rule;     // neutre
-  static const overcurrent     = Icons.flash_on;            // surintensité
+  static const neutral         = Icons.timeline;            // neutre
+  static const overcurrent     = Icons.bolt;                // surintensité
   static const powerFactor     = Icons.speed;               // facteur de puissance
   static const minMax          = Icons.compare_arrows;
   static const abnormalState   = Icons.warning_amber;
 
   // --- Electricity objects --------------------------------------------
-  static const energyRegister  = Icons.bolt;                // registres d'énergie
-  static const ctvt            = Icons.transform;           // CT/VT (transformateurs)
-  static const instant         = Icons.electric_bolt;       // valeurs instantanées
-  static const average         = Icons.stacked_line_chart;  // moyennes
+  static const energyRegister  = Icons.electric_meter;      // registres d'énergie
+  static const ctvt            = Icons.change_circle;       // CT/VT (transformateurs)
+  static const instant         = Icons.flash_on;            // valeurs instantanées
+  static const average         = Icons.ssid_chart;          // moyennes
 
   // --- Firmware / réseau ----------------------------------------------
   static const firmwareUpgrade = Icons.system_update_alt;   // OTA
-  static const modem           = Icons.router;              // modem / P2P
+  static const modem           = Icons.sync_alt;            // modem / P2P
   static const sim             = Icons.sim_card;            // SIM
   static const mobileNetworkId = Icons.sim_card_outlined;   // ID réseau mobile
   static const tcpUdp          = Icons.lan;                 // TCP/UDP
 
   // --- Push setups -------------------------------------------------------
-  static const pushSetupServer = Icons.dns_outlined;        // serveur push
+  static const pushSetupServer = Icons.campaign;            // serveur push
   static const pushSetup       = Icons.notifications_active;// push setup
   static const pushAction      = Icons.play_circle_outline; // push action
   static const scriptTable     = Icons.code;                // script table
