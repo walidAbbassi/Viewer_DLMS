@@ -5,6 +5,8 @@ import 'package:lottie/lottie.dart';
 import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
 import '../../core/theme/semantic_colors.dart';
+import '../../core/theme/app_icons.dart';
+import '../../core/widgets/app_button.dart';
 import '../../core/widgets/breadcrumb.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../core/user_rights.dart';
@@ -620,17 +622,13 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
 
   Widget _actionButton(String label, VoidCallback? onPressed,
       {Color? color, Key? key}) {
-    final isWrite = color != null;
-    return FilledButton.icon(
+    final isWrite = label == 'Write';
+    return AppButton(
       key: key,
+      label: label,
+      icon: isWrite ? AppIcons.write : AppIcons.read,
+      variant: isWrite ? AppButtonVariant.primary : AppButtonVariant.secondary,
       onPressed: onPressed,
-      icon: Icon(isWrite ? Icons.edit : Icons.visibility, size: 18),
-      label: Text(label),
-      style: FilledButton.styleFrom(
-        backgroundColor:
-            isWrite ? const Color(0xFFFF9800) : const Color(0xFF1976D2),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      ),
     );
   }
 
@@ -790,20 +788,15 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.end, children: [
               if (mcWriteInit)
-                FilledButton.icon(
+                AppButton.primary(
                   key: const Key(ModemConfigKeys.initAddRowBtn),
                   onPressed: () => setState(() {
                     _initStrings = List.from(_initStrings)
                       ..add(ModemInitStringEntry(
                           request: '', expected: '', delayMs: 0));
                   }),
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add Row'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: DesignTokens.success,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                  ),
+                  icon: Icons.add,
+                  label: 'Add Row',
                 ),
               const SizedBox(width: 8),
               _actionButton('Read',
@@ -1040,7 +1033,7 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
             ),
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-              FilledButton.icon(
+              AppButton.primary(
                 key: const Key(ModemConfigKeys.callingWindowAddBtn),
                 onPressed: (_newCwStart != null || _newCwEnd != null)
                     ? () {
@@ -1059,12 +1052,8 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
                         });
                       }
                     : null,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add to list'),
-                style: FilledButton.styleFrom(
-                    backgroundColor: DesignTokens.success,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10)),
+                icon: Icons.add,
+                label: 'Add to list',
               ),
             ]),
             const Divider(height: 24),
@@ -1116,18 +1105,14 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
               ),
             ),
           const SizedBox(height: 12),
-          FilledButton.icon(
+          AppButton.primary(
             key: const Key(ModemConfigKeys.connectBtn),
             onPressed: (canWrite &&
                     (_autoConnectMode == 103 || _autoConnectMode == 104))
                 ? () => _writeAndReport(() => _client.modemConnect())
                 : null,
-            icon: const Icon(Icons.cast_connected, size: 18),
-            label: const Text('Connect'),
-            style: FilledButton.styleFrom(
-              backgroundColor: DesignTokens.success,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
+            icon: Icons.cast_connected,
+            label: 'Connect',
           ),
         ]),
       ]),
@@ -1489,17 +1474,13 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
           const SizedBox(height: 8),
           Row(mainAxisAlignment: MainAxisAlignment.end, children: [
             if (aaWriteCallers) ...[
-              FilledButton.icon(
+              AppButton.primary(
                 key: const Key(ModemConfigKeys.allowedCallersAddBtn),
                 onPressed: () => setState(() =>
                     _allowedCallers = List.from(_allowedCallers)
                       ..add(AllowedCallerEntry(callerId: '', callType: 0))),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add'),
-                style: FilledButton.styleFrom(
-                    backgroundColor: DesignTokens.success,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10)),
+                icon: Icons.add,
+                label: 'Add',
               ),
               const SizedBox(width: 8),
             ],
@@ -1533,7 +1514,7 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
             ),
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-              FilledButton.icon(
+              AppButton.primary(
                 key: const Key(ModemConfigKeys.listeningWindowAddBtn),
                 onPressed: (_newLwStart != null || _newLwEnd != null)
                     ? () {
@@ -1552,12 +1533,8 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
                         });
                       }
                     : null,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add to list'),
-                style: FilledButton.styleFrom(
-                    backgroundColor: DesignTokens.success,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10)),
+                icon: Icons.add,
+                label: 'Add to list',
               ),
             ]),
             const Divider(height: 24),

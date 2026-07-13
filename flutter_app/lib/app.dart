@@ -51,7 +51,7 @@ class _SmartMeterAppState extends ConsumerState<SmartMeterApp> {
               darkTheme: ThemeData(
                 extensions: const [SemanticColors.dark],
                 colorScheme: ColorScheme.fromSeed(
-                  seedColor: const Color(0xFF1e40af),
+                  seedColor: SemanticColors.light.primary,
                   brightness: Brightness.dark,
                   surface: const Color(0xFF1E293B),
                   onSurface: const Color(0xFFF1F5F9),
@@ -164,7 +164,7 @@ class _SmartMeterAppState extends ConsumerState<SmartMeterApp> {
               theme: ThemeData(
                 extensions: const [SemanticColors.light],
                 colorScheme: ColorScheme.fromSeed(
-                  seedColor: const Color(0xFF1e40af),
+                  seedColor: SemanticColors.light.primary,
                   brightness: Brightness.light,
                 ),
                 useMaterial3: true,
@@ -235,7 +235,7 @@ class _SmartMeterAppState extends ConsumerState<SmartMeterApp> {
 
                 appBarTheme: const AppBarTheme(
                   elevation: 0,
-                  backgroundColor: Color(0xFF1e40af),
+                  backgroundColor: SemanticColors.light.primary,
                   foregroundColor: Colors.white,
                   systemOverlayStyle: SystemUiOverlayStyle.light,
                 ),

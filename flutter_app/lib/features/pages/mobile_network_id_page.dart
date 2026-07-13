@@ -4,6 +4,8 @@ import 'package:lottie/lottie.dart';
 import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
 import '../../core/theme/semantic_colors.dart';
+import '../../core/theme/app_icons.dart';
+import '../../core/widgets/app_button.dart';
 import '../../core/widgets/breadcrumb.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../core/user_rights.dart';
@@ -320,23 +322,23 @@ class _MobileNetworkIdPageState extends ConsumerState<MobileNetworkIdPage> {
     if (!canWrite) return;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Row(children: [
-          Icon(Icons.restart_alt, color: Color(0xFFFF9800)),
-          SizedBox(width: 10),
-          Text('Restart Modem'),
+      builder: (dialogContext) => AlertDialog(
+        title: Row(children: [
+          Icon(Icons.restart_alt, color: SemanticColors.of(dialogContext).warning),
+          const SizedBox(width: 10),
+          const Text('Restart Modem'),
         ]),
         content: const Text('This will restart the cellular modem. Continue?'),
         actions: [
           TextButton(
             key: const Key(MobileNetworkIdKeys.modemRestartCancelBtn),
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
-          FilledButton(
+          AppButton.primary(
             key: const Key(MobileNetworkIdKeys.modemRestartConfirmBtn),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Restart'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            label: 'Restart',
           ),
         ],
       ),
@@ -571,16 +573,12 @@ class _MobileNetworkIdPageState extends ConsumerState<MobileNetworkIdPage> {
 
   Widget _actionButton(String label, VoidCallback? onPressed, {Key? key}) {
     final isWrite = label == 'Write';
-    return FilledButton.icon(
+    return AppButton(
       key: key,
+      label: label,
+      icon: isWrite ? AppIcons.write : AppIcons.read,
+      variant: isWrite ? AppButtonVariant.primary : AppButtonVariant.secondary,
       onPressed: onPressed,
-      icon: Icon(isWrite ? Icons.edit : Icons.visibility, size: 18),
-      label: Text(label),
-      style: FilledButton.styleFrom(
-        backgroundColor:
-            isWrite ? const Color(0xFF1976D2) : const Color(0xFFFF9800),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      ),
     );
   }
 
@@ -744,7 +742,6 @@ class _MobileNetworkIdPageState extends ConsumerState<MobileNetworkIdPage> {
   // ---- Section 2: Modem Control ----
 
   Widget _buildModemControlSection(bool canRead, bool canWrite) {
-    final bool isDark = DesignTokens.isDark(context);
     final dlms = _mniRights;
     final canReadModem = canRead && (dlms?.modemGet ?? false);
     final canWriteModem = canWrite && (dlms?.modemSet ?? false);
@@ -811,32 +808,24 @@ class _MobileNetworkIdPageState extends ConsumerState<MobileNetworkIdPage> {
         // Row 1 â€“ Activate / Deactivate
         Row(children: [
           Expanded(
-            child: FilledButton.icon(
+            child: AppButton.primary(
               key: const Key(MobileNetworkIdKeys.modemActivateBtn),
               onPressed: canWriteModem && !_isModemActive
                   ? () => _toggleModem(canWrite)
                   : null,
-              icon: const Icon(Icons.signal_cellular_alt, size: 18),
-              label: const Text('Activate'),
-              style: FilledButton.styleFrom(
-                backgroundColor: DesignTokens.success,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
+              icon: Icons.signal_cellular_alt,
+              label: 'Activate',
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: FilledButton.icon(
+            child: AppButton.danger(
               key: const Key(MobileNetworkIdKeys.modemDeactivateBtn),
               onPressed: canWriteModem && _isModemActive
                   ? () => _toggleModem(canWrite)
                   : null,
-              icon: const Icon(Icons.signal_cellular_off, size: 18),
-              label: const Text('Deactivate'),
-              style: FilledButton.styleFrom(
-                backgroundColor: DesignTokens.danger,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
+              icon: Icons.signal_cellular_off,
+              label: 'Deactivate',
             ),
           ),
         ]),
@@ -844,25 +833,16 @@ class _MobileNetworkIdPageState extends ConsumerState<MobileNetworkIdPage> {
         // Row 2 â€“ Restart / Refresh
         Row(children: [
           Expanded(
-            child: OutlinedButton.icon(
+            child: AppButton.secondary(
               key: const Key(MobileNetworkIdKeys.modemRestartBtn),
               onPressed: canWriteModem ? () => _restartModem(canWrite) : null,
-              icon: const Icon(Icons.restart_alt, size: 18),
-              label: const Text('Restart'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor:
-                    isDark ? DesignTokens.darkFocus : DesignTokens.primary600,
-                side: BorderSide(
-                    color: isDark
-                        ? DesignTokens.darkFocus
-                        : DesignTokens.primary600),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
+              icon: Icons.restart_alt,
+              label: 'Restart',
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: OutlinedButton.icon(
+            child: AppButton.secondary(
               key: const Key(MobileNetworkIdKeys.modemRefreshBtn),
               onPressed: canReadModem
                   ? () async {
@@ -879,17 +859,8 @@ class _MobileNetworkIdPageState extends ConsumerState<MobileNetworkIdPage> {
                       }
                     }
                   : null,
-              icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Refresh'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor:
-                    isDark ? DesignTokens.darkFocus : DesignTokens.primary600,
-                side: BorderSide(
-                    color: isDark
-                        ? DesignTokens.darkFocus
-                        : DesignTokens.primary600),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
+              icon: AppIcons.refresh,
+              label: 'Refresh',
             ),
           ),
         ]),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/design_tokens.dart';
 import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/breadcrumb.dart';
 import '../services/push_server_provider.dart';
@@ -199,45 +200,23 @@ class _PushSetupServerPageState extends ConsumerState<PushSetupServerPage> {
             Row(
               children: [
                 state.running
-                    ? ElevatedButton.icon(
+                    ? AppButton.danger(
                         key: const Key(PushSetupServerKeys.stopBtn),
-                        onPressed: state.stopping ? null : notifier.stop,
-                        icon: state.stopping
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white))
-                            : const Icon(Icons.stop_circle_outlined),
-                        label:
-                            Text(state.stopping ? 'Stopping...' : 'Stop Server'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          foregroundColor: Colors.white,
-                        ),
+                        onPressed: notifier.stop,
+                        loading: state.stopping,
+                        icon: Icons.stop_circle_outlined,
+                        label: state.stopping ? 'Stopping...' : 'Stop Server',
                       )
-                    : ElevatedButton.icon(
+                    : AppButton.primary(
                         key: const Key(PushSetupServerKeys.startBtn),
-                        onPressed: state.starting
-                            ? null
-                            : () => notifier.start(
-                                  _hostCtrl.text.trim(),
-                                  int.tryParse(_portCtrl.text.trim()) ?? 4059,
-                                  _selectedType,
-                                ),
-                        icon: state.starting
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white))
-                            : const Icon(Icons.play_circle_outline),
-                        label:
-                            Text(state.starting ? 'Starting...' : 'Start Server'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
+                        onPressed: () => notifier.start(
+                          _hostCtrl.text.trim(),
+                          int.tryParse(_portCtrl.text.trim()) ?? 4059,
+                          _selectedType,
                         ),
+                        loading: state.starting,
+                        icon: Icons.play_circle_outline,
+                        label: state.starting ? 'Starting...' : 'Start Server',
                       ),
                 const Spacer(),
                 Container(

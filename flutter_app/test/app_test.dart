@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_python_grpc/app.dart';
+import 'package:flutter_python_grpc/core/theme/semantic_colors.dart';
 import 'package:flutter_python_grpc/platform/python_launcher.dart';
 import 'package:flutter_python_grpc/grpc/meter_client.dart';
 import 'package:flutter_python_grpc/grpc/generated/meter.pb.dart';
@@ -152,7 +153,7 @@ void main() {
       expect(find.byType(MaterialApp), findsWidgets);
     });
 
-    testWidgets('theme uses Material 3 with seed color 0xFF1e40af', (tester) async {
+    testWidgets('theme uses Material 3 with seed color SemanticColors.light.primary', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1200, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       _muteLayoutErrors();
@@ -178,7 +179,7 @@ void main() {
 
       final app = tester.widgetList<MaterialApp>(find.byType(MaterialApp))
           .firstWhere((a) => a.title == 'Smart Meter Application');
-      expect(app.theme?.appBarTheme.backgroundColor, const Color(0xFF1e40af));
+      expect(app.theme?.appBarTheme.backgroundColor, SemanticColors.light.primary);
     });
 
     testWidgets('theme has custom ElevatedButton shape', (tester) async {
