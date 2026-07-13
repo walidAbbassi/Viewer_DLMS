@@ -4,13 +4,14 @@ Résumé de tout ce qui a été fait sur la branche `ui_ux_design`, destiné à 
 partagé avec **d'autres comptes Claude Design & Claude Code** qui reprendraient
 ce chantier. Écrit par une session Claude Code.
 
-Dernier commit : `eed67f1` sur `ui_ux_design` (pushé sur GitHub ; `main` a été
-fusionné jusqu'à `322130a` — voir Bloc 4 — mais **pas encore jusqu'à
-`eed67f1`, la fusion de `main` reste à refaire** après ce commit).
+Dernier commit : `5fd2f5b` sur `ui_ux_design` (pushé sur GitHub). `main` a été
+fusionné jusqu'à `eed67f1`/`b70c8ec` (le sweep icônes/toolbar sur les 27
+pages) mais **pas encore jusqu'à `5fd2f5b`** (SWEEP STEP7 Phase 1,
+ci-dessous) — fusion à refaire si souhaité.
 Repo : https://github.com/walidAbbassi/Viewer_DLMS
 Projet design source : https://claude.ai/design/p/8a32b677-2b52-4b62-9f26-02bee55faee0
-Sweep STEP6 + ce sweep icônes/toolbar reçus via le projet
-`1ee44508-26f1-42d0-8d48-7c599417abd6` (Viewer NG UI/UX Review).
+Sweep STEP6, le sweep icônes/toolbar (27 pages) et SWEEP STEP7 reçus via
+le projet `1ee44508-26f1-42d0-8d48-7c599417abd6` (Viewer NG UI/UX Review).
 **Tout le travail se fait désormais uniquement sur `ui_ux_design`** (consigne
 explicite de l'utilisateur) — ne plus pousser sur
 `claude/viewer-ng-ui-ux-review-m4t078` ni `claude/github-account-connection-rn0vbe`.
@@ -210,6 +211,71 @@ sweep), et grep de chaque fichier pour confirmer imports/usages uniques
 (pas de doublons). À faire tourner avec le vrai SDK avant de considérer
 cette passe définitivement close.
 
+### Bloc 6 — SWEEP STEP7 Phase 1 : toolbar persistante (commit `5fd2f5b`)
+Reçu via `Claude_Design_sweeps/SWEEP_STEP7_persistent_toolbar.md` +
+`RUNBOOK_STEP6_claude_code.md` (même projet design). Le mockup HTML montre
+l'intention ; le spec texte dit explicitement de faire confiance à sa
+logique plutôt qu'au glyphe exact du mockup — suivi à la lettre.
+
+**Découvertes avant d'implémenter (le spec ne le savait pas)** :
+- `core/widgets/app_toolbar.dart` (`AppToolbar`) existait déjà mais
+  **n'était instancié nulle part dans l'app** — code mort. Reconstruit
+  entièrement plutôt que d'ajouter un nouveau widget, conformément à la
+  consigne du spec.
+- Aucun champ "modèle de compteur" n'existe dans `AppState`. Le "T310
+  STEG" du mockup vient de `DeviceIdCache.data['Model']` (nom de champ
+  confirmé réel via `device_id_page_test.dart`) — vide tant que
+  l'utilisateur n'a pas visité Device ID au moins une fois.
+- L'i18n n'existe **toujours pas du tout** (0 hit `flutter_localizations`/
+  `localizationsDelegates`/`supportedLocales`/`localeProvider`). Le spec
+  suppose que la Passe 4 est faite — elle ne l'est pas. Le sélecteur de
+  langue est donc **visuel uniquement** : `language_selector_widget.dart`
+  (auparavant un stub 0 octet) toggle EN/FR, persiste via
+  `SharedPreferences`, chargé au démarrage (`app.dart` `initState` →
+  `loadPersistedLanguage()`) — mais ne retraduit aucune chaîne.
+- `AppHeader` était la **seule** action Disconnect sur toutes les routes
+  sauf `meter_connexion`. La liste d'actions du spec ne mentionne pas
+  Disconnect — si on l'avait suivie à la lettre, remplacer `AppHeader` par
+  la nouvelle toolbar aurait supprimé le déconnexion partout. **Préservé
+  volontairement** dans la nouvelle toolbar, non listé par le spec.
+- Même chose pour le toggle du panneau de logs (auparavant sur
+  `RefreshAppBarButton`) — préservé pour ne pas perdre une fonctionnalité
+  existante.
+- Le rail de nav a déjà son propre bouton Sign out qui fonctionne — la
+  section username/rôle/logout de l'ancien `AppToolbar` mort n'a pas été
+  reportée (aurait dupliqué, même problème que STEP6 avec le statut
+  connexion).
+- **Position corrigée** : `AppHeader` se rendait en bas de l'écran (dernier
+  enfant de la `Column`, vestige du nom historique `AppBottomToolbar` selon
+  `docs/SPECS_UI.md`). Le mockup montre la toolbar en haut, sous l'AppBar
+  bleue de chaque page. Déplacé en conséquence — sinon la nouvelle toolbar
+  aurait hérité de la mauvaise position sans le dire.
+- **Refresh** : générique dans le nouveau design (pas lié à une page), mais
+  chaque page garde encore son propre `RefreshAppBarButton` avec sa vraie
+  logique de rechargement (page-spécifique, parfois avec teardown gRPC).
+  Le Refresh de la nouvelle toolbar est donc un placeholder honnête (affiche
+  un message expliquant d'utiliser le refresh de la page) plutôt que de
+  faire semblant de recharger quelque chose — le vrai câblage attend la
+  Phase 2 (retrait des AppBar par page, non fait, gros chantier séparé —
+  9 pages couplent leur `TabBar` à `AppBar.bottom`, ~20 pages ont des
+  callbacks Export/Refresh page-locaux).
+
+**Tests mis à jour** : les deux fichiers `app_scaffold_wrapper_test.dart`
+(`test/core/widgets/` et `test/widgets/`, deux fichiers de test distincts
+et non dupliqués trouvés pendant la vérification) référençaient `AppHeader`
+via `find.byType`/`tester.widget<AppHeader>`. `AppToolbar` étant un
+`ConsumerWidget` qui lit `isConnected` en interne (pas un paramètre de
+constructeur comme `AppHeader`), les tests qui vérifiaient
+`toolbar.isConnected` ont été réécrits pour vérifier l'icône de statut
+rendue (`find.byIcon(AppIcons.connected/.disconnected)`) plutôt qu'une
+propriété de widget. Le groupe de tests `AppHeader` autonome (qui
+instancie `AppHeader` directement, sans passer par `AppScaffoldWrapper`)
+n'a pas été touché — `AppHeader` existe toujours tel quel, juste plus
+monté nulle part par l'app.
+
+**Non vérifié** (même limite que les sweeps précédents) : pas de SDK
+Flutter dans cet environnement.
+
 ## ⏸️ Reporté — pas encore fait
 
 - **Passe 2 — couleurs en dur → SemanticColors** (`SWEEP_STEP4_colors.md`) :
@@ -232,10 +298,20 @@ cette passe définitivement close.
   `connexion_page.dart` (login, pas d'AppBar) et `firmware_download_page.dart`
   (a déjà son propre breadcrumb hand-rolled, volontairement laissé tel quel
   pour ne pas dupliquer).
-- **Retrait des AppBar par page au profit du seul AppHeader partagé** :
-  décision explicite de ne PAS le faire (Bloc 5) — trop couplé aux `TabBar`
-  et callbacks page-locaux pour une passe mécanique. Resterait un vrai
-  chantier de redesign par page si souhaité.
+- **Retrait des AppBar par page au profit de la seule `AppToolbar` partagée**
+  (Phase 2 de SWEEP STEP7) : décision explicite de ne PAS le faire en une
+  passe mécanique (Bloc 5, confirmé Bloc 6) — trop couplé aux `TabBar`
+  (9 pages) et callbacks Export/Refresh page-locaux (~20 pages). Chantier
+  de redesign par page, à faire si souhaité. En attendant, `AppToolbar`
+  (Bloc 6) coexiste avec l'AppBar de chaque page — pas de doublon visuel
+  car `AppToolbar` est en haut sous l'AppBar bleue, `Breadcrumb` (Bloc 5)
+  entre les deux.
+- **i18n réelle pour le sélecteur de langue** de `AppToolbar` (Bloc 6) :
+  actuellement visuel uniquement (persiste EN/FR, ne retraduit rien) —
+  bloqué sur la Passe 4 ci-dessus.
+- **Refresh de `AppToolbar`** (Bloc 6) : placeholder qui explique sa limite
+  au lieu de recharger quoi que ce soit — vrai câblage par page prévu avec
+  la Phase 2 (retrait des AppBar).
 - **Historique de navigation** : `pushReplacementNamed` pas encore remplacé par
   `pushNamed`.
 
