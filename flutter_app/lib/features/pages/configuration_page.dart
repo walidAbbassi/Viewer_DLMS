@@ -10,8 +10,10 @@ import '../../state/device_id_cache.dart';
 import '../../core/export/export_registry.dart';
 import '../../core/export/export_action_button.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../grpc/configuration_client.dart';
 import '../../grpc/meter_client.dart';
@@ -673,11 +675,12 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage>
   // --------------------------------------------------------------------------- UI
   @override
   Widget build(BuildContext context) {
+    final sc = SemanticColors.of(context);
     return Scaffold(
       backgroundColor: DesignTokens.backgroundOf(context),
       appBar: AppBar(
         title: const Text("Configuration"),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -690,22 +693,34 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage>
         ],
       ),
       drawer: const AppDrawer(),
-      body: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: const Breadcrumb(
+                segments: ['Menu', 'Meter Connexion', 'Configuration']),
+          ),
+          Expanded(
+            child: SafeArea(
+              child: Row(
                 children: [
-                  _buildHeader(),
-                  _buildSearchBar(),
                   Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    child: Column(
                       children: [
+                        _buildHeader(),
+                        _buildSearchBar(),
                         Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: _buildTabContainer(),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: _buildTabContainer(),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -714,8 +729,8 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage>
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

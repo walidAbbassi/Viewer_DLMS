@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../core/user_rights.dart';
 import '../../core/feature_keys.dart';
@@ -360,6 +362,7 @@ class _MobileNetworkIdPageState extends ConsumerState<MobileNetworkIdPage> {
 
   @override
   Widget build(BuildContext context) {
+    final sc = SemanticColors.of(context);
     final appState = ref.watch(appControllerProvider);
     final canRead = !appState.simulation &&
         appState.isConnected &&
@@ -371,44 +374,56 @@ class _MobileNetworkIdPageState extends ConsumerState<MobileNetworkIdPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mobile Network Identifier'),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [RefreshAppBarButton(key: const Key(MobileNetworkIdKeys.refreshBtn), onPressed: _readAll)],
       ),
-      body: Stack(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            children: [
-              if (_error != null) _buildErrorBanner(),
-              Expanded(
-                child: LayoutBuilder(builder: (context, constraints) {
-                  final isDesktop = constraints.maxWidth >= 1024;
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: isDesktop
-                        ? _buildDesktopLayout(canRead, canWrite)
-                        : _buildMobileLayout(canRead, canWrite),
-                  );
-                }),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Breadcrumb(
+                segments: ['Menu', 'P2P Setup', 'Mobile Network Identifier']),
           ),
-          if (_isLoading)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.3),
-                child: Center(
-                  child: Lottie.asset(
-                    'assets/animations/data.json',
-                    width: 200,
-                    height: 200,
-                    errorBuilder: (context, err, stack) =>
-                        const CircularProgressIndicator(),
-                  ),
+          Expanded(
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    if (_error != null) _buildErrorBanner(),
+                    Expanded(
+                      child: LayoutBuilder(builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth >= 1024;
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.all(16),
+                          child: isDesktop
+                              ? _buildDesktopLayout(canRead, canWrite)
+                              : _buildMobileLayout(canRead, canWrite),
+                        );
+                      }),
+                    ),
+                  ],
                 ),
-              ),
+                if (_isLoading)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      child: Center(
+                        child: Lottie.asset(
+                          'assets/animations/data.json',
+                          width: 200,
+                          height: 200,
+                          errorBuilder: (context, err, stack) =>
+                              const CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     );

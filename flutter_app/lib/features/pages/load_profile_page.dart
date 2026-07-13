@@ -30,6 +30,8 @@ import '../../state/class7_cache.dart';
 import '../../core/user_rights.dart';
 import '../../core/feature_keys.dart';
 import '../../core/widget_keys.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 
 class LoadProfilePage extends StatefulWidget {
   final LoadProfileConfig config;
@@ -732,12 +734,13 @@ class _LoadProfilePageState extends State<LoadProfilePage>
                 .read(appControllerProvider)
                 .isConnected;
 
+        final sc = SemanticColors.of(context);
         return Stack(
           children: [
             Scaffold(
               appBar: AppBar(
                 title: Text(widget.config.name),
-                backgroundColor: const Color(0xFF1976D2),
+                backgroundColor: sc.primary,
                 foregroundColor: Colors.white,
                 automaticallyImplyLeading: false,
                 bottom: TabBar(
@@ -791,7 +794,16 @@ class _LoadProfilePageState extends State<LoadProfilePage>
                 ],
               ),
               drawer: const AppDrawer(),
-              body: TabBarView(
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Breadcrumb(
+                        segments: ['Menu', 'Load Profiles', widget.config.name]),
+                  ),
+                  Expanded(
+                    child: TabBarView(
                 controller: _tabController,
                 children: [
                   // ── Tab 0: Data Table ──────────────────────────────────────────────
@@ -961,6 +973,9 @@ class _LoadProfilePageState extends State<LoadProfilePage>
                           : currentColumns,
                       data: _chartData.isNotEmpty ? _chartData : currentData,
                     ),
+                  ),
+                ],
+              ),
                   ),
                 ],
               ),

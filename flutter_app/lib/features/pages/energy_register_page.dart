@@ -4,8 +4,10 @@ import 'package:grpc/grpc.dart' show GrpcError;
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../grpc/meter_client.dart';
 import '../../grpc/generated/meter.pb.dart';
@@ -171,10 +173,11 @@ class _EnergyRegisterPageState extends ConsumerState<EnergyRegisterPage>
   @override
   Widget build(BuildContext context) {
     ref.watch(appControllerProvider);
+    final sc = SemanticColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Energy Register'),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -199,8 +202,17 @@ class _EnergyRegisterPageState extends ConsumerState<EnergyRegisterPage>
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: const Breadcrumb(
+                segments: ['Menu', 'Electricity Objects', 'Energy Register']),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
           Column(
             children: [
               // Error banner
@@ -287,6 +299,9 @@ class _EnergyRegisterPageState extends ConsumerState<EnergyRegisterPage>
                 ),
               ),
             ),
+        ],
+            ),
+          ),
         ],
       ),
     );

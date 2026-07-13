@@ -17,6 +17,8 @@ import '../../core/export/export_action_button.dart';
 import '../../core/export/export_registry.dart';
 import '../../state/device_id_cache.dart';
 import '../../core/widget_keys.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 
 /// Page for status profiles: calls [getBitStatus] and renders each bit
 /// as a colored circle + description.
@@ -143,12 +145,12 @@ class _LoadProfileStatusPageState extends State<LoadProfileStatusPage>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sc = SemanticColors.of(context);
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0f172a) : null,
       appBar: AppBar(
         title: Text(widget.config.name),
-        backgroundColor:
-            isDark ? const Color(0xFF1e3a6e) : DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -166,7 +168,17 @@ class _LoadProfileStatusPageState extends State<LoadProfileStatusPage>
         ],
       ),
       drawer: const AppDrawer(),
-      body: _buildBody(),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Breadcrumb(
+                segments: ['Menu', 'Load Profiles', widget.config.name]),
+          ),
+          Expanded(child: _buildBody()),
+        ],
+      ),
     );
   }
 

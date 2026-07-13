@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grpc/grpc.dart' show GrpcError;
 import 'package:intl/intl.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/services/feedback_service.dart';
 import '../../core/widgets/refresh_action_button.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../grpc/meter_client.dart';
 import '../../core/user_rights.dart';
 import '../../core/feature_keys.dart';
@@ -121,10 +123,11 @@ class _AveragePageState extends ConsumerState<AveragePage> {
   @override
   Widget build(BuildContext context) {
     ref.watch(appControllerProvider);
+    final sc = SemanticColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Average'),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -142,48 +145,61 @@ class _AveragePageState extends ConsumerState<AveragePage> {
         ],
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_error != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              color: DesignTokens.danger,
-              child: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.white),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(_error!,
-                        style: const TextStyle(color: Colors.white)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: const Breadcrumb(
+                segments: ['Menu', 'Electricity Objects', 'Average']),
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                if (_error != null)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    color: DesignTokens.danger,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(_error!,
+                              style: const TextStyle(color: Colors.white)),
+                        ),
+                        IconButton(
+                          key: const Key(AverageKeys.dismissErrorBtn),
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          onPressed: () => setState(() => _error = null),
+                        ),
+                      ],
+                    ),
                   ),
-                  IconButton(
-                    key: const Key(AverageKeys.dismissErrorBtn),
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => setState(() => _error = null),
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: DesignTokens.surfaceOf(context),
+                    border: Border(
+                      bottom: BorderSide(
+                          color: DesignTokens.borderOf(context), width: 1),
+                    ),
                   ),
-                ],
-              ),
-            ),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              color: DesignTokens.surfaceOf(context),
-              border: Border(
-                bottom:
-                    BorderSide(color: DesignTokens.borderOf(context), width: 1),
-              ),
-            ),
-            child: Text(
-              'Instantaneous Average Values',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: DesignTokens.textPrimaryOf(context),
-              ),
+                  child: Text(
+                    'Instantaneous Average Values',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: DesignTokens.textPrimaryOf(context),
+                    ),
+                  ),
+                ),
+                Expanded(child: _buildContent()),
+              ],
             ),
           ),
-          Expanded(child: _buildContent()),
         ],
       ),
     );

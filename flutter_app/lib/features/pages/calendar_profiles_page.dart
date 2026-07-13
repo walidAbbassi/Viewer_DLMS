@@ -12,6 +12,8 @@ import '../../grpc/meter_client.dart';
 import '../../grpc/generated/meter.pb.dart';
 import '../../core/widget_keys.dart';
 import 'package:flutter/services.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 
 // ─── Color tokens (aligned with firmware screen) ──────────────────────────────
 const _cPrimary600 = Color(0xFF1976D2);
@@ -309,10 +311,11 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
       }
     });
 
+    final sc = SemanticColors.of(context);
     return Scaffold(
       backgroundColor: _isDark ? const Color(0xFF0f172a) : _cBg,
       appBar: AppBar(
-        backgroundColor: _isDark ? const Color(0xFF1e3a6e) : _cPrimary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         title: Column(
@@ -342,16 +345,28 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           ],
         ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _outerTab,
-              children: [
-                _buildActiveCalendarTab(),
-                _buildPassiveCalendarTab(),
-                _buildSpecialDaysTab(),
-              ],
-            ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: const Breadcrumb(
+                segments: ['Menu', 'Tariff Management', 'Activity Calendars']),
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : TabBarView(
+                    controller: _outerTab,
+                    children: [
+                      _buildActiveCalendarTab(),
+                      _buildPassiveCalendarTab(),
+                      _buildSpecialDaysTab(),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 

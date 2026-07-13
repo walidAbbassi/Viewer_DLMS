@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/widgets/app_drawer.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../services/push_server_provider.dart';
 import '../../core/widget_keys.dart';
 
@@ -41,6 +43,7 @@ class _PushSetupServerPageState extends ConsumerState<PushSetupServerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final sc = SemanticColors.of(context);
     final state = ref.watch(pushServerProvider);
     final notifier = ref.read(pushServerProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -48,7 +51,7 @@ class _PushSetupServerPageState extends ConsumerState<PushSetupServerPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Push Setup Server'),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -62,53 +65,65 @@ class _PushSetupServerPageState extends ConsumerState<PushSetupServerPage> {
         ],
       ),
       drawer: const AppDrawer(),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              DesignTokens.backgroundOf(context),
-              DesignTokens.surfaceOf(context),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Breadcrumb(
+                segments: ['Menu', 'Push Setups', 'Push Setup Server']),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildConfigCard(state, notifier),
-              const SizedBox(height: 16),
-              if (state.error != null)
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade900.withOpacity(0.15),
-                    border: Border.all(color: Colors.redAccent),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline,
-                          color: Colors.redAccent, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          state.error!,
-                          style: const TextStyle(
-                              color: Colors.redAccent, fontSize: 13),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    DesignTokens.backgroundOf(context),
+                    DesignTokens.surfaceOf(context),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildConfigCard(state, notifier),
+                    const SizedBox(height: 16),
+                    if (state.error != null)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade900.withOpacity(0.15),
+                          border: Border.all(color: Colors.redAccent),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline,
+                                color: Colors.redAccent, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                state.error!,
+                                style: const TextStyle(
+                                    color: Colors.redAccent, fontSize: 13),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    Expanded(child: _buildNotificationList(state, isDark)),
+                  ],
                 ),
-              Expanded(child: _buildNotificationList(state, isDark)),
-            ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

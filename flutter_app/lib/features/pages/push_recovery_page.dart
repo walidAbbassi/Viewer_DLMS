@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../util/grpc_error.dart';
 import '../../state/app_controller.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/widgets/app_drawer.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../grpc/generated/meter.pb.dart';
 import '../../grpc/meter_client.dart';
 import '../push_setups/push_recovery_config.dart';
@@ -75,38 +77,48 @@ class _PushRecoveryPageState extends State<PushRecoveryPage> {
   @override
   Widget build(BuildContext context) {
     final objects = widget.config.objects;
+    final sc = SemanticColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.config.label),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
       drawer: const AppDrawer(),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              DesignTokens.backgroundOf(context),
-              DesignTokens.surfaceOf(context),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Breadcrumb(
+                segments: ['Menu', 'Push Recovery', widget.config.label]),
           ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: DesignTokens.surfaceOf(context),
-              borderRadius: DesignTokens.brMd,
-              border: Border.all(color: DesignTokens.borderOf(context)),
-              boxShadow: DesignTokens.shadowSm,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Card header
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    DesignTokens.backgroundOf(context),
+                    DesignTokens.surfaceOf(context),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: DesignTokens.surfaceOf(context),
+                    borderRadius: DesignTokens.brMd,
+                    border: Border.all(color: DesignTokens.borderOf(context)),
+                    boxShadow: DesignTokens.shadowSm,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Card header
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -222,10 +234,13 @@ class _PushRecoveryPageState extends State<PushRecoveryPage> {
                         height: 1, color: DesignTokens.borderOf(context)),
                     itemBuilder: (_, i) => _buildRow(objects[i], i),
                   ),
-              ],
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

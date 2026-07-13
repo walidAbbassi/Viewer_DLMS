@@ -4,11 +4,16 @@ Résumé de tout ce qui a été fait sur la branche `ui_ux_design`, destiné à 
 partagé avec **d'autres comptes Claude Design & Claude Code** qui reprendraient
 ce chantier. Écrit par une session Claude Code.
 
-Branches à jour (même HEAD) : `ui_ux_design` **et** `claude/github-account-connection-rn0vbe`.
-Dernier commit : voir Bloc 4 ci-dessous (branche `claude/viewer-ng-ui-ux-review-m4t078`).
+Dernier commit : `eed67f1` sur `ui_ux_design` (pushé sur GitHub ; `main` a été
+fusionné jusqu'à `322130a` — voir Bloc 4 — mais **pas encore jusqu'à
+`eed67f1`, la fusion de `main` reste à refaire** après ce commit).
 Repo : https://github.com/walidAbbassi/Viewer_DLMS
 Projet design source : https://claude.ai/design/p/8a32b677-2b52-4b62-9f26-02bee55faee0
-Sweep STEP6 reçu via le projet `1ee44508-26f1-42d0-8d48-7c599417abd6` (Viewer NG UI/UX Review).
+Sweep STEP6 + ce sweep icônes/toolbar reçus via le projet
+`1ee44508-26f1-42d0-8d48-7c599417abd6` (Viewer NG UI/UX Review).
+**Tout le travail se fait désormais uniquement sur `ui_ux_design`** (consigne
+explicite de l'utilisateur) — ne plus pousser sur
+`claude/viewer-ng-ui-ux-review-m4t078` ni `claude/github-account-connection-rn0vbe`.
 
 ## Historique des commits (du plus ancien au plus récent)
 
@@ -133,22 +138,104 @@ manuelle ligne à ligne des 5 fichiers modifiés + vérification croisée contre
 les tests existants à la place. À faire tourner dans un environnement avec
 le SDK avant de considérer cette passe définitivement close.
 
+### Bloc 5 — Sweep icônes/toolbar sur toutes les pages restantes (commit `eed67f1`)
+Suite du finding "single header" de la review (`step 4` de la séquence
+recommandée). Périmètre : les 27 pages restantes de
+`flutter_app/lib/features/pages/` (toutes sauf `meter_connexion_page.dart`,
+déjà fait en STEP6, et `connexion_page.dart`, l'écran de login sans AppBar),
+plus 2 widgets partagés.
+
+**Décision prise après audit du code réel (Explore) : ne PAS retirer
+l'AppBar de chaque page.** La formulation littérale de la review ("single
+header") aurait impliqué de redessiner le placement des `TabBar` (9 pages
+les portent via `AppBar.bottom`) et de reloger les callbacks page-locaux
+(`ExportActionButton`/`RefreshAppBarButton` avec fermeture de flux gRPC,
+capture de graphique, etc. — trop risqué pour une passe mécanique. À la
+place, chaque `AppBar` existant est conservé tel quel (titre, actions,
+tabs) et on ajoute seulement :
+1. **Couleur** : `AppBar.backgroundColor` (`DesignTokens.primary600` ou
+   ternaire dark-mode codé en dur, y compris un cas 100% hardcodé sans
+   branche dark dans `load_profile_page.dart`) → `SemanticColors.of(context)
+   .primary`.
+2. **Breadcrumb** : `Breadcrumb(segments: [...])` ajouté au-dessus du body
+   existant (même wrapper `Column([Padding(Breadcrumb), Expanded(<body
+   original inchangé>)])` que celui utilisé sur `meter_connexion_page.dart`
+   en STEP6), segments alignés sur les catégories du rail de nav
+   (`app_drawer.dart`). **Exception** : `firmware_download_page.dart` a été
+   exclu de ce point — sa propre `_buildHeader()` rend déjà un breadcrumb
+   équivalent ("Menu > Firmware Upgrade > Firmware Download"), ajouter le
+   widget partagé l'aurait dupliqué visuellement. Seule la couleur a été
+   migrée sur cette page.
+3. **Icônes des 2 widgets partagés** (touche 20+ pages sans éditer chaque
+   fichier) : `RefreshAppBarButton`'s `Icons.refresh` → `AppIcons.refresh`
+   (même glyphe, zéro impact visuel) ; `ExportActionButton`'s
+   `Icons.upload_file` → `AppIcons.export` (= `Icons.ios_share`, changement
+   de glyphe réel et volontaire).
+
+**Exclu de cette passe** (documenté explicitement, pas un oubli) :
+icônes de `TabBar` par page (trop nombreuses, pas de correspondance
+`AppIcons` claire), icônes de format d'export XML/CSV/PDF/DOCX,
+duplication `MeterStatusIndicator`/`AppHeader` du statut de connexion
+(déjà présente avant ce sweep, nécessite une décision de design séparée),
+retrait des `AppBar` par page.
+
+**`gurux_translator_page.dart` exclu du décompte des 27 pages** — vérifié
+via `app_routes.dart` : la route `/gurux_translator` (libellé du rail de
+nav "DLMS Translator") pointe en réalité vers `DlmsTranslatorPage`
+(`dlms_translator_page.dart`). La classe `GuruxTranslatorPage` de
+`gurux_translator_page.dart` n'est référencée par aucune route ni appel de
+navigation dans tout le code — fichier mort, non traité.
+
+**Effet de bord sur les tests** : vérifié tous les tests pour des
+assertions par icône (`find.byIcon`) sur `Icons.refresh` (aucun risque,
+même valeur qu'`AppIcons.refresh`) et `Icons.upload_file` (un seul hit,
+`calendar_profiles_page_test.dart:97` — mais cette page n'utilise pas du
+tout `ExportActionButton`, seulement `RefreshAppBarButton` ; ce test était
+déjà cassé/obsolète avant ce sweep, non lié à ce changement, laissé tel
+quel). Aucune assertion structurelle fragile (`find.byType(...).first` sur
+`Container`/`Column`/`Row`/`Padding`) trouvée dans la suite de tests — tous
+les tests de cette codebase utilisent des finders par clé/texte/icône, pas
+par position, donc le nouveau wrapping `Column`/`Expanded` du body de
+chaque page n'a cassé aucun test connu.
+
+**Non vérifié** (même limite que STEP6) : pas de SDK Flutter dans cet
+environnement, donc `flutter analyze`/`flutter test` n'ont pas pu tourner.
+Vérification faite par : relecture ligne à ligne de chaque diff (29
+fichiers), script Python de comptage d'accolades/parenthèses/crochets sur
+chaque fichier modifié comparé à sa version d'origine (`git show HEAD:...`)
+pour confirmer qu'aucun déséquilibre n'a été introduit (2 déséquilibres de
+parenthèses trouvés dans `configuration_page.dart` et
+`fresnel_diagram_page.dart` — confirmés préexistants, pas causés par ce
+sweep), et grep de chaque fichier pour confirmer imports/usages uniques
+(pas de doublons). À faire tourner avec le vrai SDK avant de considérer
+cette passe définitivement close.
+
 ## ⏸️ Reporté — pas encore fait
 
-- **Passe 2 — couleurs en dur → SemanticColors** (`SWEEP_STEP4_colors.md`) : pas
-  commencée. Comprend l'unification du 3ᵉ bleu d'AppBar dans `app.dart`
+- **Passe 2 — couleurs en dur → SemanticColors** (`SWEEP_STEP4_colors.md`) :
+  **le sous-ensemble `AppBar.backgroundColor` est fait** (Bloc 5, toutes les
+  pages). Reste non fait : l'unification du 3ᵉ bleu d'AppBar dans `app.dart`
   (`Color(0xFF1e40af)`/`Color(0xFF1e3a6e)` → `sc.primary`), et les couleurs de
   bouton en dur (voir écart ci-dessus, à étendre à mobile_network_id/modem_config/
-  push_setup_server).
+  push_setup_server) — ces boutons n'ont pas été touchés par le Bloc 5.
 - **Passe 3 — calendar_profiles migration complète** (`CALENDAR_full_migration.md`) :
   pas commencée. Le patch mécanique initial (`PATCHES_STEP1.md` §3) ne compile pas
   tel quel — voir raisons ci-dessous. Seuls 3 boutons "Read" orange→bleu ont été
-  corrigés (dans `a947679`), en attendant cette migration complète.
+  corrigés (dans `a947679`) + AppBar color/Breadcrumb (Bloc 5), en attendant
+  cette migration complète (boutons, onglets, SnackBar de cette page restent
+  à migrer).
 - **Passe 4 — i18n** (`STEP5_i18n.md`) : pas commencée. État confirmé du repo :
   `app.dart` n'a aucun `localizationsDelegates`/`supportedLocales`, `pubspec.yaml`
   a `intl` mais pas `flutter_localizations`. C'est une mise en place complète,
   pas un simple branchement.
-- **Breadcrumb** : widget créé mais pas rendu par le shell pour toutes les pages.
+- **Breadcrumb** : **fait sur 28/29 pages** (Bloc 5) — toutes sauf
+  `connexion_page.dart` (login, pas d'AppBar) et `firmware_download_page.dart`
+  (a déjà son propre breadcrumb hand-rolled, volontairement laissé tel quel
+  pour ne pas dupliquer).
+- **Retrait des AppBar par page au profit du seul AppHeader partagé** :
+  décision explicite de ne PAS le faire (Bloc 5) — trop couplé aux `TabBar`
+  et callbacks page-locaux pour une passe mécanique. Resterait un vrai
+  chantier de redesign par page si souhaité.
 - **Historique de navigation** : `pushReplacementNamed` pas encore remplacé par
   `pushNamed`.
 

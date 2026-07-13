@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:grpc/grpc.dart' show GrpcError;
 import '../../grpc/meter_client.dart';
 import '../../state/device_id_cache.dart';
+import '../theme/app_icons.dart';
 import '../theme/design_tokens.dart';
 // ---------------------------------------------------------------------------
 // Export format options
@@ -97,7 +98,7 @@ class ExportActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       tooltip: 'Export page data',
-      icon: Icon(Icons.upload_file, color: iconColor),
+      icon: Icon(AppIcons.export, color: iconColor),
       onPressed: () => _open(context),
     );
   }

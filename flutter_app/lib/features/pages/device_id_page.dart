@@ -18,6 +18,8 @@ import '../../core/export/exportable_page.dart';
 import '../../core/export/export_action_button.dart';
 import '../../core/widget_keys.dart';
 import '../../core/export/export_registry.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 
 class DeviceIdPage extends ConsumerStatefulWidget {
   const DeviceIdPage({super.key});
@@ -114,11 +116,11 @@ class _DeviceIdPageState extends ConsumerState<DeviceIdPage>
     });
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sc = SemanticColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Device ID'),
-        backgroundColor:
-            isDark ? const Color(0xFF1e3a6e) : DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -132,7 +134,16 @@ class _DeviceIdPageState extends ConsumerState<DeviceIdPage>
           RefreshAppBarButton(onPressed: _readIdentification),
         ],
       ),
-      body: Container(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: const Breadcrumb(
+                segments: ['Menu', 'Identification', 'Device ID']),
+          ),
+          Expanded(
+            child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDark
@@ -253,6 +264,9 @@ class _DeviceIdPageState extends ConsumerState<DeviceIdPage>
             ),
           ],
         ),
+      ),
+          ),
+        ],
       ),
     );
   }

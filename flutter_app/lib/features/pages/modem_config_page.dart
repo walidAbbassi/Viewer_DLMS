@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../core/user_rights.dart';
 import '../../core/feature_keys.dart';
@@ -379,6 +381,7 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
 
   @override
   Widget build(BuildContext context) {
+    final sc = SemanticColors.of(context);
     final appState = ref.watch(appControllerProvider);
     final canRead = !appState.simulation &&
         appState.isConnected &&
@@ -390,7 +393,7 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Modem Config'),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         bottom: TabBar(
@@ -420,39 +423,50 @@ class _ModemConfigPageState extends ConsumerState<ModemConfigPage>
               onPressed: _readCurrentTab),
         ],
       ),
-      body: Stack(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            children: [
-              if (_error != null) _buildErrorBanner(),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Breadcrumb(segments: ['Menu', 'P2P Setup', 'Modem Config']),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                Column(
                   children: [
-                    _buildModemConfigTab(canRead, canWrite),
-                    _buildAutoConnectTab(canRead, canWrite),
-                    _buildAutoAnswerTab(canRead, canWrite),
-                    _buildTcpUdpSetupTab(canRead, canWrite),
+                    if (_error != null) _buildErrorBanner(),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildModemConfigTab(canRead, canWrite),
+                          _buildAutoConnectTab(canRead, canWrite),
+                          _buildAutoAnswerTab(canRead, canWrite),
+                          _buildTcpUdpSetupTab(canRead, canWrite),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          if (_isLoading)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.3),
-                child: Center(
-                  child: Lottie.asset(
-                    'assets/animations/data.json',
-                    width: 200,
-                    height: 200,
-                    errorBuilder: (context, err, stack) =>
-                        const CircularProgressIndicator(),
+                if (_isLoading)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      child: Center(
+                        child: Lottie.asset(
+                          'assets/animations/data.json',
+                          width: 200,
+                          height: 200,
+                          errorBuilder: (context, err, stack) =>
+                              const CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+              ],
             ),
+          ),
         ],
       ),
     );

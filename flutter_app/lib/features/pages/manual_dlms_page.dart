@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../util/grpc_error.dart';
 import '../../grpc/manual_dlms_client.dart';
 import '../../grpc/generated/manual_dlms.pb.dart';
@@ -37,10 +39,11 @@ class _ManualDlmsPageState extends State<ManualDlmsPage>
 
   @override
   Widget build(BuildContext context) {
+    final sc = SemanticColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manual DLMS'),
-        backgroundColor: DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         bottom: TabBar(
@@ -55,12 +58,23 @@ class _ManualDlmsPageState extends State<ManualDlmsPage>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabs,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _NormalTab(client: _client),
-          _WithListTab(client: _client),
-          _RawFrameTab(client: _client),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: const Breadcrumb(segments: ['Menu', 'Manual DLMS']),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabs,
+              children: [
+                _NormalTab(client: _client),
+                _WithListTab(client: _client),
+                _RawFrameTab(client: _client),
+              ],
+            ),
+          ),
         ],
       ),
     );

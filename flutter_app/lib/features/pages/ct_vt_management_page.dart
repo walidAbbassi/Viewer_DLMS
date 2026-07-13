@@ -7,8 +7,10 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/widgets/number_input_field.dart';
 import '../../core/widgets/section_title.dart';
+import '../../core/widgets/breadcrumb.dart';
 
 class CtVtManagementPage extends ConsumerStatefulWidget {
   const CtVtManagementPage({super.key});
@@ -246,13 +248,14 @@ return Align(
 
   @override
 Widget build(BuildContext context) {
+  final sc = SemanticColors.of(context);
   return Scaffold(
     key: const Key('ct_vt_screen'),
 
     appBar: AppBar(
       key: const Key('app_bar'),
       title: const Text('CT VT Management'),
-      backgroundColor: DesignTokens.primary600,
+      backgroundColor: sc.primary,
       foregroundColor: Colors.white,
       automaticallyImplyLeading: false,
       actions: [
@@ -263,7 +266,16 @@ Widget build(BuildContext context) {
       ],
     ),
 
-    body: Stack(
+    body: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: const Breadcrumb(
+              segments: ['Menu', 'Electricity Objects', 'CT VT Management']),
+        ),
+        Expanded(
+          child: Stack(
       key: const Key(CTVTKeys.mainStack),
       fit: StackFit.expand,
       children: [
@@ -365,6 +377,9 @@ Widget build(BuildContext context) {
               ),
             ),
           ),
+      ],
+    ),
+        ),
       ],
     ),
   );

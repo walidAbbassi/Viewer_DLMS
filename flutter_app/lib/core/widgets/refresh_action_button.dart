@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../state/app_controller.dart';
 import '../../features/services/logger_provider.dart';
+import '../theme/app_icons.dart';
 import 'log_panel.dart';
 
 /// A Refresh icon button designed for AppBar actions.
@@ -35,7 +36,7 @@ class RefreshAppBarButton extends ConsumerWidget {
           padding: const EdgeInsets.only(right: 8),
           child: IconButton(
             key: const Key('appbar_refresh_btn'),
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(AppIcons.refresh),
             tooltip: isConnected ? 'Refresh' : 'Not connected',
             onPressed: isConnected ? onPressed : null,
           ),

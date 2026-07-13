@@ -18,6 +18,8 @@ import '../../core/export/exportable_page.dart';
 import '../../core/export/export_action_button.dart';
 import '../../core/export/export_registry.dart';
 import '../../state/device_id_cache.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../core/widgets/breadcrumb.dart';
 
 class FirmwareVersionPage extends ConsumerStatefulWidget {
   const FirmwareVersionPage({super.key});
@@ -112,11 +114,11 @@ class _FirmwareVersionPageState extends ConsumerState<FirmwareVersionPage>
     });
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sc = SemanticColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Firmware Version'),
-        backgroundColor:
-            isDark ? const Color(0xFF1e3a6e) : DesignTokens.primary600,
+        backgroundColor: sc.primary,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -133,7 +135,16 @@ class _FirmwareVersionPageState extends ConsumerState<FirmwareVersionPage>
           ),
         ],
       ),
-      body: Container(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: const Breadcrumb(
+                segments: ['Menu', 'Identification', 'Firmware Version']),
+          ),
+          Expanded(
+            child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDark
@@ -254,6 +265,9 @@ class _FirmwareVersionPageState extends ConsumerState<FirmwareVersionPage>
             ),
           ],
         ),
+      ),
+          ),
+        ],
       ),
     );
   }

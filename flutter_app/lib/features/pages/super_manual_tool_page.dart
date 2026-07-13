@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../util/grpc_error.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/theme/semantic_colors.dart';
 import '../../core/services/feedback_service.dart';
 import '../../core/widgets/app_drawer.dart';
+import '../../core/widgets/breadcrumb.dart';
 import '../../core/widgets/refresh_action_button.dart';
 import '../../core/widgets/attribute_edit_dialog.dart';
 import '../../core/widgets/selective_access_tab.dart';
@@ -827,12 +829,13 @@ class _SuperManualToolPageState extends ConsumerState<SuperManualToolPage>
   @override
   Widget build(BuildContext context) {
     _isConnected = ref.watch(appControllerProvider).isConnected;
+    final sc = SemanticColors.of(context);
     return Stack(children: [
       Scaffold(
         backgroundColor: DesignTokens.backgroundOf(context),
         appBar: AppBar(
           title: const Text("Super Manual Tool"),
-          backgroundColor: DesignTokens.primary600,
+          backgroundColor: sc.primary,
           foregroundColor: Colors.white,
           automaticallyImplyLeading: false,
           actions: [
@@ -857,14 +860,26 @@ class _SuperManualToolPageState extends ConsumerState<SuperManualToolPage>
           ],
         ),
         drawer: const AppDrawer(),
-        body: Column(children: [
-          _tabsBar(),
-          Expanded(
-              child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: _buildActiveTab(),
-          )),
-        ]),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: const Breadcrumb(
+                  segments: ['Menu', 'Super Manual Tool']),
+            ),
+            Expanded(
+              child: Column(children: [
+                _tabsBar(),
+                Expanded(
+                    child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _buildActiveTab(),
+                )),
+              ]),
+            ),
+          ],
+        ),
       ),
       if (_isLoading)
         Positioned.fill(
