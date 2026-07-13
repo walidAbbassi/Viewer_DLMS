@@ -15,6 +15,8 @@ import 'package:flutter/services.dart';
 import '../../core/theme/semantic_colors.dart';
 import '../../core/widgets/breadcrumb.dart';
 import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_tabs.dart';
+import '../../core/services/feedback_service.dart';
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -314,19 +316,12 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
           RefreshAppBarButton(onPressed: _loadAll),
           const SizedBox(width: 8),
         ],
-        bottom: TabBar(
+        bottom: AppTabs(
           controller: _outerTab,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
           tabs: const [
-            Tab(
-                icon: Icon(Icons.lock_clock, size: 18),
-                text: 'Active Calendar'),
-            Tab(
-                icon: Icon(Icons.edit_calendar, size: 18),
-                text: 'Passive Calendar'),
-            Tab(icon: Icon(Icons.star, size: 18), text: 'Special Days'),
+            AppTabItem('Active Calendar', icon: Icons.lock_clock),
+            AppTabItem('Passive Calendar', icon: Icons.edit_calendar),
+            AppTabItem('Special Days', icon: Icons.star),
           ],
         ),
       ),
@@ -459,18 +454,12 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 flex: 5,
                 child: Column(
                   children: [
-                    TabBar(
+                    AppTabs(
                       controller: _innerActive,
-                      labelColor:
-                          sc.primary,
-                      indicatorColor:
-                          sc.primary,
-                      unselectedLabelColor:
-                          sc.onSurfaceVariant,
                       tabs: const [
-                        Tab(text: 'Day Profiles'),
-                        Tab(text: 'Week Profiles'),
-                        Tab(text: 'Season Profiles'),
+                        AppTabItem('Day Profiles'),
+                        AppTabItem('Week Profiles'),
+                        AppTabItem('Season Profiles'),
                       ],
                     ),
                     Expanded(
@@ -1352,18 +1341,12 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
                 flex: 5,
                 child: Column(
                   children: [
-                    TabBar(
+                    AppTabs(
                       controller: _innerPassive,
-                      labelColor:
-                          sc.primary,
-                      indicatorColor:
-                          sc.primary,
-                      unselectedLabelColor:
-                          sc.onSurfaceVariant,
                       tabs: const [
-                        Tab(text: 'Day Profiles'),
-                        Tab(text: 'Week Profiles'),
-                        Tab(text: 'Season Profiles'),
+                        AppTabItem('Day Profiles'),
+                        AppTabItem('Week Profiles'),
+                        AppTabItem('Season Profiles'),
                       ],
                     ),
                     Expanded(
@@ -4466,10 +4449,6 @@ class _CalendarProfilesPageState extends ConsumerState<CalendarProfilesPage>
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
-      );
+    feedback.info(msg);
   }
 }
